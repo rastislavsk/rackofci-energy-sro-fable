@@ -14,3 +14,8 @@ crons = ["*/5 * * * *"]
 [[kv_namespaces]]
 binding = "PV_DATA"
 id = "9e63c7f573a04b81addbef33625861a2"
+
+# Uchovávanie logov, aby sa dala dohľadať príčina zlyhania cronu spätne,
+# nielen v živom výpise.
+[observability]
+enabled = true
