@@ -15,8 +15,18 @@ načas a KV nezanáša históriu.
 { "pv": { "realTimePowerKw": 6.41, "...": "..." }, "forecast": { "days": [] }, "servedAt": "2026-09-05T11:00:00.000Z" }
 ```
 
-Chýbajúca časť je `null`, nie chyba. Hlavičky: CORS pre všetkých, `cache-control: max-age=60`
-a `x-data-stale`, keď je predpoveď staršia než tri hodiny. Iné cesty vracajú 404, iné metódy 405.
+Chýbajúca časť je `null`, nie chyba. Pole `status` hovorí, ako dopadol posledný beh cronu,
+takže pri chýbajúcich dátach netreba hádať medzi výpadkom zdroja a zlým nastavením:
+
+```json
+{ "status": { "pv": { "ok": false, "at": "…", "error": "KIOSK_URL secret nie je nastavený" }, "forecast": { "ok": true, "at": "…" } } }
+```
+
+Hlavičky: CORS pre všetkých, `cache-control: max-age=60` a `x-data-stale`, keď je predpoveď
+staršia než tri hodiny. Iné cesty vracajú 404, iné metódy 405.
+
+Podrobnejšie hlásenia sú v logoch Workera (dashboard → Observability), ktoré sú zapnuté
+vo `wrangler.toml`.
 
 ## Nasadenie (jednorazovo)
 

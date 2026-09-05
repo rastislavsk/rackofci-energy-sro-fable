@@ -8,6 +8,9 @@ import { buildForecast } from '../../shared/solar.js';
 
 const KV_PV = 'pv';
 const KV_FORECAST = 'forecast';
+// Výsledok posledného behu cronu. Vďaka nemu endpoint sám povie, prečo časť dát chýba,
+// namiesto toho, aby ticho vrátil null a nechal hádať medzi výpadkom a zlým nastavením.
+const KV_STATUS = 'status';
 // Predpoveď sa prepočíta, keď je staršia než 55 minút (cron beží každých 5 min, takže raz za hodinu).
 const FORECAST_REFRESH_MS = 55 * 60 * 1000;
 
@@ -42,16 +45,30 @@ export async function refreshForecastIfStale(env, now, fetchImpl = fetch) {
     return forecast;
 }
 
+/** Zhrnutie jednej obnovy pre KV. @param {PromiseSettledResult<unknown>} result @param {Date} now */
+function statusEntry(result, now) {
+    if (result.status === 'fulfilled') return { ok: true, at: now.toISOString() };
+    // Dôvod skracujeme, do KV patrí hlásenie, nie celý zásobník volaní.
+    return { ok: false, at: now.toISOString(), error: String(result.reason).slice(0, 300) };
+}
+
 /** Jeden beh cronu: obe obnovy nezávisle, chyba jednej nezhodí druhú. @param {Env} env @param {Date} now @param {typeof fetch} fetchImpl */
 export async function runScheduled(env, now = new Date(), fetchImpl = fetch) {
     const results = await Promise.allSettled([refreshPv(env, now, fetchImpl), refreshForecastIfStale(env, now, fetchImpl)]);
     results.forEach((r, i) => {
         if (r.status === 'rejected') console.log(i === 0 ? 'pv refresh failed' : 'forecast refresh failed', String(r.reason));
     });
+    const status = { pv: statusEntry(results[0], now), forecast: statusEntry(results[1], now) };
+    // Zápis stavu je len diagnostika; keby zlyhal, dáta samotné sú už uložené.
+    try {
+        await env.PV_DATA.put(KV_STATUS, JSON.stringify(status));
+    } catch (err) {
+        console.log('status write failed', String(err));
+    }
     return results;
 }
 
-/** Odpoveď na GET /: {pv, forecast, servedAt}; chýbajúce dáta sú null. @param {Request} request @param {Env} env @param {Date} now */
+/** Odpoveď na GET /: {pv, forecast, status, servedAt}; chýbajúce dáta sú null. @param {Request} request @param {Env} env @param {Date} now */
 export async function handleRequest(request, env, now = new Date()) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
     if (request.method !== 'GET')
@@ -59,8 +76,12 @@ export async function handleRequest(request, env, now = new Date()) {
     const path = new URL(request.url).pathname;
     if (path !== '/') return new Response(JSON.stringify({ error: 'not found' }), { status: 404, headers: CORS_HEADERS });
 
-    const [pv, forecast] = await Promise.all([env.PV_DATA.get(KV_PV, 'json'), env.PV_DATA.get(KV_FORECAST, 'json')]);
-    const body = { pv: pv || null, forecast: forecast || null, servedAt: now.toISOString() };
+    const [pv, forecast, status] = await Promise.all([
+        env.PV_DATA.get(KV_PV, 'json'),
+        env.PV_DATA.get(KV_FORECAST, 'json'),
+        env.PV_DATA.get(KV_STATUS, 'json'),
+    ]);
+    const body = { pv: pv || null, forecast: forecast || null, status: status || null, servedAt: now.toISOString() };
     const stale = forecast && now.getTime() - Date.parse(forecast.updatedAt) > STALE_FORECAST_MS;
     return new Response(JSON.stringify(body), { status: 200, headers: { ...CORS_HEADERS, 'x-data-stale': stale ? '1' : '0' } });
 }

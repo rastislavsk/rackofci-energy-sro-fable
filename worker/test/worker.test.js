@@ -82,3 +82,51 @@ test('iné cesty a metódy sú odmietnuté', async () => {
     assert.equal((await handleRequest(new Request('https://w.test/', { method: 'POST' }), e, NOW)).status, 405);
     assert.equal((await handleRequest(new Request('https://w.test/', { method: 'OPTIONS' }), e, NOW)).status, 204);
 });
+
+test('runScheduled zapíše do KV stav oboch obnov s dôvodom zlyhania', async () => {
+    const e = env();
+    await runScheduled(e, NOW, fakeFetch({ 'https://kiosk.test/': null, [OPEN_METEO_URL]: fixture('open-meteo.json') }));
+    const status = JSON.parse(e.PV_DATA.store.status);
+    assert.equal(status.pv.ok, false);
+    assert.match(status.pv.error, /HTTP 500/);
+    assert.equal(status.pv.at, NOW.toISOString());
+    assert.equal(status.forecast.ok, true);
+    assert.equal(status.forecast.error, undefined);
+});
+
+test('chýbajúci secret KIOSK_URL sa prejaví ako zrozumiteľný dôvod v stave', async () => {
+    const e = { PV_DATA: memoryKv(), KIOSK_URL: '' };
+    await runScheduled(e, NOW, fakeFetch({ [OPEN_METEO_URL]: fixture('open-meteo.json') }));
+    assert.match(JSON.parse(e.PV_DATA.store.status).pv.error, /KIOSK_URL/);
+});
+
+test('GET / vráti aj stav posledného behu cronu', async () => {
+    const e = env();
+    await runScheduled(e, NOW, fakeFetch({ 'https://kiosk.test/': fixture('kiosk.json'), [OPEN_METEO_URL]: fixture('open-meteo.json') }));
+    const body = await (await handleRequest(new Request('https://w.test/'), e, NOW)).json();
+    assert.equal(body.status.pv.ok, true);
+    assert.equal(body.status.forecast.ok, true);
+    assert.ok(body.pv && body.forecast);
+});
+
+test('bez behu cronu je stav null, nie chyba', async () => {
+    const body = await (await handleRequest(new Request('https://w.test/'), env(), NOW)).json();
+    assert.equal(body.status, null);
+});
+
+test('zlyhaný zápis stavu nezhodí cron ani neprepíše uložené dáta', async () => {
+    const e = env();
+    const kv = e.PV_DATA;
+    const origPut = kv.put.bind(kv);
+    kv.put = async (key, value) => {
+        if (key === 'status') throw new Error('KV nedostupné');
+        return origPut(key, value);
+    };
+    const results = await runScheduled(
+        e,
+        NOW,
+        fakeFetch({ 'https://kiosk.test/': fixture('kiosk.json'), [OPEN_METEO_URL]: fixture('open-meteo.json') }),
+    );
+    assert.equal(results[0].status, 'fulfilled');
+    assert.equal(JSON.parse(kv.store.pv).realTimePowerKw, 6.412);
+});
