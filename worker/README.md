@@ -25,6 +25,30 @@ takže pri chýbajúcich dátach netreba hádať medzi výpadkom zdroja a zlým 
 Hlavičky: CORS pre všetkých, `cache-control: max-age=60` a `x-data-stale`, keď je predpoveď
 staršia než tri hodiny. Iné cesty vracajú 404, iné metódy 405.
 
+### `GET /status`
+
+Krátke zhrnutie na kontrolu jedným pohľadom, bez celej predpovede. Odpoveď je odsadená
+a bez cache, takže sa dá otvoriť priamo v prehliadači:
+
+```json
+{
+  "ok": false,
+  "pv": {
+    "ok": false,
+    "updatedAt": null,
+    "ageMinutes": null,
+    "lastRun": { "ok": false, "at": "…", "error": "KIOSK_URL secret nie je nastavený" }
+  },
+  "forecast": { "ok": true, "updatedAt": "…", "ageMinutes": 5, "lastRun": { "ok": true, "at": "…" } },
+  "servedAt": "…"
+}
+```
+
+`ok` je `true`, len keď sú obe časti dát čerstvé: živý výkon do 20 minút, predpoveď do
+troch hodín. `lastRun` hovorí, ako dopadol posledný beh cronu, aj keď v KV ešte leží
+staršia použiteľná hodnota. Cesta vždy vracia 200, aj keď `ok` je `false` — je to hlásenie
+o stave, nie brána, ktorá by mala padať.
+
 Podrobnejšie hlásenia sú v logoch Workera (dashboard → Observability), ktoré sú zapnuté
 vo `wrangler.toml`.
 

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { handleRequest, refreshForecastIfStale, refreshPv, runScheduled } from '../src/index.js';
+import { buildStatus, handleRequest, refreshForecastIfStale, refreshPv, runScheduled } from '../src/index.js';
 import { OPEN_METEO_URL } from '../../shared/config.js';
 
 const fixture = (/** @type {string} */ name) => readFileSync(new URL(`../../test/fixtures/${name}`, import.meta.url), 'utf8');
@@ -129,4 +129,51 @@ test('zlyhaný zápis stavu nezhodí cron ani neprepíše uložené dáta', asyn
     );
     assert.equal(results[0].status, 'fulfilled');
     assert.equal(JSON.parse(kv.store.pv).realTimePowerKw, 6.412);
+});
+
+test('GET /status: po úspešnom crone je ok true a dáta sú čerstvé', async () => {
+    const e = env();
+    await runScheduled(e, NOW, fakeFetch({ 'https://kiosk.test/': fixture('kiosk.json'), [OPEN_METEO_URL]: fixture('open-meteo.json') }));
+    const res = await handleRequest(new Request('https://w.test/status'), e, NOW);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('cache-control'), 'no-store');
+    const s = await res.json();
+    assert.equal(s.ok, true);
+    assert.equal(s.pv.ok, true);
+    assert.equal(s.pv.ageMinutes, 0);
+    assert.equal(s.pv.updatedAt, NOW.toISOString());
+    assert.equal(s.pv.lastRun.ok, true);
+    assert.equal(s.forecast.ok, true);
+});
+
+test('GET /status: zlyhaný kiosk dá ok false a dôvod, predpoveď zostáva v poriadku', async () => {
+    const e = env();
+    await runScheduled(e, NOW, fakeFetch({ 'https://kiosk.test/': null, [OPEN_METEO_URL]: fixture('open-meteo.json') }));
+    const s = await (await handleRequest(new Request('https://w.test/status'), e, NOW)).json();
+    assert.equal(s.ok, false);
+    assert.equal(s.pv.ok, false);
+    assert.equal(s.pv.updatedAt, null);
+    assert.match(s.pv.lastRun.error, /HTTP 500/);
+    assert.equal(s.forecast.ok, true);
+});
+
+test('GET /status na prázdnom KV nespadne, len ohlási, že dáta nie sú', async () => {
+    const s = await (await handleRequest(new Request('https://w.test/status'), env(), NOW)).json();
+    assert.equal(s.ok, false);
+    assert.deepEqual(s.pv, { ok: false, updatedAt: null, ageMinutes: null, lastRun: null });
+    assert.equal(s.servedAt, NOW.toISOString());
+});
+
+test('buildStatus označí zastarané dáta za nie v poriadku', () => {
+    const old = new Date(NOW.getTime() - 60 * 60 * 1000).toISOString();
+    const s = buildStatus({ pv: { updatedAt: old }, forecast: { updatedAt: NOW.toISOString() }, status: null }, NOW);
+    assert.equal(s.pv.ok, false, 'hodinu staré pv je zastarané');
+    assert.equal(s.pv.ageMinutes, 60);
+    assert.equal(s.forecast.ok, true);
+    assert.equal(s.ok, false);
+});
+
+test('neznáme cesty ostávajú 404 aj po pridaní /status', async () => {
+    assert.equal((await handleRequest(new Request('https://w.test/statuss'), env(), NOW)).status, 404);
+    assert.equal((await handleRequest(new Request('https://w.test/status/x'), env(), NOW)).status, 404);
 });

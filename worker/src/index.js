@@ -1,7 +1,7 @@
 // Cloudflare Worker: jediný zdroj dát appky. Cron každých 5 minút stiahne kiosk,
 // raz za hodinu prepočíta predpoveď z Open-Meteo a obe uloží do KV. GET / ich vráti.
 
-import { OPEN_METEO_URL, STALE_FORECAST_MS } from '../../shared/config.js';
+import { OPEN_METEO_URL, STALE_FORECAST_MS, STALE_PV_MS } from '../../shared/config.js';
 import { fetchWithRetry } from '../../shared/http.js';
 import { parseKiosk } from '../../shared/kiosk.js';
 import { buildForecast } from '../../shared/solar.js';
@@ -68,20 +68,68 @@ export async function runScheduled(env, now = new Date(), fetchImpl = fetch) {
     return results;
 }
 
-/** Odpoveď na GET /: {pv, forecast, status, servedAt}; chýbajúce dáta sú null. @param {Request} request @param {Env} env @param {Date} now */
-export async function handleRequest(request, env, now = new Date()) {
-    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
-    if (request.method !== 'GET')
-        return new Response(JSON.stringify({ error: 'method not allowed' }), { status: 405, headers: CORS_HEADERS });
-    const path = new URL(request.url).pathname;
-    if (path !== '/') return new Response(JSON.stringify({ error: 'not found' }), { status: 404, headers: CORS_HEADERS });
+/** Vek údaja v minútach; null, keď údaj alebo jeho značka času chýba. @param {string | undefined} iso @param {Date} now */
+function ageMinutes(iso, now) {
+    if (!iso) return null;
+    const ms = now.getTime() - Date.parse(iso);
+    return Number.isFinite(ms) ? Math.round(ms / 60000) : null;
+}
 
+/**
+ * Krátke zhrnutie zdravia pre `GET /status`: ako dopadol posledný beh cronu a aké
+ * čerstvé sú uložené dáta. Určené na to, aby sa dalo skontrolovať jedným pohľadom.
+ * @param {{ pv: any, forecast: any, status: any }} stored @param {Date} now
+ */
+export function buildStatus(stored, now) {
+    const { pv, forecast, status } = stored;
+    const pvAge = ageMinutes(pv && pv.updatedAt, now);
+    const forecastAge = ageMinutes(forecast && forecast.updatedAt, now);
+    const pvFresh = pvAge !== null && pvAge * 60000 <= STALE_PV_MS;
+    const forecastFresh = forecastAge !== null && forecastAge * 60000 <= STALE_FORECAST_MS;
+    const part = (/** @type {boolean} */ fresh, /** @type {any} */ data, /** @type {number | null} */ age, /** @type {any} */ lastRun) => ({
+        ok: fresh,
+        updatedAt: (data && data.updatedAt) || null,
+        ageMinutes: age,
+        lastRun: lastRun || null,
+    });
+    return {
+        ok: pvFresh && forecastFresh,
+        pv: part(pvFresh, pv, pvAge, status && status.pv),
+        forecast: part(forecastFresh, forecast, forecastAge, status && status.forecast),
+        servedAt: now.toISOString(),
+    };
+}
+
+/** Prečíta všetky tri kľúče z KV naraz. @param {Env} env */
+async function readStored(env) {
     const [pv, forecast, status] = await Promise.all([
         env.PV_DATA.get(KV_PV, 'json'),
         env.PV_DATA.get(KV_FORECAST, 'json'),
         env.PV_DATA.get(KV_STATUS, 'json'),
     ]);
-    const body = { pv: pv || null, forecast: forecast || null, status: status || null, servedAt: now.toISOString() };
+    return { pv: pv || null, forecast: forecast || null, status: status || null };
+}
+
+/** Odpoveď na GET / a GET /status; chýbajúce dáta sú null. @param {Request} request @param {Env} env @param {Date} now */
+export async function handleRequest(request, env, now = new Date()) {
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
+    if (request.method !== 'GET')
+        return new Response(JSON.stringify({ error: 'method not allowed' }), { status: 405, headers: CORS_HEADERS });
+    const path = new URL(request.url).pathname;
+    if (path !== '/' && path !== '/status')
+        return new Response(JSON.stringify({ error: 'not found' }), { status: 404, headers: CORS_HEADERS });
+
+    const stored = await readStored(env);
+    if (path === '/status') {
+        // Zhrnutie sa píše pre človeka v prehliadači, preto s odsadením a bez cache.
+        return new Response(JSON.stringify(buildStatus(stored, now), null, 2), {
+            status: 200,
+            headers: { ...CORS_HEADERS, 'cache-control': 'no-store' },
+        });
+    }
+
+    const { pv, forecast, status } = stored;
+    const body = { pv, forecast, status, servedAt: now.toISOString() };
     const stale = forecast && now.getTime() - Date.parse(forecast.updatedAt) > STALE_FORECAST_MS;
     return new Response(JSON.stringify(body), { status: 200, headers: { ...CORS_HEADERS, 'x-data-stale': stale ? '1' : '0' } });
 }
