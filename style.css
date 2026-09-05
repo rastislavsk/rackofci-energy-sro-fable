@@ -1114,6 +1114,10 @@ b {
 }
 .week-block {
     margin: 0;
+    /* Grid položka sa bez toho nezmestí na šírku obrazovky - min-width je defaultne "auto",
+       teda min-content najširšieho potomka (tabuľka s white-space:nowrap). Bez tohto riadku
+       sa celý stĺpec (a s ním grafy aj tabuľka) roztiahne mimo viewport na mobile. */
+    min-width: 0;
 }
 .week-tbl-wrap {
     overflow-x: auto;
