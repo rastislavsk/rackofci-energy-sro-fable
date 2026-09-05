@@ -1,0 +1,46 @@
+name: Pages
+
+# Zapne a nasadí GitHub Pages. `enablement: true` zapne Pages pri prvom behu,
+# takže sa nemusí nič klikať v nastaveniach repozitára.
+# Publikujú sa len súbory, ktoré appka potrebuje - testy, dokumentácia a Worker nie.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Naraz beží jedno nasadenie; rozbehnuté sa nechá dobehnúť.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pripraviť súbory appky
+        run: |
+          mkdir -p _site
+          cp index.html style.css app.js _site/
+          cp -r web shared _site/
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

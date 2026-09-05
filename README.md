@@ -70,6 +70,12 @@ keď zmeníš výpočet zámerne, spusti `UPDATE_GOLDEN=1 npm test` a zmenu pop�
 
 ## Nasadenie
 
-Stránka: **Settings → Pages → Deploy from a branch**, vetva `main`, priečinok `/ (root)`.
+**Stránka** sa nasadzuje sama pri každom pushnutí do `main` workflowom
+[`pages.yml`](.github/workflows/pages.yml). Ten Pages pri prvom behu aj zapne, takže v
+nastaveniach repozitára netreba nič klikať. Publikujú sa iba súbory, ktoré appka
+potrebuje (`index.html`, `style.css`, `app.js`, `web/`, `shared/`); testy, dokumentácia
+ani kód Workera sa na web nedostanú.
 
-Worker: postup a potrebné tajomstvá sú v [`worker/README.md`](worker/README.md).
+Adresa: <https://rastislavsk.github.io/rackofci-energy-sro-fable/>
+
+**Worker**: postup a potrebné tajomstvá sú v [`worker/README.md`](worker/README.md).
