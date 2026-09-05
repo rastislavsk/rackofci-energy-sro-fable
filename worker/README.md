@@ -20,16 +20,19 @@ a `x-data-stale`, keď je predpoveď staršia než tri hodiny. Iné cesty vracaj
 
 ## Nasadenie (jednorazovo)
 
-1. **KV namespace**
+1. **KV namespace** — už existuje (`rackofci-energy-pv-data`) a jeho `id` je vyplnené vo
+   `wrangler.toml`. Nové by sa vytvorilo takto:
 
    ```bash
    cd worker
    npx wrangler kv namespace create PV_DATA
    ```
 
-   Vrátené `id` zapíš do `wrangler.toml` namiesto `REPLACE_WITH_KV_NAMESPACE_ID`.
+   Vrátené `id` patrí do `wrangler.toml` pod binding `PV_DATA`.
 
-2. **Tajomstvo s kiosk odkazom** (verejný odkaz na kiosk elektrárne, v kóde nie je)
+2. **Tajomstvo s kiosk odkazom** (verejný odkaz na kiosk elektrárne, v kóde nie je).
+   V dashboarde: Workers & Pages → `rackofci-energy` → Settings → Variables and Secrets →
+   Add, názov `KIOSK_URL`, typ **Secret**. Alebo z príkazového riadku:
 
    ```bash
    npx wrangler secret put KIOSK_URL
