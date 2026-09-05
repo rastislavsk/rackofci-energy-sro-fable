@@ -1,14 +1,32 @@
+# Aktualizácie závislostí raz mesačne, zoskupené do jedného pull requestu na ekosystém.
+# Dependabot nevie spojiť npm a GitHub Actions do jedného pull requestu, takže vzniknú
+# najviac tri, a len vtedy, keď je naozaj čo aktualizovať: koreňové npm, npm vo worker/
+# a samotné Actions.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      npm:
+        patterns: ['*']
+
   - package-ecosystem: npm
     directory: /worker
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      worker:
+        patterns: ['*']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      actions:
+        patterns: ['*']
