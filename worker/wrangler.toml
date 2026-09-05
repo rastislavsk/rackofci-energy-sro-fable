@@ -1,6 +1,8 @@
-# Cloudflare Worker "rackofci-energy": zdroj dát pre appku (kiosk + predpoveď v KV).
+# Cloudflare Worker "rackofci-energy-sro-fable": zdroj dát pre appku (kiosk + predpoveď v KV).
 # Nasadenie: pozri worker/README.md. Secret KIOSK_URL sa nastavuje cez `wrangler secret put`.
-name = "rackofci-energy"
+# Meno musí sedieť s Workerom v Cloudflare účte, inak by wrangler nasadil
+# do iného (prázdneho) Workera bez secretu KIOSK_URL.
+name = "rackofci-energy-sro-fable"
 main = "src/index.js"
 compatibility_date = "2026-08-29"
 

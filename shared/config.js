@@ -125,7 +125,7 @@ export const AUTO_MIN_PV_KW = POWER_HIGH_KW;
 
 // Kde appka beží a odkiaľ číta dáta.
 export const APP_URL = 'https://rastislavsk.github.io/rackofci-energy-sro-fable/';
-export const WORKER_URL = 'https://rackofci-energy.rastislav-racek.workers.dev/';
+export const WORKER_URL = 'https://rackofci-energy-sro-fable.rastislav-racek.workers.dev/';
 // Dočasný záložný zdroj, kým nový Worker nebeží: dáta pôvodnej appky (rovnaký formát).
 export const LEGACY_SOURCES = {
     pv: 'https://pv-proxy.rastislav-racek.workers.dev/',
