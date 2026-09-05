@@ -35,9 +35,10 @@ slnka, premietne žiarenie na roviny panelov (juh a východ), pripočíta teplot
 limit striedača. Tá istá funkcia počíta aj strop pri úplne jasnej oblohe, z ktorého
 vychádza údaj „využitie“.
 
-Kým nový Worker nebeží, appka číta záložné zdroje pôvodnej appky (`shared/config.js`,
-`LEGACY_SOURCES`). Keď nie je dostupný ani jeden zdroj, ukáže „dáta nedostupné“ a
-nespadne.
+Ak by Worker vypadol, appka spadne na záložné zdroje pôvodnej appky (`LEGACY_SOURCES`
+v `shared/config.js`) — tie čítajú ten istý kiosk. Záloha je ponechaná zámerne: pôvodná
+appka beží ďalej, takže poistka nič nestojí. Keď nie je dostupný ani jeden zdroj, appka
+ukáže „dáta nedostupné“ a nespadne.
 
 ## Štruktúra
 
@@ -70,6 +71,14 @@ keď zmeníš výpočet zámerne, spusti `UPDATE_GOLDEN=1 npm test` a zmenu pop�
 
 ## Nasadenie
 
-Stránka: **Settings → Pages → Deploy from a branch**, vetva `main`, priečinok `/ (root)`.
+Oboje je nasadené a beží.
 
-Worker: postup a potrebné tajomstvá sú v [`worker/README.md`](worker/README.md).
+- **Stránka**: GitHub Pages, _Deploy from a branch_, vetva `main`, priečinok `/ (root)`.
+  Adresa: <https://rastislavsk.github.io/rackofci-energy-sro-fable/>
+- **Worker** `rackofci-energy-sro-fable`: nasadzuje sa sám pri pushnutí do `main` cez
+  Git integráciu Cloudflare. Postup, nastavenia buildu a potrebné tajomstvá sú
+  v [`worker/README.md`](worker/README.md).
+
+Zdravie systému sa dá skontrolovať jedným pohľadom na
+`https://rackofci-energy-sro-fable.rastislav-racek.workers.dev/status` — `"ok": true`
+znamená, že cron beží a obe časti dát sú čerstvé.

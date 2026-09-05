@@ -82,9 +82,18 @@ E2E testy nepoužívajú vlastné očakávané reťazce – volajú tú istú fu
 porovnávajú ju s DOM. Test tak nezlyhá pri zmene textu, ale zlyhá, keď sa appka rozíde
 s modelom.
 
-## Čo zatiaľ chýba
+## Vzťah k pôvodnej appke
 
-- Worker ešte nie je nasadený; appka dovtedy číta záložné zdroje pôvodnej appky
-  (`LEGACY_SOURCES` v `config.js`). Po nasadení a overení sa dá záloha odstrániť.
-- Fixtures sú syntetické, lebo vývojové prostredie nemá prístup na internet. Po nasadení
-  ich má zmysel nahradiť skutočnou odpoveďou oboch zdrojov.
+Pôvodná appka _Kedy zapínať spotrebiče_ beží ďalej a má vlastný Cloudflare Worker
+`pv-proxy`, ktorý číta ten istý kiosk. Preto zostávajú v `config.js` aj `LEGACY_SOURCES`:
+keď nový Worker vypadne, appka prečíta dáta odtiaľ. Kým starý systém beží, je to poistka
+zadarmo. Ak sa raz pôvodná appka vypne, treba `LEGACY_SOURCES` odstrániť spolu s ňou —
+inak by po nej ostala mŕtva závislosť.
+
+## Známe obmedzenia
+
+- Fixtures v `test/fixtures/` sú syntetické, vygenerované z bezoblačného modelu, nie
+  stiahnuté zo živých zdrojov. Sú deterministické, čo je pre testy výhoda; nezachytia
+  však zvláštnosti, ktoré skutočná odpoveď kiosku alebo Open-Meteo môže mať.
+- `pv` a `forecast` sa obnovujú rôzne často (5 minút a hodina), takže `updatedAt` oboch
+  častí sa bežne líši. `GET /status` preto posudzuje čerstvosť každej zvlášť.
