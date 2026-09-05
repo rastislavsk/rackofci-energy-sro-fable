@@ -39,9 +39,16 @@ a `x-data-stale`, keď je predpoveď staršia než tri hodiny. Iné cesty vracaj
    Settings → Build → Connect to Git, root directory `worker/`. Po každom pushnutí do
    `main` sa Worker nasadí sám.
 
-   Ak build na pull requestoch zlyhá na chýbajúcom `wrangler.toml`, nastav
-   **Version command** na `npx wrangler versions upload --config worker/wrangler.toml`.
-   Root directory sa na tento príkaz neaplikuje.
+   Pozor, dva príkazy v tom istom nastavení sa správajú rozdielne:
+
+   | Príkaz                              | Odkiaľ beží                           | Ako ho nastaviť                                              |
+   | ----------------------------------- | ------------------------------------- | ------------------------------------------------------------ |
+   | **Deploy command** (vetva `main`)   | z Root directory, teda už z `worker/` | `npx wrangler deploy` — **bez** `--config`                   |
+   | **Version command** (pull requesty) | z koreňa repozitára                   | `npx wrangler versions upload --config worker/wrangler.toml` |
+
+   Pridať `--config worker/wrangler.toml` aj do Deploy command je častá chyba: cesta sa
+   zdvojí na `worker/worker/wrangler.toml` a nasadenie zlyhá na
+   `ENOENT: no such file or directory`. Prepínač patrí len do Version command.
 
 4. **Cron** `*/5 * * * *` je v `wrangler.toml`, netreba ho klikať.
 
