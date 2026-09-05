@@ -1,4 +1,4 @@
-# Worker `rackofci-energy`
+# Worker `rackofci-energy-sro-fable`
 
 Jediný zdroj dát pre appku. Cron každých päť minút stiahne kiosk Huawei FusionSolar a raz
 za hodinu prepočíta predpoveď z Open-Meteo. Obe uloží do KV. `GET /` ich vráti spolu.
@@ -31,14 +31,14 @@ a `x-data-stale`, keď je predpoveď staršia než tri hodiny. Iné cesty vracaj
    Vrátené `id` patrí do `wrangler.toml` pod binding `PV_DATA`.
 
 2. **Tajomstvo s kiosk odkazom** (verejný odkaz na kiosk elektrárne, v kóde nie je).
-   V dashboarde: Workers & Pages → `rackofci-energy` → Settings → Variables and Secrets →
+   V dashboarde: Workers & Pages → `rackofci-energy-sro-fable` → Settings → Variables and Secrets →
    Add, názov `KIOSK_URL`, typ **Secret**. Alebo z príkazového riadku:
 
    ```bash
    npx wrangler secret put KIOSK_URL
    ```
 
-3. **Git integrácia**: Cloudflare dashboard → Workers & Pages → `rackofci-energy` →
+3. **Git integrácia**: Cloudflare dashboard → Workers & Pages → `rackofci-energy-sro-fable` →
    Settings → Build → Connect to Git, root directory `worker/`. Po každom pushnutí do
    `main` sa Worker nasadí sám.
 
