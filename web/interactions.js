@@ -137,9 +137,10 @@ function initDeviceChips(dom) {
 }
 
 /** Po pinch-zoome (najmä okolo grafov, kde majú .chart-wrap touch-action:none) sa stránka
- * niekedy vráti na zoom 1x, ale vizuálne ostane vodorovne posunutá mimo okraja displeja -
- * známa nezhoda visual/layout viewportu v mobilných prehliadačoch. Po ustálení gesta preto
- * posun skontrolujeme a opravíme. */
+ * niekedy vráti na zoom 1x, ale vizuálny viewport ostane posunutý od layout viewportu -
+ * známa nezhoda v mobilných prehliadačoch, prejaví sa orezaným obsahom pri okraji displeja.
+ * `window.scrollX` tento posun nevidí (appka nemá vodorovný scroll), signálom je
+ * `visualViewport.offsetLeft/offsetTop`. Po ustálení gesta preto posun skontrolujeme a opravíme. */
 function initViewportZoomRealign() {
     const vv = window.visualViewport;
     if (!vv) return;
@@ -148,7 +149,8 @@ function initViewportZoomRealign() {
     const checkAlignment = () => {
         clearTimeout(settleTimer);
         settleTimer = setTimeout(() => {
-            if (vv.scale <= 1.001 && window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+            if (vv.scale <= 1.001 && (vv.offsetLeft !== 0 || vv.offsetTop !== 0))
+                window.scrollTo(window.scrollX + vv.offsetLeft, window.scrollY + vv.offsetTop);
         }, 150);
     };
     vv.addEventListener('resize', checkAlignment);
