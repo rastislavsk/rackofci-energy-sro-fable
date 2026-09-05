@@ -1,0 +1,29 @@
+{
+  "name": "rackofci-energy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Kedy zapínať spotrebiče: živý výkon fotovoltiky, predpoveď výroby a odporúčania podľa tarify VT/NT.",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "TZ=Europe/Bratislava node --test --experimental-test-coverage --test-coverage-include='shared/**' --test-coverage-include='web/state.js' --test-coverage-lines=90 test/*.test.js worker/test/*.test.js",
+    "test:e2e": "playwright test",
+    "fixtures": "node test/fixtures/generate.js",
+    "serve": "http-server -p 8080 -c-1 .",
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.56.1",
+    "@types/node": "^22.20.1",
+    "eslint": "9.39.5",
+    "globals": "16.4.0",
+    "http-server": "14.1.1",
+    "prettier": "3.6.2",
+    "typescript": "5.9.3"
+  }
+}

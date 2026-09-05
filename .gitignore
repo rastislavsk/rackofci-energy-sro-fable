@@ -1,0 +1,7 @@
+node_modules/
+worker/node_modules/
+worker/dist/
+worker/.wrangler/
+playwright-report/
+test-results/
+.DS_Store
