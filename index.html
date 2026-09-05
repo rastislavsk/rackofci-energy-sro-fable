@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="sk">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#0a0a0a" />
+        <meta name="description" content="Kedy zapínať spotrebiče: živý výkon fotovoltiky, predpoveď výroby a odporúčania podľa tarify." />
+        <title>Račkofci Energy · Kedy zapínať spotrebiče</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+        />
+        <link rel="stylesheet" href="style.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+    </head>
+    <body>
+        <header class="appbar">
+            <div class="appbar-inner">
+                <div class="appbar-top">
+                    <span class="appbar-label">RAČKOFCI ENERGY s.r.o.</span>
+                    <div class="appbar-clock">
+                        <span id="header-status-dot" class="live-dot"></span>
+                        <time id="current-time-display">00:00</time>
+                    </div>
+                </div>
+                <div class="pv-updated-line"><span id="pv-updated">načítavam…</span></div>
+            </div>
+            <nav class="bottomnav" aria-label="Hlavná navigácia">
+                <div class="bottomnav-inner">
+                    <button id="nav-spotrebice" class="nav-item active" type="button" data-panel="spotrebice" aria-current="page">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z" /></svg>
+                        <span class="lbl">Spotrebiče</span>
+                    </button>
+                    <button id="nav-predpoved" class="nav-item" type="button" data-panel="predpoved">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="4" />
+                            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                        </svg>
+                        <span class="lbl">Predpoveď</span>
+                    </button>
+                    <button id="nav-7dni" class="nav-item" type="button" data-panel="7dni">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="3" y="4.5" width="18" height="16" rx="2.5" />
+                            <path d="M3 9.5h18M8 2.5v4M16 2.5v4M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2" />
+                        </svg>
+                        <span class="lbl">7 dní</span>
+                    </button>
+                    <button id="nav-zdielat" class="nav-item" type="button" data-panel="zdielat">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="18" cy="5" r="3" />
+                            <circle cx="6" cy="12" r="3" />
+                            <circle cx="18" cy="19" r="3" />
+                            <path d="M8.6 10.6l6.8-3.8M8.6 13.4l6.8 3.8" />
+                        </svg>
+                        <span class="lbl">Zdieľať</span>
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <main class="page" id="page">
+            <!-- PANEL: SPOTREBIČE -->
+            <section id="panel-spotrebice" class="panel panel-spotrebice" aria-labelledby="verdict-headline">
+                <div class="preview-banner hidden" id="preview-banner">
+                    <div class="preview-pill" id="preview-pill">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v5l3 3" />
+                        </svg>
+                        <span id="preview-time-label">Náhľad · --:--</span>
+                    </div>
+                    <button class="preview-reset" id="preview-reset" type="button">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M9 14l-4-4 4-4" />
+                            <path d="M5 10h9a5 5 0 015 5v1" />
+                        </svg>
+                        Teraz
+                    </button>
+                </div>
+
+                <div class="col-a">
+                    <button
+                        class="dial-hero card"
+                        id="dial-hero"
+                        type="button"
+                        data-panel="predpoved"
+                        aria-label="Aktuálny výkon, otvoriť predpoveď"
+                    >
+                        <div class="card-hd">Aktuálny výkon</div>
+                        <div class="badge-row"><span class="badge" id="verdict-eyebrow">—</span></div>
+                        <div class="dial-wrap">
+                            <svg class="dial-svg" viewBox="0 0 220 220" aria-hidden="true">
+                                <circle class="dial-track" cx="110" cy="110" r="92" />
+                                <circle id="dial-ring" class="dial-ring" cx="110" cy="110" r="92" transform="rotate(-90 110 110)" />
+                            </svg>
+                            <div class="dial-num">
+                                <span class="val" id="pv-power">–</span>
+                                <span class="unit" id="pv-power-unit">kW teraz</span>
+                            </div>
+                        </div>
+                    </button>
+
+                    <div class="verdict card" id="verdict">
+                        <div class="card-hd">Čo robiť teraz</div>
+                        <h1 id="verdict-headline">Načítavam…</h1>
+                        <p class="body" id="verdict-body"></p>
+                        <div class="go-row hidden" id="verdict-go-row"></div>
+                        <div class="go-legend">
+                            <span><i class="sw green"></i>najlepší čas</span>
+                            <span><i class="sw amber"></i>ok, ale drahšie</span>
+                            <span><i class="sw red"></i>radšej počkaj</span>
+                        </div>
+                        <div class="wait-chip hidden" id="verdict-wait-chip">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 7v5l3 3" />
+                            </svg>
+                            <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-b">
+                    <div class="footline">
+                        <span class="strip-head">
+                            <span class="chart-label">Priebeh dňa</span>
+                            <span class="chart-legend hidden" id="strip-legend">
+                                <span class="hidden" id="strip-legend-real"><i class="leg-line-real"></i>namerané</span>
+                                <span><i class="leg-dash-green"></i>predpoveď</span>
+                            </span>
+                        </span>
+                        <span class="season-indicator" id="season-indicator">Leto</span>
+                    </div>
+                    <div class="daystrip-wrap" id="daystrip-wrap">
+                        <div class="daystrip" id="daystrip"></div>
+                        <div class="strip-now-ghost hidden" id="strip-now-ghost">
+                            <span class="strip-now-ghost-dot"></span>
+                            <span class="strip-now-ghost-label">teraz</span>
+                        </div>
+                        <div class="strip-marker" id="strip-now-marker">
+                            <span class="strip-marker-dot"></span>
+                            <div class="drag-tooltip hidden" id="drag-tooltip">--:--</div>
+                            <button
+                                class="strip-marker-handle"
+                                id="strip-marker-handle"
+                                type="button"
+                                aria-label="Potiahnutím zobrazíš iný čas dňa"
+                            >
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3" /></svg>
+                            </button>
+                        </div>
+                        <div class="strip-ticks" aria-hidden="true">
+                            <span>00</span><span>06</span><span>12</span><span>18</span><span>24</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL: PREDPOVEĎ -->
+            <section id="panel-predpoved" class="panel hidden" aria-labelledby="forecast-title">
+                <div class="section-head">
+                    <h2 class="section-title" id="forecast-title">Predpoveď výroby</h2>
+                    <div class="section-sub" id="forecast-sub"></div>
+                </div>
+                <div class="utabs" role="tablist">
+                    <button id="day-btn-today" class="utab active" type="button" role="tab" data-day="today" aria-selected="true">
+                        Dnes
+                    </button>
+                    <button id="day-btn-tomorrow" class="utab" type="button" role="tab" data-day="tomorrow" aria-selected="false">
+                        Zajtra
+                    </button>
+                </div>
+                <div class="stat-pair">
+                    <div class="stat">
+                        <span class="lbl">Špička</span>
+                        <div class="cols">
+                            <div class="col-pred">
+                                <span class="num" id="forecast-peak">–</span><span class="u"> kW</span
+                                ><span class="subtxt" id="forecast-peak-time">–</span>
+                            </div>
+                            <div class="col-real hidden" id="forecast-peak-real-col">
+                                <span class="num" id="forecast-peak-real"></span><span class="u"> kW</span
+                                ><span class="subtxt" id="forecast-peak-real-time"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <span class="lbl">Odhad výroby</span>
+                        <div class="cols">
+                            <div class="col-pred">
+                                <span class="num" id="forecast-total">–</span><span class="u"> kWh</span
+                                ><span class="subtxt">za celý deň</span>
+                            </div>
+                            <div class="col-real hidden" id="forecast-total-real-col">
+                                <span class="num" id="forecast-total-real"></span><span class="u"> kWh</span
+                                ><span class="subtxt">doteraz</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-top">
+                        <span class="lbl">Priebeh výroby (kW)</span>
+                        <span id="forecast-now-badge" class="chart-now hidden"
+                            ><span class="live-dot"></span><span id="forecast-now-time">teraz</span></span
+                        >
+                    </div>
+                    <div class="chart-wrap" id="forecast-chart-wrap">
+                        <svg id="forecast-chart" viewBox="0 0 320 150" preserveAspectRatio="none" aria-hidden="true"></svg>
+                        <div id="forecast-tooltip" class="chart-tooltip" role="status">
+                            <div class="tt-time">--:--</div>
+                            <div class="tt-kw">-- kW</div>
+                        </div>
+                    </div>
+                    <div class="chart-footer">
+                        <div class="chart-legend">
+                            <span><i class="leg-line"></i>predpoveď</span>
+                            <span><i class="leg-dash"></i>oblačnosť</span>
+                            <span id="forecast-live-legend" class="hidden"><i class="leg-line-real"></i>skutočná výroba</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="msg-block">
+                    <h3 id="forecast-message-title">Načítavam…</h3>
+                    <p id="forecast-message-body">Predpoveď sa načítava.</p>
+                </div>
+            </section>
+
+            <!-- PANEL: 7 DNÍ -->
+            <section id="panel-7dni" class="panel hidden" aria-labelledby="week-title">
+                <div class="section-head">
+                    <h2 class="section-title" id="week-title">Predpoveď na 7 dní</h2>
+                    <div class="section-sub" id="week-sub"></div>
+                </div>
+                <div class="stat-trio">
+                    <div class="stat">
+                        <div class="stat-top"><span class="lbl">Dnes</span><span class="stat-badge" id="week-today-badge"></span></div>
+                        <div class="stat-num-row"><span class="num" id="week-today">–</span><span class="u">kWh</span></div>
+                        <div class="stat-meta" id="week-today-meta"></div>
+                        <div class="stat-progress" id="week-today-progress">
+                            <div class="progress-track"><div class="progress-fill" id="week-today-progress-fill"></div></div>
+                            <div class="progress-caption">
+                                <span id="week-today-progress-txt"></span><span id="week-today-progress-pct"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-top"><span class="lbl">Zajtra</span><span class="stat-badge" id="week-tomorrow-badge"></span></div>
+                        <div class="stat-num-row">
+                            <span class="num" id="week-tomorrow">–</span><span class="u">kWh</span
+                            ><span class="trend" id="week-tomorrow-trend"></span>
+                        </div>
+                        <div class="stat-meta" id="week-tomorrow-meta"></div>
+                    </div>
+                    <div class="stat hi">
+                        <div class="stat-top"><span class="lbl">7 dní spolu</span></div>
+                        <div class="stat-num-row"><span class="num" id="week-total">–</span><span class="u">kWh</span></div>
+                        <div class="stat-meta" id="week-total-meta"></div>
+                    </div>
+                </div>
+                <div class="week-grid">
+                    <section class="week-block">
+                        <div class="chart-top">
+                            <span class="lbl">Mapa výroby (kW) · hodina × deň</span
+                            ><span class="heat-scale mono" id="week-heat-scale"></span>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-wrap" id="week-heat-wrap">
+                                <svg id="week-heat" class="week-svg" aria-hidden="true"></svg>
+                                <div id="week-heat-tooltip" class="chart-tooltip">
+                                    <div class="tt-time"></div>
+                                    <div class="tt-kw"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="week-block">
+                        <div class="chart-top"><span class="lbl">Denná výroba (kWh)</span></div>
+                        <div class="stat-line" id="week-bars-stat"></div>
+                        <div class="chart-card">
+                            <div class="chart-wrap" id="week-bars-wrap">
+                                <svg id="week-bars" class="week-svg" aria-hidden="true"></svg>
+                                <div id="week-bars-tooltip" class="chart-tooltip">
+                                    <div class="tt-time"></div>
+                                    <div class="tt-kw"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-footer plain">
+                            <div class="chart-legend">
+                                <span><i class="leg-sq"></i>predpoveď</span><span><i class="leg-dash"></i>jasná obloha (strop)</span>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="week-block">
+                        <div class="chart-top"><span class="lbl">Priebeh výroby</span></div>
+                        <div class="utabs" id="week-day-tabs" role="tablist"></div>
+                        <div class="stat-line" id="week-curve-stat"></div>
+                        <div class="chart-card">
+                            <div class="chart-wrap" id="week-curve-wrap">
+                                <svg
+                                    id="week-curve"
+                                    class="week-svg"
+                                    viewBox="0 0 320 150"
+                                    preserveAspectRatio="none"
+                                    aria-hidden="true"
+                                ></svg>
+                                <div id="week-curve-tooltip" class="chart-tooltip">
+                                    <div class="tt-time"></div>
+                                    <div class="tt-kw"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-footer">
+                            <div class="chart-legend">
+                                <span><i class="leg-line"></i>predpoveď</span><span><i class="leg-dash"></i>oblačnosť</span>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="week-block">
+                        <div class="chart-top"><span class="lbl">Prehľad dní</span></div>
+                        <div class="week-tbl-wrap">
+                            <table class="week-table">
+                                <thead>
+                                    <tr>
+                                        <th>Deň</th>
+                                        <th>Výroba</th>
+                                        <th>Obloha</th>
+                                        <th>Využitie</th>
+                                        <th>Špička</th>
+                                        <th>Oblačnosť</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="week-tbody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                <div class="msg-block">
+                    <h3 id="week-msg-title">Načítavam…</h3>
+                    <p id="week-msg-body">Týždenná predpoveď sa načítava.</p>
+                </div>
+            </section>
+
+            <!-- PANEL: ZDIEĽAŤ -->
+            <section id="panel-zdielat" class="panel hidden" aria-labelledby="share-title">
+                <div class="section-head centered">
+                    <h2 class="section-title" id="share-title">Zdieľať appku</h2>
+                    <div class="section-sub">Naskenuj alebo pošli link na iný telefón</div>
+                </div>
+                <div class="share-panel">
+                    <div class="qr-frame" id="qrcode" role="img" aria-label="QR kód s odkazom na appku"></div>
+                    <a id="share-whatsapp" href="#" target="_blank" rel="noopener" class="wa-btn">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.669.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.001 2C6.478 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5.003L2.05 22l5.096-1.293A9.958 9.958 0 0012.001 22c5.523 0 10-4.477 10-10S17.524 2 12.001 2zm0 18.161c-1.635 0-3.146-.457-4.436-1.246l-.318-.19-3.3.837.882-3.222-.207-.331a8.117 8.117 0 01-1.24-4.328c0-4.5 3.66-8.161 8.16-8.161 4.502 0 8.161 3.66 8.161 8.161 0 4.502-3.66 8.161-8.161 8.161z"
+                            />
+                        </svg>
+                        Zdieľať cez WhatsApp
+                    </a>
+                    <p class="share-url mono" id="share-url"></p>
+                </div>
+            </section>
+        </main>
+
+        <script type="module" src="app.js"></script>
+    </body>
+</html>

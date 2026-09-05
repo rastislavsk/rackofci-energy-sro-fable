@@ -1,0 +1,1301 @@
+/* ============================================================================
+   Račkofci Energy · Kedy zapínať spotrebiče
+   Tmavé rozhranie s tromi sémantickými farbami tarify (green/amber/red).
+   Všetky farby, medzery a písma idú cez tokeny v :root. Sekcie kopírujú poradie v index.html.
+   ============================================================================ */
+
+/* ---- Tokeny ---------------------------------------------------------------- */
+:root {
+    --bg: #0a0a0a;
+    --card-bg: #151614;
+    --ink: #f2f0ea;
+    --ink-70: rgba(242, 240, 234, 0.94);
+    --ink-45: rgba(242, 240, 234, 0.64);
+    --ink-35: rgba(242, 240, 234, 0.54);
+    --ink-20: rgba(242, 240, 234, 0.26);
+    --ink-12: rgba(242, 240, 234, 0.16);
+    --ink-08: rgba(242, 240, 234, 0.1);
+    --ink-05: rgba(242, 240, 234, 0.06);
+
+    --green: #9ef25b;
+    --amber: #ffc24b;
+    --red: #ff6b57;
+    --green-rgb: 158, 242, 91;
+    --amber-rgb: 255, 194, 75;
+    --red-rgb: 255, 107, 87;
+
+    --accent: var(--ink-20);
+
+    --font-body: 'Space Grotesk', -apple-system, 'Segoe UI', Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --fs-xs: 10px;
+    --fs-sm: 12px;
+    --fs-md: 14px;
+    --fs-lg: 17px;
+    --fs-xl: 26px;
+    --fs-num: 44px;
+
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 22px;
+    --sp-6: 32px;
+
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-pill: 999px;
+
+    --dur: 0.35s;
+    --page-max: 480px;
+    --nav-h: 72px;
+}
+
+/* ---- Základ ---------------------------------------------------------------- */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+html {
+    color-scheme: dark;
+}
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at 20% 0%, rgba(var(--amber-rgb), 0.14) 0%, rgba(var(--amber-rgb), 0) 42%),
+        radial-gradient(circle at 82% 5%, rgba(var(--green-rgb), 0.13) 0%, rgba(var(--green-rgb), 0) 46%), var(--bg);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--fs-md);
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+}
+button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+svg {
+    display: block;
+}
+.mono {
+    font-family: var(--font-mono);
+}
+.card {
+    display: block;
+    width: 100%;
+    text-align: left;
+}
+.card-hd {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-35);
+    margin-bottom: var(--sp-2);
+}
+.lbl {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-35);
+}
+b {
+    font-weight: 600;
+    color: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* ---- Hlavička a navigácia -------------------------------------------------- */
+.appbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--bg);
+    border-bottom: 1px solid var(--ink-08);
+}
+.appbar-inner {
+    max-width: var(--page-max);
+    margin: 0 auto;
+    padding: 18px 20px 12px;
+}
+.appbar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.appbar-label {
+    font-family: var(--font-mono);
+    font-size: 16.5px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: #fff;
+}
+.appbar-clock {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--ink-70);
+}
+.pv-updated-line {
+    margin-top: var(--sp-1);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-35);
+    letter-spacing: 0.04em;
+}
+.live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(var(--green-rgb), 0.55);
+    transition:
+        background-color var(--dur),
+        box-shadow var(--dur);
+}
+.live-dot.status-red {
+    background: var(--red);
+    box-shadow: 0 0 8px rgba(var(--red-rgb), 0.55);
+}
+.live-dot.status-amber {
+    background: var(--amber);
+    box-shadow: 0 0 8px rgba(var(--amber-rgb), 0.55);
+}
+
+.bottomnav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    background: rgba(10, 10, 10, 0.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--ink-08);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.bottomnav-inner {
+    max-width: var(--page-max);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 0 10px;
+    color: var(--ink-35);
+    position: relative;
+    transition: color var(--dur);
+}
+.nav-item svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.nav-item .lbl {
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    color: inherit;
+}
+.nav-item.active {
+    color: var(--ink);
+}
+.nav-item.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 30%;
+    right: 30%;
+    height: 2px;
+    background: var(--green);
+    border-radius: 0 0 2px 2px;
+}
+
+/* ---- Stránka a karty ------------------------------------------------------- */
+.page {
+    max-width: var(--page-max);
+    margin: 0 auto;
+    padding: var(--sp-5) 20px calc(var(--nav-h) + 40px);
+}
+.section-head {
+    margin-bottom: var(--sp-4);
+}
+.section-head.centered {
+    text-align: center;
+}
+.section-title {
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+}
+.section-sub {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-35);
+    margin-top: var(--sp-1);
+}
+.msg-block {
+    margin-top: var(--sp-5);
+    padding: var(--sp-4);
+    background: var(--card-bg);
+    border: 1px solid var(--ink-08);
+    border-radius: var(--radius-md);
+}
+.msg-block h3 {
+    margin: 0 0 var(--sp-1);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    text-wrap: balance;
+}
+.msg-block p {
+    margin: 0;
+    color: var(--ink-45);
+}
+
+/* ---- Spotrebiče: náhľad času ---------------------------------------------- */
+.preview-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-4);
+}
+.preview-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px dashed color-mix(in srgb, var(--preview-accent, var(--amber)) 50%, transparent);
+    background: color-mix(in srgb, var(--preview-accent, var(--amber)) 10%, transparent);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--preview-accent, var(--amber));
+}
+.preview-pill svg,
+.preview-reset svg,
+.wait-chip svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+.preview-reset {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--preview-accent, var(--amber));
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--bg);
+}
+.panel-spotrebice.preview-dim .dial-hero,
+.panel-spotrebice.preview-dim .verdict {
+    opacity: 0.55;
+    transition: opacity 0.15s;
+}
+
+/* ---- Spotrebiče: ciferník --------------------------------------------------- */
+.dial-hero {
+    text-align: center;
+    padding-top: var(--sp-1);
+    margin-bottom: var(--sp-5);
+}
+.badge-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--sp-1);
+}
+.badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    transition:
+        color var(--dur),
+        background-color var(--dur),
+        border-color var(--dur);
+}
+.dial-wrap {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin: 18px 0 var(--sp-1);
+}
+.dial-svg {
+    width: 208px;
+    height: 208px;
+}
+.dial-track {
+    fill: none;
+    stroke: var(--ink-08);
+    stroke-width: 14;
+}
+.dial-ring {
+    fill: none;
+    stroke: var(--ink-20);
+    stroke-width: 14;
+    stroke-linecap: round;
+    stroke-dasharray: 578;
+    stroke-dashoffset: 578;
+    transition:
+        stroke-dashoffset 0.6s ease,
+        stroke var(--dur);
+}
+.dial-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+.dial-num .val {
+    font-family: var(--font-mono);
+    font-size: var(--fs-num);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    transition: color var(--dur);
+}
+.dial-num .unit {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-35);
+}
+
+/* ---- Spotrebiče: verdikt a spotrebiče ------------------------------------- */
+.verdict {
+    margin-bottom: var(--sp-6);
+}
+.verdict h1 {
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    margin: 0 0 var(--sp-2);
+    text-wrap: balance;
+}
+.verdict .body {
+    margin: 0 0 var(--sp-4);
+    color: var(--ink-45);
+    font-size: 15px;
+}
+.go-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-3);
+}
+.go-chip {
+    --chip: var(--ink-20);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 4px 8px;
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in srgb, var(--chip) 35%, transparent);
+    background: color-mix(in srgb, var(--chip) 12%, transparent);
+    color: var(--chip);
+    transition:
+        color var(--dur),
+        background-color var(--dur),
+        border-color var(--dur);
+}
+.go-chip svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.go-chip .go-name {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.go-chip .go-power {
+    display: none;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-45);
+}
+.go-chip.tier-green {
+    --chip: var(--green);
+}
+.go-chip.tier-amber {
+    --chip: var(--amber);
+}
+.go-chip.tier-red {
+    --chip: var(--red);
+}
+.go-chip.state-no {
+    opacity: 0.35;
+    text-decoration: line-through;
+}
+.chip-tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 0.15s,
+        transform 0.15s;
+}
+.go-chip.tooltip-open .chip-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.go-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-35);
+    margin-bottom: var(--sp-3);
+}
+.go-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.sw {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    display: inline-block;
+}
+.sw.green {
+    background: var(--green);
+}
+.sw.amber {
+    background: var(--amber);
+}
+.sw.red {
+    background: var(--red);
+}
+.wait-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid color-mix(in srgb, var(--green) 40%, transparent);
+    background: color-mix(in srgb, var(--green) 12%, transparent);
+    color: var(--green);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+}
+
+/* ---- Spotrebiče: pás dňa --------------------------------------------------- */
+.footline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-2);
+}
+.strip-head {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+}
+.chart-label,
+.season-indicator {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-35);
+}
+.season-indicator {
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--ink-12);
+}
+.daystrip-wrap {
+    position: relative;
+    padding-bottom: 18px;
+    cursor: pointer;
+    touch-action: pan-y;
+}
+.daystrip {
+    height: 60px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--ink-05);
+}
+.daystrip svg {
+    width: 100%;
+    height: 100%;
+}
+.daystrip .band.green {
+    fill: rgba(var(--green-rgb), 0.14);
+}
+.daystrip .band.amber {
+    fill: rgba(var(--amber-rgb), 0.12);
+}
+.daystrip .band.red {
+    fill: rgba(var(--red-rgb), 0.16);
+}
+.strip-stop-a {
+    stop-color: var(--green);
+    stop-opacity: 0.4;
+}
+.strip-stop-b {
+    stop-color: var(--green);
+    stop-opacity: 0;
+}
+.strip-area {
+    fill: url(#strip-fill);
+}
+.strip-line {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+.strip-line.future {
+    stroke-opacity: 0.5;
+    stroke-dasharray: 7 6;
+}
+.strip-ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-35);
+}
+.strip-marker,
+.strip-now-ghost {
+    position: absolute;
+    top: 0;
+    height: 60px;
+    width: 0;
+    pointer-events: none;
+}
+.strip-marker::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -0.5px;
+    width: 1px;
+    background: var(--ink-45);
+}
+.strip-marker-dot,
+.strip-now-ghost-dot {
+    position: absolute;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--ink);
+    box-shadow: 0 0 0 3px var(--bg);
+}
+.strip-now-ghost-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--ink-45);
+}
+.strip-now-ghost-label {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-45);
+}
+.strip-marker-handle {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    transform: translate(-50%, 2px);
+    width: 34px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    background: var(--ink);
+    color: var(--bg);
+    pointer-events: auto;
+    touch-action: none;
+    cursor: grab;
+}
+.strip-marker-handle svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.drag-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ---- Predpoveď a 7 dní: štatistiky ----------------------------------------- */
+.utabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: var(--sp-4);
+}
+.utab {
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--ink-12);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-45);
+    transition:
+        color var(--dur),
+        background-color var(--dur);
+}
+.utab.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+}
+.stat-pair,
+.stat-trio {
+    display: grid;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-4);
+}
+.stat-pair {
+    grid-template-columns: 1fr 1fr;
+}
+/* Na mobile sú tri rovnaké stĺpce príliš úzke (číslo aj popisky sa lámu),
+   preto Dnes a Zajtra vedľa seba a súčet cez celú šírku. */
+.stat-trio {
+    grid-template-columns: 1fr 1fr;
+}
+.stat-trio .stat.hi {
+    grid-column: 1 / -1;
+}
+.stat {
+    padding: var(--sp-3);
+    background: var(--card-bg);
+    border: 1px solid var(--ink-08);
+    border-radius: var(--radius-md);
+    min-width: 0;
+}
+.stat.hi {
+    border-color: color-mix(in srgb, var(--green) 30%, transparent);
+}
+.stat .cols {
+    display: flex;
+    gap: var(--sp-3);
+    margin-top: 6px;
+}
+.stat .num {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+.stat .u {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-35);
+    margin-left: 3px;
+}
+.stat .subtxt {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-35);
+    margin-top: 2px;
+}
+.col-real .num {
+    color: var(--green);
+}
+.stat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+    min-height: 16px;
+}
+.stat-num-row {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+.stat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-45);
+}
+.stat-badge svg,
+.cloud-cell svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+.stat-badge.sun,
+.cloud-cell.sun {
+    color: var(--amber);
+}
+.cloud-cell.partly {
+    color: var(--ink-45);
+}
+.stat-meta {
+    display: none;
+}
+.trend {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    margin-left: 6px;
+}
+.trend.up {
+    color: var(--green);
+}
+.trend.down {
+    color: var(--red);
+}
+.stat-progress {
+    display: none;
+    margin-top: var(--sp-2);
+}
+.stat-progress.has-data {
+    display: block;
+}
+.progress-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ink-12);
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    background: var(--green);
+    transition: width 0.6s ease;
+}
+.progress-caption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--sp-2);
+    justify-content: space-between;
+    margin-top: var(--sp-1);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-35);
+}
+.stat-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-35);
+}
+
+/* ---- Grafy ------------------------------------------------------------------ */
+.chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--ink-08);
+    border-radius: var(--radius-md);
+    padding: var(--sp-3) var(--sp-3) var(--sp-2);
+}
+.chart-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-2);
+}
+.chart-now {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-45);
+}
+.chart-wrap {
+    position: relative;
+    touch-action: none;
+}
+.chart-wrap svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+#forecast-chart,
+#week-curve {
+    aspect-ratio: 320 / 150;
+}
+.chart-wrap .grid {
+    stroke: var(--ink-08);
+    stroke-width: 1;
+}
+.axis-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    fill: var(--ink-35);
+}
+.day-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--ink-45);
+    cursor: pointer;
+}
+.day-label.today {
+    fill: var(--ink);
+}
+.day-label.sel {
+    fill: var(--green);
+    font-weight: 600;
+}
+.line-forecast {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+.line-cloud {
+    fill: none;
+    stroke: rgba(242, 240, 234, 0.52);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+.line-real {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+.now-line {
+    stroke: var(--ink-45);
+    stroke-width: 1.2;
+    stroke-dasharray: 2 3;
+    vector-effect: non-scaling-stroke;
+}
+.dot-real {
+    fill: var(--green);
+    stroke: var(--bg);
+    stroke-width: 2;
+}
+.heat-cell {
+    fill: var(--green);
+    cursor: pointer;
+}
+.heat-cell[data-empty] {
+    fill: var(--ink);
+}
+.week-row-sel {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.2;
+    stroke-opacity: 0.55;
+    pointer-events: none;
+}
+.bar {
+    fill: var(--ink-45);
+}
+.bar.sel {
+    fill: var(--ink);
+}
+.clear-cap {
+    stroke: var(--ink-45);
+    stroke-width: 1.3;
+    stroke-dasharray: 3 2;
+}
+.bar-value {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    fill: var(--ink-45);
+}
+.bar-value.sel {
+    fill: var(--ink);
+}
+.bar-hit {
+    fill: transparent;
+    cursor: pointer;
+}
+.chart-tooltip {
+    position: absolute;
+    transform: translate(-50%, calc(-100% - 10px));
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+    z-index: 5;
+}
+.chart-tooltip.visible {
+    opacity: 1;
+}
+.chart-tooltip .tt-time {
+    font-weight: 700;
+}
+.chart-footer {
+    margin-top: var(--sp-2);
+    padding-top: var(--sp-2);
+    border-top: 1px solid var(--ink-08);
+}
+.chart-footer.plain {
+    border-top: 0;
+    padding-top: 0;
+    margin-top: 2px;
+}
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-35);
+}
+.chart-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.leg-line,
+.leg-line-real,
+.leg-dash,
+.leg-dash-green {
+    width: 14px;
+    height: 0;
+    border-top: 2px solid var(--ink);
+    display: inline-block;
+}
+.leg-line-real {
+    border-color: var(--green);
+}
+.leg-dash {
+    border-top-style: dashed;
+    border-color: var(--ink-45);
+}
+.leg-dash-green {
+    border-top-style: dashed;
+    border-color: var(--green);
+}
+.leg-sq {
+    width: 8px;
+    height: 8px;
+    background: var(--ink-45);
+    border-radius: 2px;
+    display: inline-block;
+}
+.heat-scale {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    color: var(--ink-35);
+}
+.heat-scale .sw {
+    display: inline-flex;
+    gap: 1px;
+    width: auto;
+    height: auto;
+}
+.heat-scale .sw i {
+    width: 7px;
+    height: 7px;
+    border-radius: 1px;
+    background: var(--green);
+    display: inline-block;
+}
+
+/* ---- 7 dní: bloky a tabuľka ------------------------------------------------ */
+.week-grid {
+    display: grid;
+    gap: var(--sp-5);
+}
+.week-block {
+    margin: 0;
+}
+.week-tbl-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--ink-08);
+    border-radius: var(--radius-md);
+    background: var(--card-bg);
+}
+.week-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-sm);
+}
+.week-table th,
+.week-table td {
+    padding: 9px 10px;
+    text-align: left;
+    white-space: nowrap;
+}
+.week-table th {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-35);
+    border-bottom: 1px solid var(--ink-08);
+}
+.week-table tbody tr {
+    cursor: pointer;
+    border-bottom: 1px solid var(--ink-05);
+}
+.week-table tbody tr.sel {
+    background: var(--ink-05);
+}
+.week-table tbody tr.today td:first-child {
+    color: var(--green);
+}
+.week-table .sub {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-35);
+}
+.cloud-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--ink-45);
+}
+
+/* ---- Zdieľať ---------------------------------------------------------------- */
+.share-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-4);
+}
+.qr-frame {
+    padding: var(--sp-3);
+    background: #fff;
+    border-radius: var(--radius-lg);
+    min-width: 280px;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.qr-frame img,
+.qr-frame canvas {
+    display: block;
+}
+.wa-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: 12px 20px;
+    border-radius: var(--radius-pill);
+    background: #25d366;
+    color: #06250f;
+    font-weight: 600;
+    text-decoration: none;
+}
+.wa-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+.share-url {
+    font-size: var(--fs-xs);
+    color: var(--ink-35);
+    word-break: break-all;
+    text-align: center;
+    margin: 0;
+}
+
+/* ---- Širšie obrazovky ----------------------------------------------------- */
+@media (min-width: 768px) {
+    :root {
+        --page-max: 720px;
+    }
+    .go-chip .go-power {
+        display: block;
+    }
+    .stat-trio {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .stat-trio .stat.hi {
+        grid-column: auto;
+    }
+    .stat-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--sp-2) var(--sp-3);
+        margin-top: 6px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--ink-35);
+    }
+    #forecast-chart,
+    #week-curve {
+        aspect-ratio: 680 / 420;
+    }
+    .week-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (min-width: 1024px) {
+    :root {
+        --page-max: 1120px;
+    }
+    .page {
+        padding-bottom: var(--sp-6);
+    }
+    .bottomnav {
+        position: sticky;
+        bottom: auto;
+        border-top: 0;
+        border-bottom: 1px solid var(--ink-08);
+        background: var(--bg);
+    }
+    .bottomnav-inner {
+        max-width: var(--page-max);
+        grid-template-columns: repeat(4, max-content);
+        gap: var(--sp-6);
+        padding: 0 20px;
+    }
+    .nav-item {
+        flex-direction: row;
+        padding: 10px 0;
+    }
+    .nav-item.active::after {
+        top: auto;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+    }
+    .page[data-panel='spotrebice'],
+    .page[data-panel='predpoved'] {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--sp-6);
+        align-items: start;
+    }
+    /* Zámerne trieda, nie #panel-spotrebice: pravidlo s ID by prebilo utilitu .hidden
+       a karta by ostala viditeľná aj po prepnutí na inú kartu. */
+    .panel-spotrebice {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--sp-4);
+    }
+    .panel-spotrebice .preview-banner {
+        grid-column: 1 / -1;
+    }
+    .verdict {
+        margin-bottom: var(--sp-4);
+    }
+}
+
+/* ---- Utility (zámerne posledné) --------------------------------------------
+   .hidden má rovnakú špecificitu ako komponentové triedy (.preview-banner,
+   .chart-now, .stat-badge...), takže o výsledku rozhoduje poradie v súbore.
+   Preto stojí až za všetkými komponentmi a media queries - inak by ho neskoršie
+   `display: flex` prebilo a skryté prvky by ostali viditeľné. Žiadny !important. */
+.hidden {
+    display: none;
+}

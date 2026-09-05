@@ -1,0 +1,9 @@
+node_modules
+worker/node_modules
+worker/dist
+playwright-report
+test-results
+test/fixtures/*.json
+package-lock.json
+worker/package-lock.json
+test/golden/*.json

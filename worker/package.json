@@ -1,0 +1,13 @@
+{
+  "name": "rackofci-energy-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "check": "wrangler deploy --dry-run --outdir dist",
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "wrangler": "4.128.0"
+  }
+}
