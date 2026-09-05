@@ -136,6 +136,25 @@ function initDeviceChips(dom) {
     });
 }
 
+/** Po pinch-zoome (najmä okolo grafov, kde majú .chart-wrap touch-action:none) sa stránka
+ * niekedy vráti na zoom 1x, ale vizuálne ostane vodorovne posunutá mimo okraja displeja -
+ * známa nezhoda visual/layout viewportu v mobilných prehliadačoch. Po ustálení gesta preto
+ * posun skontrolujeme a opravíme. */
+function initViewportZoomRealign() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
+    let settleTimer;
+    const checkAlignment = () => {
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(() => {
+            if (vv.scale <= 1.001 && window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+        }, 150);
+    };
+    vv.addEventListener('resize', checkAlignment);
+    vv.addEventListener('scroll', checkAlignment);
+}
+
 /** Hodiny, obnova dát, návrat z pozadia a zmeny šírky okna. @param {Store} store @param {{ wide: MediaQueryList, desktop: MediaQueryList }} mq */
 function initTicks(store, mq) {
     const refresh = async () => {
@@ -158,6 +177,7 @@ function initTicks(store, mq) {
 
 /** @param {Store} store @param {Dom} dom @param {{ wide: MediaQueryList, desktop: MediaQueryList }} mq */
 export function initInteractions(store, dom, mq) {
+    initViewportZoomRealign();
     initNavigation(store, dom);
     initTimePreview(store, dom);
     initTapTooltipClosing();
