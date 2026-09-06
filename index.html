@@ -110,8 +110,12 @@
                              žije už len tu, na žiadnej šírke sa neduplikuje nad ciferníkom - uvoľnené
                              miesto tam využíva väčší ciferník (viď .dial-svg v style.css). Správa
                              o predpovedi dňa je tu tiež vždy (aj na desktope); v karte Predpoveď sa
-                             na desktope už neduplikuje, na mobile a tablete áno (viď forecastMsgBlock). -->
+                             na desktope už neduplikuje, na mobile a tablete áno (viď forecastMsgBlock).
+                             Pred prvou a za poslednou reálnou stránkou je neviditeľný klon poslednej/
+                             prvej (obsah dopĺňa JS, viď syncPagerClones v spotrebice.js) - vďaka nim
+                             listovanie pôsobí ako kolotoč (initVerdictPager v interactions.js). -->
                         <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán" tabindex="0">
+                            <div class="pager-page" id="verdict-page-clone-start" aria-hidden="true"></div>
                             <div class="pager-page pager-page-eyebrow" id="verdict-page-eyebrow">
                                 <span class="badge" id="verdict-eyebrow-page">—</span>
                             </div>
@@ -140,6 +144,7 @@
                                     <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
                                 </div>
                             </div>
+                            <div class="pager-page" id="verdict-page-clone-end" aria-hidden="true"></div>
                         </div>
                         <div class="pager-dots" id="verdict-dots">
                             <button class="pager-dot active" type="button" data-verdict-page="0" aria-label="Tarifa a slnko"></button>
