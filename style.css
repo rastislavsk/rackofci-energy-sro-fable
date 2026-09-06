@@ -498,7 +498,6 @@ b {
 }
 .go-chip {
     --chip: var(--ink-20);
-    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -547,11 +546,11 @@ b {
     opacity: 0.35;
     text-decoration: line-through;
 }
+/* Position: fixed, súradnice dopočíta JS pri kliku - chip je v posúvateľnom pageri
+   (overflow-x: auto), ktorý by inak tooltip nad sebou orezal. */
 .chip-tooltip {
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%) translateY(4px);
+    position: fixed;
+    transform: translate(-50%, calc(-100% - 6px));
     padding: 4px 8px;
     border-radius: var(--radius-sm);
     background: var(--ink);
@@ -561,13 +560,11 @@ b {
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
-    transition:
-        opacity 0.15s,
-        transform 0.15s;
+    z-index: 40;
+    transition: opacity 0.15s;
 }
-.go-chip.tooltip-open .chip-tooltip {
+.chip-tooltip.visible {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
 }
 .go-legend {
     display: flex;

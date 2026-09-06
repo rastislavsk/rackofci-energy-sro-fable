@@ -64,6 +64,20 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     expect(errors).toEqual([]);
 });
 
+test('klik na spotrebič (mobil) ukáže tooltip s príkonom, nie je orezaný pagerom', async ({ page }) => {
+    await openApp(page);
+    const chip = page.locator('#verdict-go-row .go-chip').first();
+    const tooltip = page.locator('#verdict-chip-tooltip');
+    await expect(tooltip).not.toHaveClass(/visible/);
+    await chip.click();
+    await expect(tooltip).toHaveClass(/visible/);
+    await expect(tooltip).toHaveText(await chip.getAttribute('data-power'));
+    await expect(tooltip).toBeInViewport();
+    // Druhý klik na ten istý chip tooltip zavrie.
+    await chip.click();
+    await expect(tooltip).not.toHaveClass(/visible/);
+});
+
 test('verdikt sa listuje do strán: teraz, spotrebiče, kedy bude lepšie', async ({ page }) => {
     const { instant, wall } = atTime('09:00');
     // Fixtures nemajú pred sebou silnejšie okno, bez tejto úpravy by čakací čas nikdy nevznikol.
