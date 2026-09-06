@@ -39,6 +39,7 @@ function spotrebiceDom() {
         verdictPageWait: byId('verdict-page-wait'),
         verdictDots: byId('verdict-dots'),
         verdictDotButtons: /** @type {HTMLElement[]} */ (Array.from(byId('verdict-dots').querySelectorAll('.pager-dot'))),
+        verdictDotWait: byId('verdict-dot-wait'),
         verdictWaitTime: byId('verdict-wait-time'),
         stripLegend: byId('strip-legend'),
         stripLegendReal: byId('strip-legend-real'),

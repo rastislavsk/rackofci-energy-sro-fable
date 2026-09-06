@@ -26,18 +26,16 @@ function devicesHtml(devices) {
         .join('');
 }
 
-/** Listovanie verdiktu: druhá stránka je len vtedy, keď model pozná čas "lepšie bude".
- * Pozíciu posunu drží prehliadač; sem sa zapisuje obsah, bodky a dostupnosť stránok.
- * @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
+/** Listovanie verdiktu: prvé dve stránky (teraz, spotrebiče) sú vždy, tretia ("lepšie bude")
+ * len keď model pozná čas čakania. Pozíciu posunu drží prehliadač; sem sa zapisuje obsah
+ * a bodky. @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
 function renderVerdictPager(state, m, dom) {
-    const pages = m.waitTime ? 2 : 1;
+    const pages = m.waitTime ? 3 : 2;
     const page = Math.min(state.verdictPage, pages - 1);
     dom.verdictWaitTime.textContent = m.waitTime || '--:--';
     dom.verdictPageWait.classList.toggle('hidden', !m.waitTime);
-    dom.verdictDots.classList.toggle('hidden', pages < 2);
+    dom.verdictDotWait.classList.toggle('hidden', !m.waitTime);
     dom.verdictDotButtons.forEach((dot, i) => dot.classList.toggle('active', i === page));
-    // Posuvná oblasť musí byť dosiahnuteľná klávesnicou, ale len keď je čím listovať.
-    dom.verdictPager.tabIndex = pages > 1 ? 0 : -1;
 }
 
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */

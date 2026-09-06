@@ -103,11 +103,20 @@
 
                     <div class="verdict card" id="verdict">
                         <div class="card-hd">Čo robiť teraz</div>
-                        <!-- Dve stránky na listovanie do strán: čo robiť teraz a kedy bude lepšie. -->
-                        <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán">
+                        <!-- Tri stránky na listovanie do strán: čo robiť teraz, spotrebiče a kedy bude lepšie.
+                             Spotrebiče sú tam vždy, tretia stránka len keď model pozná čas "lepšie bude". -->
+                        <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán" tabindex="0">
                             <div class="pager-page" id="verdict-page-now">
                                 <h1 id="verdict-headline">Načítavam…</h1>
                                 <p class="body" id="verdict-body"></p>
+                            </div>
+                            <div class="pager-page pager-page-devices" id="verdict-page-devices">
+                                <div class="go-row" id="verdict-go-row"></div>
+                                <div class="go-legend">
+                                    <span><i class="sw green"></i>najlepší čas</span>
+                                    <span><i class="sw amber"></i>ok, ale drahšie</span>
+                                    <span><i class="sw red"></i>radšej počkaj</span>
+                                </div>
                             </div>
                             <div class="pager-page pager-page-wait hidden" id="verdict-page-wait">
                                 <div class="wait-chip" id="verdict-wait-chip">
@@ -119,15 +128,16 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="pager-dots hidden" id="verdict-dots">
+                        <div class="pager-dots" id="verdict-dots">
                             <button class="pager-dot active" type="button" data-verdict-page="0" aria-label="Čo robiť teraz"></button>
-                            <button class="pager-dot" type="button" data-verdict-page="1" aria-label="Kedy bude lepšie"></button>
-                        </div>
-                        <div class="go-row" id="verdict-go-row"></div>
-                        <div class="go-legend">
-                            <span><i class="sw green"></i>najlepší čas</span>
-                            <span><i class="sw amber"></i>ok, ale drahšie</span>
-                            <span><i class="sw red"></i>radšej počkaj</span>
+                            <button class="pager-dot" type="button" data-verdict-page="1" aria-label="Spotrebiče"></button>
+                            <button
+                                class="pager-dot hidden"
+                                type="button"
+                                data-verdict-page="2"
+                                id="verdict-dot-wait"
+                                aria-label="Kedy bude lepšie"
+                            ></button>
                         </div>
                     </div>
                 </div>
