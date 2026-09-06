@@ -246,6 +246,8 @@ test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }
     const errors = await openApp(page);
     await expect(page.locator('#panel-spotrebice')).toBeVisible();
     await expect(page.locator('#panel-predpoved')).toBeVisible();
+    // Karta Predpoveď tu nemá vlastnú položku v navigácii - je vidno rovno vedľa Spotrebičov.
+    await expect(page.locator('#nav-predpoved')).toBeHidden();
     await expect(page.locator('#forecast-chart')).toHaveAttribute('viewBox', '0 0 680 420');
     // Odznak s tarifou nikde nad ciferníkom nie je (ani na desktope) - žije len v defaultnej
     // prvej stránke pageru, tá preto nesmie ostať prázdna.
@@ -256,6 +258,12 @@ test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }
     // Správa o predpovedi dňa je na desktope už len v pageri, v karte Predpoveď sa neduplikuje.
     await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
     await expect(page.locator('#forecast-msg-block')).toBeHidden();
+    // Ciferník má data-panel="predpoved" na každej šírke (na mobile ním otvoríš kartu Predpoveď) -
+    // na desktope nesmie kliknutím zmiznúť Spotrebiče, keď je Predpoveď už zobrazená vedľa nich.
+    await page.locator('#dial-hero').click();
+    await expect(page.locator('#panel-spotrebice')).toBeVisible();
+    await expect(page.locator('#panel-predpoved')).toBeVisible();
+    await expect(page.locator('#nav-spotrebice')).toHaveClass(/active/);
     expect(errors).toEqual([]);
 });
 

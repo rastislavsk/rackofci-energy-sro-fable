@@ -1331,6 +1331,11 @@ b {
         left: 0;
         right: 0;
     }
+    /* Predpoveď tu nie je samostatná destinácia - zobrazuje sa rovno vedľa Spotrebičov
+       (viď isForecastVisible v web/render/index.js), položka v navigácii by bola duplicitná. */
+    .nav-item-predpoved {
+        display: none;
+    }
     .page[data-panel='spotrebice'],
     .page[data-panel='predpoved'] {
         display: grid;
