@@ -54,6 +54,22 @@ function renderForecastPage(state, dom) {
     dom.verdictForecastBody.textContent = msg.body;
 }
 
+/** Kolotoč: klon poslednej/prvej reálnej stránky vernou kópiou (cloneNode), aj keď sa mení,
+ * ktorá stránka je posledná (predpoveď dňa/lepšie bude) - odstránené id v klone predídu
+ * duplicitám. @param {HTMLElement} source @param {HTMLElement} target */
+function mirrorPage(source, target) {
+    target.className = source.className;
+    target.replaceChildren(...source.cloneNode(true).childNodes);
+    target.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+}
+
+/** @param {import('../dom.js').Dom} dom */
+function syncPagerClones(dom) {
+    const lastPage = dom.verdictPageWait.classList.contains('hidden') ? dom.verdictPageForecast : dom.verdictPageWait;
+    mirrorPage(lastPage, dom.verdictPageCloneStart);
+    mirrorPage(dom.verdictPageEyebrow, dom.verdictPageCloneEnd);
+}
+
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
 function renderHero(state, m, dom) {
     const panel = dom.panels.spotrebice;
@@ -69,6 +85,7 @@ function renderHero(state, m, dom) {
     dom.verdictGoRow.innerHTML = devicesHtml(m.devices);
     renderForecastPage(state, dom);
     renderVerdictPager(state, m, dom);
+    syncPagerClones(dom);
 }
 
 /** Marker na krivke: X podľa minúty, výška bodky podľa krivky. @param {HTMLElement} el @param {number} minutes @param {{x: number, y: number}[]} points */

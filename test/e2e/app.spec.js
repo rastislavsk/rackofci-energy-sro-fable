@@ -137,10 +137,20 @@ test('verdikt sa listuje do strán: tarifa a slnko (defaultne prvá), teraz, spo
     await expect(dots.nth(4)).toHaveClass(/active/);
     await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
 
+    // Pás je kolotoč: posun za poslednú stránku sa zacyklí na prvú.
+    await page.mouse.wheel(400, 0);
+    await expect(dots.nth(0)).toHaveClass(/active/);
+    await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
+
+    // A opačným smerom z prvej stránky sa zacyklí na poslednú.
+    await page.mouse.wheel(-400, 0);
+    await expect(dots.nth(4)).toHaveClass(/active/);
+    await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
+
     // Bodka posunie pás späť na prvú stránku.
     await dots.nth(0).click();
     await expect(dots.nth(0)).toHaveClass(/active/);
-    await expect(pager).toHaveJSProperty('scrollLeft', 0);
+    await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
 
     // Posuvná oblasť bez prístupu z klávesnice je vážny nález axe - preto sa kontroluje tu.
     const results = await new AxeBuilder({ page }).include('#panel-spotrebice').analyze();

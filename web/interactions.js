@@ -26,10 +26,11 @@ function initNavigation(store, dom) {
         // Bodka len posunie pás; stránka sa dopočíta z výslednej pozície ako pri prste. Cieľ je
         // samotná stránka (scrollIntoView), nie index krát clientWidth - ten je celočíselný, kým
         // skutočná šírka stránky býva desatinná, čo na desktope (klik na bodku, nie prstom) nechávalo
-        // pás o pár pixelov mimo prichytenia a cez okraj presvital kúsok susednej stránky.
+        // pás o pár pixelov mimo prichytenia a cez okraj presvital kúsok susednej stránky. +1, lebo
+        // pred prvou reálnou stránkou je klon poslednej (kolotoč, viď initVerdictPager).
         const pageBtn = target.closest('[data-verdict-page]');
         if (pageBtn instanceof HTMLElement) {
-            const pageEl = dom.verdictPager.children[Number(pageBtn.dataset.verdictPage)];
+            const pageEl = dom.verdictPager.children[Number(pageBtn.dataset.verdictPage) + 1];
             if (pageEl instanceof HTMLElement) pageEl.scrollIntoView({ inline: 'start', block: 'nearest' });
         }
     });
@@ -65,18 +66,45 @@ function initTimePreview(store, dom) {
     });
 }
 
-/** Listovanie verdiktu posúva prehliadač sám. Do stavu ide až ustálená stránka - inak by
- * prekreslenie uprostred gesta prepisovalo bodky tam a späť. @param {Store} store @param {Dom} dom */
+/** Listovanie verdiktu posúva prehliadač sám. Pred prvou a za poslednou reálnou stránkou je
+ * neviditeľný klon poslednej/prvej (obsah drží syncPagerClones v spotrebice.js) - keď sa naň
+ * pás ustáli, znamená to, že sa listovalo za okraj, a JS ho bez animácie preskočí na skutočnú
+ * stránku na druhom konci, takže to pôsobí ako kolotoč. Do stavu ide až ustálená stránka - inak
+ * by prekreslenie uprostred gesta prepisovalo bodky tam a späť. @param {Store} store @param {Dom} dom */
 function initVerdictPager(store, dom) {
+    const pager = dom.verdictPager;
+
+    // Defaultná prvá stránka je skutočná prvá (index 1 v toku pásu, index 0 je klon poslednej).
+    // rAF počká na prvé prekreslenie (nastaví #page data-panel, od ktorého závisí na desktope
+    // šírka stránky pageru) a skočí tam bez animácie.
+    requestAnimationFrame(() => {
+        const firstPage = pager.children[1];
+        if (firstPage instanceof HTMLElement) firstPage.scrollIntoView({ inline: 'start', block: 'nearest', behavior: 'instant' });
+    });
+
     /** @type {ReturnType<typeof setTimeout> | undefined} */
     let timer;
-    dom.verdictPager.addEventListener(
+    pager.addEventListener(
         'scroll',
         () => {
             clearTimeout(timer);
             timer = setTimeout(() => {
-                const width = dom.verdictPager.clientWidth || 1;
-                store.setState({ verdictPage: Math.round(dom.verdictPager.scrollLeft / width) });
+                const width = pager.clientWidth || 1;
+                const realPages = dom.verdictPageWait.classList.contains('hidden') ? 4 : 5;
+                const flowIndex = Math.round(pager.scrollLeft / width);
+                if (flowIndex <= 0) {
+                    const lastPage = pager.children[realPages];
+                    if (lastPage instanceof HTMLElement)
+                        lastPage.scrollIntoView({ inline: 'start', block: 'nearest', behavior: 'instant' });
+                    store.setState({ verdictPage: realPages - 1 });
+                } else if (flowIndex >= realPages + 1) {
+                    const firstPage = pager.children[1];
+                    if (firstPage instanceof HTMLElement)
+                        firstPage.scrollIntoView({ inline: 'start', block: 'nearest', behavior: 'instant' });
+                    store.setState({ verdictPage: 0 });
+                } else {
+                    store.setState({ verdictPage: flowIndex - 1 });
+                }
             }, PAGER_SETTLE_MS);
         },
         { passive: true },
