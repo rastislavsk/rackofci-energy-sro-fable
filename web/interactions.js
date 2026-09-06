@@ -2,7 +2,7 @@
 // nikto tu nekreslí do DOM okrem tooltipov, ktoré nie sú súčasťou stavu.
 
 import { chartTooltipModel, STRIP } from '../shared/chart-model.js';
-import { REFRESH, TOOLTIP_HOLD_MS } from '../shared/config.js';
+import { PAGER_SETTLE_MS, REFRESH, TOOLTIP_HOLD_MS } from '../shared/config.js';
 import { loadData } from './data.js';
 import { forecastModel } from './render/predpoved.js';
 import { weekCurveModel } from './render/sedemdni.js';
@@ -23,6 +23,10 @@ function initNavigation(store, dom) {
         const weekBtn = target.closest('[data-day-index]');
         if (weekBtn instanceof Element && dom.panels['7dni'].contains(weekBtn))
             store.setState({ weekSelDay: Number(weekBtn.getAttribute('data-day-index')) });
+        // Bodka len posunie pás; stránka sa dopočíta z výslednej pozície ako pri prste.
+        const pageBtn = target.closest('[data-verdict-page]');
+        if (pageBtn instanceof HTMLElement)
+            dom.verdictPager.scrollTo({ left: Number(pageBtn.dataset.verdictPage) * dom.verdictPager.clientWidth });
     });
     dom.previewReset.addEventListener('click', () => store.setState({ previewMinutes: null, isDragging: false }));
 }
@@ -54,6 +58,24 @@ function initTimePreview(store, dom) {
         if (/** @type {HTMLElement} */ (e.target).closest('.strip-marker-handle')) return;
         store.setState({ previewMinutes: minutesFromClientX(dom, e.clientX), isDragging: false });
     });
+}
+
+/** Listovanie verdiktu posúva prehliadač sám. Do stavu ide až ustálená stránka - inak by
+ * prekreslenie uprostred gesta prepisovalo bodky tam a späť. @param {Store} store @param {Dom} dom */
+function initVerdictPager(store, dom) {
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
+    let timer;
+    dom.verdictPager.addEventListener(
+        'scroll',
+        () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                const width = dom.verdictPager.clientWidth || 1;
+                store.setState({ verdictPage: Math.round(dom.verdictPager.scrollLeft / width) });
+            }, PAGER_SETTLE_MS);
+        },
+        { passive: true },
+    );
 }
 
 /** @type {Array<{ wrap: HTMLElement, hide: () => void }>} */
@@ -182,6 +204,7 @@ export function initInteractions(store, dom, mq) {
     initViewportZoomRealign();
     initNavigation(store, dom);
     initTimePreview(store, dom);
+    initVerdictPager(store, dom);
     initTapTooltipClosing();
     initCurveTooltip(store, dom.forecastChartWrap, dom.forecastChart, dom.forecastTooltip, forecastModel);
     initCurveTooltip(store, dom.weekCurveWrap, dom.weekCurve, dom.weekCurveTooltip, weekCurveModel);

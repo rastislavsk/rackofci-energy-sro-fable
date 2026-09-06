@@ -436,6 +436,60 @@ b {
     color: var(--ink-45);
     font-size: 15px;
 }
+/* Listovanie do strán. Posúva a prichytáva prehliadač (scroll-snap), JS len číta, ktorá
+   stránka ostala na obrazovke. Skrytá stránka vypadne z toku, takže pri jedinej stránke
+   niet čo posúvať a pás sa správa ako obyčajný blok. */
+.pager {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+}
+.pager::-webkit-scrollbar {
+    display: none;
+}
+.pager-page {
+    flex: 0 0 100%;
+    min-width: 0;
+    scroll-snap-align: start;
+}
+.pager-page-wait {
+    display: flex;
+    align-items: center;
+}
+.pager-dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-1);
+    margin-bottom: var(--sp-3);
+}
+.pager-dot {
+    position: relative;
+    width: 20px;
+    height: 20px;
+}
+.pager-dot::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    transform: translate(-50%, -50%);
+    border-radius: var(--radius-pill);
+    background: var(--ink-12);
+    transition: background var(--dur);
+}
+.pager-dot.active::before {
+    background: var(--ink-45);
+}
+@media (prefers-reduced-motion: reduce) {
+    .pager {
+        scroll-behavior: auto;
+    }
+}
 .go-row {
     display: grid;
     grid-template-columns: repeat(5, 1fr);

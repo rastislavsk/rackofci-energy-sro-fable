@@ -141,6 +141,9 @@ export const REFRESH = {
 // Ako dlho ostáva tooltip po ťuknutí zobrazený (ms).
 export const TOOLTIP_HOLD_MS = 1600;
 
+// Ako dlho po poslednom posune sa listovanie považuje za ustálené (ms).
+export const PAGER_SETTLE_MS = 90;
+
 // Dáta staršie než toto sú "zastarané" a appka to ukáže.
 export const STALE_PV_MS = 20 * 60 * 1000;
 export const STALE_FORECAST_MS = 3 * 60 * 60 * 1000;
