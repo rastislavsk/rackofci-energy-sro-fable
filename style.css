@@ -1425,6 +1425,18 @@ b {
     }
 }
 
+/* ---- Ultra-široké monitory -------------------------------------------------
+   Nad 1600px len o niečo širšia stránka, rozloženie kariet sa nemení (zostáva
+   Spotrebiče a Predpoveď 1:1 vedľa seba, viď media query vyššie). Skúšaný
+   trojstĺpcový rozpad karty Spotrebiče (graf Priebeh dňa ako samostatný stĺpec)
+   vyzeral zle - graf je oveľa nižší než ciferník+odporúčanie, pod ním by ostala
+   veľká prázdna diera. */
+@media (min-width: 1600px) {
+    :root {
+        --page-max: 1440px;
+    }
+}
+
 /* ---- Utility (zámerne posledné) --------------------------------------------
    .hidden má rovnakú špecificitu ako komponentové triedy (.preview-banner,
    .chart-now, .stat-badge...), takže o výsledku rozhoduje poradie v súbore.
