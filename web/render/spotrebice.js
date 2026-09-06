@@ -5,6 +5,7 @@ import { escapeHtml, fmt1 } from '../../shared/format.js';
 import { heroModel, minutesOfDay } from '../../shared/hero-model.js';
 import { EMPTY_MESSAGES, forecastDayMessage } from '../../shared/messages.js';
 import { DEVICE_ICONS } from '../icons.js';
+import { changedKeys, sameKeys, writeHtml } from '../memo.js';
 import { dayStripSvg } from '../svg.js';
 
 const DIAL_CIRCUMFERENCE = 2 * Math.PI * 92;
@@ -66,8 +67,11 @@ function mirrorPage(source, target) {
 /** @param {import('../dom.js').Dom} dom */
 function syncPagerClones(dom) {
     const lastPage = dom.verdictPageWait.classList.contains('hidden') ? dom.verdictPageForecast : dom.verdictPageWait;
-    mirrorPage(lastPage, dom.verdictPageCloneStart);
-    mirrorPage(dom.verdictPageEyebrow, dom.verdictPageCloneEnd);
+    // Do kľúča patrí aj trieda, lebo mirrorPage kopíruje oboje - inak by zmena samotnej
+    // triedy zdroja klon nedobehla.
+    if (changedKeys('clone-start', [lastPage.className, lastPage.innerHTML])) mirrorPage(lastPage, dom.verdictPageCloneStart);
+    const eyebrow = dom.verdictPageEyebrow;
+    if (changedKeys('clone-end', [eyebrow.className, eyebrow.innerHTML])) mirrorPage(eyebrow, dom.verdictPageCloneEnd);
 }
 
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
@@ -82,7 +86,7 @@ function renderHero(state, m, dom) {
     renderEyebrowBadge(m, dom);
     dom.verdictHeadline.textContent = m.message.headline;
     dom.verdictBody.textContent = m.message.body;
-    dom.verdictGoRow.innerHTML = devicesHtml(m.devices);
+    writeHtml(dom.verdictGoRow, devicesHtml(m.devices), 'devices');
     renderForecastPage(state, dom);
     renderVerdictPager(state, m, dom);
     syncPagerClones(dom);
@@ -95,16 +99,32 @@ function positionMarker(el, minutes, points) {
     if (dot instanceof HTMLElement) dot.style.top = `${(stripCurveY(points, minutes) / STRIP.h) * 100}%`;
 }
 
-/** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} hero @param {import('../dom.js').Dom} dom */
-function renderStrip(state, hero, dom) {
-    const nowMinutes = minutesOfDay(state.now);
+/** Pás dňa závisí len na sezóne, dátach a aktuálnej minúte. Pri ťahaní bežca sa nemení ani
+ * jedno z toho - mení sa iba poloha bežca - preto sa model aj SVG počítajú znovu len vtedy,
+ * keď sa naozaj zmenil vstup. Zbytočný zápis by ušpinil layout a účet zaň zaplatí až ďalší
+ * krok gesta, keď si appka pýta rozmery pásu.
+ * @type {{ keys: unknown[], model: ReturnType<typeof dayStripModel> } | null} */
+let stripCache = null;
+
+/** @param {import('../state.js').AppState} state @param {number} nowMinutes */
+function stripModel(state, nowMinutes) {
+    const keys = [state.season, state.forecast, state.pv, nowMinutes];
+    if (stripCache && sameKeys(stripCache.keys, keys)) return { model: stripCache.model, rebuilt: false };
     const model = dayStripModel({
         season: state.season,
         hourlyToday: state.forecast ? state.forecast.hourlyToday : null,
         realCurve: state.pv ? state.pv.realCurveToday : null,
         nowMinutes,
     });
-    dom.daystrip.innerHTML = dayStripSvg(model);
+    stripCache = { keys, model };
+    return { model, rebuilt: true };
+}
+
+/** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} hero @param {import('../dom.js').Dom} dom */
+function renderStrip(state, hero, dom) {
+    const nowMinutes = minutesOfDay(state.now);
+    const { model, rebuilt } = stripModel(state, nowMinutes);
+    if (rebuilt) dom.daystrip.innerHTML = dayStripSvg(model);
     dom.stripLegend.classList.toggle('hidden', !model.hasData);
     dom.stripLegendReal.classList.toggle('hidden', !model.boundary);
     dom.seasonIndicator.textContent = state.season === 'summer' ? 'Leto' : 'Zima';

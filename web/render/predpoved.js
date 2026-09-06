@@ -4,6 +4,7 @@ import { chartDims, forecastChartModel, realProductionSoFar } from '../../shared
 import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
 import { fmt1, hourFloatToTimeStr, hourLabel, pad2 } from '../../shared/format.js';
 import { EMPTY_MESSAGES, forecastDayMessage } from '../../shared/messages.js';
+import { changedKeys } from '../memo.js';
 import { forecastChartSvg } from '../svg.js';
 
 /** Vstup grafu odvodený zo stavu - rovnaký pre render aj pre tooltip. @param {import('../state.js').AppState} state */
@@ -53,6 +54,12 @@ function renderEmpty(dom) {
 
 /** @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
 export function renderPredpoved(state, dom) {
+    // Táto karta nezávisí od náhľadu času ani od ťahania bežca. Na desktope však stojí vedľa
+    // Spotrebičov, takže sa pri každom pohybe prsta prekresľovala nadarmo - a hlavne špinila
+    // layout, čo zdražilo ďalší krok gesta. Preto sa prekresľuje len pri zmene vlastných vstupov.
+    const nowHour = state.now.getHours() + state.now.getMinutes() / 60;
+    if (!changedKeys('predpoved', [state.forecast, state.pv, state.forecastDay, state.wide, state.desktop, nowHour])) return;
+
     // Tá istá správa je aj vlastnou stránkou v pageri karty Spotrebiče (vždy, aj na desktope) -
     // tu na desktope už nie je čo duplikovať, na mobile a tablete ostáva na oboch miestach.
     dom.forecastMsgBlock.classList.toggle('hidden', state.desktop);
