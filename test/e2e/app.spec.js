@@ -57,13 +57,14 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     await expect(page.locator('#pv-power')).toHaveText('6.41');
     await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
     await expect(page.locator('#pv-updated')).toContainText('aktualizované 13:00');
-    // V zelenom okne sa nečaká, listovanie má jedinú stránku - bodky ani druhá stránka nie sú.
-    await expect(page.locator('#verdict-dots')).toBeHidden();
+    // Spotrebiče sú druhá stránka vždy - bodky sú vidno, no tretia (Lepšie bude) nie je.
+    await expect(page.locator('#verdict-dots')).toBeVisible();
+    await expect(page.locator('#verdict-dot-wait')).toBeHidden();
     await expect(page.locator('#verdict-page-wait')).toBeHidden();
     expect(errors).toEqual([]);
 });
 
-test('verdikt sa listuje do strán na "Lepšie bude"', async ({ page }) => {
+test('verdikt sa listuje do strán: teraz, spotrebiče, kedy bude lepšie', async ({ page }) => {
     const { instant, wall } = atTime('09:00');
     // Fixtures nemajú pred sebou silnejšie okno, bez tejto úpravy by čakací čas nikdy nevznikol.
     const sunnier = { ...forecast, strongerWindowAhead: true, hoursAhead: 3, windowDaypart: 'poobede' };
@@ -72,6 +73,7 @@ test('verdikt sa listuje do strán na "Lepšie bude"', async ({ page }) => {
 
     const dots = page.locator('#verdict-dots .pager-dot');
     await expect(page.locator('#verdict-dots')).toBeVisible();
+    await expect(dots.nth(2)).toBeVisible();
     await expect(page.locator('#verdict-wait-time')).toHaveText(String(expected.waitTime));
     await expect(page.locator('#verdict-headline')).toHaveText(expected.message.headline);
     await expect(page.locator('#verdict-pager')).toHaveAttribute('tabindex', '0');
@@ -83,6 +85,12 @@ test('verdikt sa listuje do strán na "Lepšie bude"', async ({ page }) => {
     await page.mouse.wheel(400, 0);
     await expect(dots.nth(1)).toHaveClass(/active/);
     await expect(dots.nth(0)).not.toHaveClass(/active/);
+    await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
+    await expect(page.locator('#verdict-go-row')).toBeInViewport();
+
+    // Ešte jeden posun na tretiu stránku "Lepšie bude".
+    await page.mouse.wheel(400, 0);
+    await expect(dots.nth(2)).toHaveClass(/active/);
     await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
 
     // Bodka posunie pás späť na prvú stránku.
