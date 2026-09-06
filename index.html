@@ -88,7 +88,7 @@
                         aria-label="Aktuálny výkon, otvoriť predpoveď"
                     >
                         <div class="card-hd">Aktuálny výkon</div>
-                        <div class="badge-row"><span class="badge" id="verdict-eyebrow">—</span></div>
+                        <div class="badge-row" id="dial-badge-row"><span class="badge" id="verdict-eyebrow">—</span></div>
                         <div class="dial-wrap">
                             <svg class="dial-svg" viewBox="0 0 220 220" aria-hidden="true">
                                 <circle class="dial-track" cx="110" cy="110" r="92" />
@@ -103,8 +103,12 @@
 
                     <div class="verdict card" id="verdict">
                         <div class="card-hd">Čo robiť teraz</div>
-                        <!-- Tri stránky na listovanie do strán: čo robiť teraz, spotrebiče a kedy bude lepšie.
-                             Spotrebiče sú tam vždy, tretia stránka len keď model pozná čas "lepšie bude". -->
+                        <!-- Päť stránok na listovanie do strán: čo robiť teraz, spotrebiče, tarifa a slnko
+                             a predpoveď dňa sú tam vždy; "kedy bude lepšie" je posledná a len keď ju model
+                             pozná. Na mobile a tablete sem patrí aj odznak s tarifou - na desktope ostáva
+                             nad ciferníkom, tam je preň dosť miesta (viď placeEyebrowBadge v spotrebice.js).
+                             Správa o predpovedi dňa je tu vždy (aj na desktope); v karte Predpoveď sa na
+                             desktope už neduplikuje, na mobile a tablete áno (viď forecastMsgBlock). -->
                         <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán" tabindex="0">
                             <div class="pager-page" id="verdict-page-now">
                                 <h1 id="verdict-headline">Načítavam…</h1>
@@ -117,6 +121,11 @@
                                     <span><i class="sw amber"></i>ok, ale drahšie</span>
                                     <span><i class="sw red"></i>radšej počkaj</span>
                                 </div>
+                            </div>
+                            <div class="pager-page pager-page-eyebrow" id="verdict-page-eyebrow"></div>
+                            <div class="pager-page pager-page-forecast" id="verdict-page-forecast">
+                                <h3 id="verdict-forecast-title"></h3>
+                                <p class="body" id="verdict-forecast-body"></p>
                             </div>
                             <div class="pager-page pager-page-wait hidden" id="verdict-page-wait">
                                 <div class="wait-chip" id="verdict-wait-chip">
@@ -131,10 +140,12 @@
                         <div class="pager-dots" id="verdict-dots">
                             <button class="pager-dot active" type="button" data-verdict-page="0" aria-label="Čo robiť teraz"></button>
                             <button class="pager-dot" type="button" data-verdict-page="1" aria-label="Spotrebiče"></button>
+                            <button class="pager-dot" type="button" data-verdict-page="2" aria-label="Tarifa a slnko"></button>
+                            <button class="pager-dot" type="button" data-verdict-page="3" aria-label="Predpoveď dňa"></button>
                             <button
                                 class="pager-dot hidden"
                                 type="button"
-                                data-verdict-page="2"
+                                data-verdict-page="4"
                                 id="verdict-dot-wait"
                                 aria-label="Kedy bude lepšie"
                             ></button>
@@ -243,7 +254,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="msg-block">
+                <div class="msg-block" id="forecast-msg-block">
                     <h3 id="forecast-message-title">Načítavam…</h3>
                     <p id="forecast-message-body">Predpoveď sa načítava.</p>
                 </div>

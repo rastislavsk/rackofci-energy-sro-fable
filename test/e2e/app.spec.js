@@ -2,8 +2,10 @@
 // doménovou logikou (shared/), takže test chytí rozdiel medzi modelom a tým, čo je v DOM.
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { visibleHours } from '../../shared/chart-model.js';
 import { APP_URL, LEGACY_SOURCES, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
+import { forecastDayMessage } from '../../shared/messages.js';
 import { FIXED_NOW, fixtureData } from '../helpers.js';
 
 const { pv, forecast } = fixtureData();
@@ -47,6 +49,8 @@ function atTime(hm) {
 /** @param {Date} wall */
 const modelAt = (wall) => heroModel({ now: wall, season: 'summer', pv, forecast, previewMinutes: null });
 
+const todayForecastMsg = forecastDayMessage(visibleHours(forecast.hourlyToday), true);
+
 test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     const errors = await openApp(page);
     const expected = modelAt(atTime('13:00').wall);
@@ -57,10 +61,18 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     await expect(page.locator('#pv-power')).toHaveText('6.41');
     await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
     await expect(page.locator('#pv-updated')).toContainText('aktualizované 13:00');
-    // Spotrebiče sú druhá stránka vždy - bodky sú vidno, no tretia (Lepšie bude) nie je.
+    // Spotrebiče, Tarifa a slnko a Predpoveď dňa sú tam vždy - bodky sú vidno, no piata
+    // (Lepšie bude) nie je.
+    await expect(page.locator('#verdict-dots .pager-dot')).toHaveCount(5);
     await expect(page.locator('#verdict-dots')).toBeVisible();
     await expect(page.locator('#verdict-dot-wait')).toBeHidden();
     await expect(page.locator('#verdict-page-wait')).toBeHidden();
+    // Na mobile odznak s tarifou nie je nad ciferníkom, ale vo vlastnej stránke pageru.
+    await expect(page.locator('#verdict-page-eyebrow')).toContainText(expected.eyebrow);
+    await expect(page.locator('#dial-badge-row')).toBeEmpty();
+    // Správa o predpovedi dňa je tu v pageri (karta Predpoveď je na mobile teraz skrytá).
+    await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
+    await expect(page.locator('#verdict-forecast-body')).toHaveText(todayForecastMsg.body);
     expect(errors).toEqual([]);
 });
 
@@ -78,7 +90,7 @@ test('klik na spotrebič (mobil) ukáže tooltip s príkonom, nie je orezaný pa
     await expect(tooltip).not.toHaveClass(/visible/);
 });
 
-test('verdikt sa listuje do strán: teraz, spotrebiče, kedy bude lepšie', async ({ page }) => {
+test('verdikt sa listuje do strán: teraz, spotrebiče, tarifa a slnko, predpoveď dňa, kedy bude lepšie', async ({ page }) => {
     const { instant, wall } = atTime('09:00');
     // Fixtures nemajú pred sebou silnejšie okno, bez tejto úpravy by čakací čas nikdy nevznikol.
     const sunnier = { ...forecast, strongerWindowAhead: true, hoursAhead: 3, windowDaypart: 'poobede' };
@@ -87,7 +99,7 @@ test('verdikt sa listuje do strán: teraz, spotrebiče, kedy bude lepšie', asyn
 
     const dots = page.locator('#verdict-dots .pager-dot');
     await expect(page.locator('#verdict-dots')).toBeVisible();
-    await expect(dots.nth(2)).toBeVisible();
+    await expect(dots.nth(4)).toBeVisible();
     await expect(page.locator('#verdict-wait-time')).toHaveText(String(expected.waitTime));
     await expect(page.locator('#verdict-headline')).toHaveText(expected.message.headline);
     await expect(page.locator('#verdict-pager')).toHaveAttribute('tabindex', '0');
@@ -102,9 +114,21 @@ test('verdikt sa listuje do strán: teraz, spotrebiče, kedy bude lepšie', asyn
     await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
     await expect(page.locator('#verdict-go-row')).toBeInViewport();
 
-    // Ešte jeden posun na tretiu stránku "Lepšie bude".
+    // Ešte jeden posun na tretiu stránku "Tarifa a slnko".
     await page.mouse.wheel(400, 0);
     await expect(dots.nth(2)).toHaveClass(/active/);
+    await expect(page.locator('#verdict-page-eyebrow')).toHaveText(expected.eyebrow);
+    await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
+
+    // Ešte jeden posun na štvrtú stránku "Predpoveď dňa".
+    await page.mouse.wheel(400, 0);
+    await expect(dots.nth(3)).toHaveClass(/active/);
+    await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
+    await expect(page.locator('#verdict-page-forecast')).toBeInViewport();
+
+    // Posledný posun na piatu stránku "Lepšie bude".
+    await page.mouse.wheel(400, 0);
+    await expect(dots.nth(4)).toHaveClass(/active/);
     await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
 
     // Bodka posunie pás späť na prvú stránku.
@@ -162,6 +186,8 @@ test('predpoveď: štatistiky, prepnutie na zajtra, správa dňa', async ({ page
     await expect(page.locator('#forecast-now-badge')).toBeHidden();
     await expect(page.locator('#forecast-chart path.line-real')).toHaveCount(0);
     await expect(page.locator('#forecast-message-title')).not.toHaveText('Načítavam…');
+    // Na mobile je tá istá správa duplicitne aj v karte Spotrebiče (v pageri) aj tu.
+    await expect(page.locator('#forecast-msg-block')).toBeVisible();
     expect(errors).toEqual([]);
 });
 
@@ -215,6 +241,12 @@ test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }
     await expect(page.locator('#panel-spotrebice')).toBeVisible();
     await expect(page.locator('#panel-predpoved')).toBeVisible();
     await expect(page.locator('#forecast-chart')).toHaveAttribute('viewBox', '0 0 680 420');
+    // Na desktope má odznak s tarifou dosť miesta nad ciferníkom, do pageru sa nepresúva.
+    await expect(page.locator('#dial-badge-row #verdict-eyebrow')).toBeVisible();
+    await expect(page.locator('#verdict-page-eyebrow')).toBeEmpty();
+    // Správa o predpovedi dňa je na desktope už len v pageri, v karte Predpoveď sa neduplikuje.
+    await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
+    await expect(page.locator('#forecast-msg-block')).toBeHidden();
     expect(errors).toEqual([]);
 });
 

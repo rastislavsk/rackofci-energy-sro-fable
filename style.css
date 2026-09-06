@@ -350,6 +350,9 @@ b {
     justify-content: center;
     margin-bottom: var(--sp-1);
 }
+.badge-row:empty {
+    margin-bottom: 0;
+}
 .badge {
     display: inline-flex;
     align-items: center;
@@ -374,9 +377,11 @@ b {
     justify-content: center;
     margin: 18px 0 var(--sp-1);
 }
+/* Väčšie ako na desktope (viď @media min-width:1024px) - na mobile a tablete uvoľnil
+   miesto odznak s tarifou, ktorý sa odtiaľ presunul do pageru (placeEyebrowBadge). */
 .dial-svg {
-    width: 208px;
-    height: 208px;
+    width: 240px;
+    height: 240px;
 }
 .dial-track {
     fill: none;
@@ -455,9 +460,19 @@ b {
     min-width: 0;
     scroll-snap-align: start;
 }
-.pager-page-wait {
+.pager-page-wait,
+.pager-page-eyebrow {
     display: flex;
     align-items: center;
+}
+.pager-page-eyebrow {
+    justify-content: center;
+}
+.pager-page-forecast h3 {
+    margin: 0 0 var(--sp-2);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    text-wrap: balance;
 }
 .pager-dots {
     display: flex;
@@ -1340,6 +1355,11 @@ b {
     }
     .panel-spotrebice .preview-banner {
         grid-column: 1 / -1;
+    }
+    /* Odznak s tarifou tu ostáva nad ciferníkom (placeEyebrowBadge), miesto sa neuvoľňuje. */
+    .dial-svg {
+        width: 208px;
+        height: 208px;
     }
     .verdict {
         margin-bottom: var(--sp-4);

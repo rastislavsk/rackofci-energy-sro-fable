@@ -1,8 +1,9 @@
 // Karta Spotrebiče: ciferník, verdikt, spotrebiče a pás dňa. Čistý zápis modelu do DOM.
 
-import { dayStripModel, stripCurveY, STRIP } from '../../shared/chart-model.js';
+import { dayStripModel, stripCurveY, STRIP, visibleHours } from '../../shared/chart-model.js';
 import { escapeHtml, fmt1 } from '../../shared/format.js';
 import { heroModel, minutesOfDay } from '../../shared/hero-model.js';
+import { EMPTY_MESSAGES, forecastDayMessage } from '../../shared/messages.js';
 import { DEVICE_ICONS } from '../icons.js';
 import { dayStripSvg } from '../svg.js';
 
@@ -26,16 +27,33 @@ function devicesHtml(devices) {
         .join('');
 }
 
-/** Listovanie verdiktu: prvé dve stránky (teraz, spotrebiče) sú vždy, tretia ("lepšie bude")
- * len keď model pozná čas čakania. Pozíciu posunu drží prehliadač; sem sa zapisuje obsah
- * a bodky. @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
+/** Listovanie verdiktu: prvé štyri stránky (teraz, spotrebiče, tarifa a slnko, predpoveď dňa)
+ * sú vždy, piata ("lepšie bude") len keď model pozná čas čakania. Pozíciu posunu drží
+ * prehliadač; sem sa zapisuje obsah a bodky. @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
 function renderVerdictPager(state, m, dom) {
-    const pages = m.waitTime ? 3 : 2;
+    const pages = m.waitTime ? 5 : 4;
     const page = Math.min(state.verdictPage, pages - 1);
     dom.verdictWaitTime.textContent = m.waitTime || '--:--';
     dom.verdictPageWait.classList.toggle('hidden', !m.waitTime);
     dom.verdictDotWait.classList.toggle('hidden', !m.waitTime);
     dom.verdictDotButtons.forEach((dot, i) => dot.classList.toggle('active', i === page));
+}
+
+/** Odznak s tarifou: na desktope ostáva nad ciferníkom (tam je naň dosť miesta), na mobile
+ * a tablete sa presunie do vlastnej stránky pageru, aby sa uvoľnilo miesto pre väčší ciferník.
+ * @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
+function placeEyebrowBadge(state, dom) {
+    const home = state.desktop ? dom.dialBadgeRow : dom.verdictPageEyebrow;
+    if (dom.verdictEyebrow.parentElement !== home) home.appendChild(dom.verdictEyebrow);
+}
+
+/** Správa o dnešnej predpovedi - tá istá, čo je v karte Predpoveď, len vždy pre dnešok
+ * bez ohľadu na tam zvolený deň. @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
+function renderForecastPage(state, dom) {
+    const visible = state.forecast ? visibleHours(state.forecast.hourlyToday) : [];
+    const msg = visible.length ? forecastDayMessage(visible, true) : EMPTY_MESSAGES.forecast;
+    dom.verdictForecastTitle.textContent = msg.title;
+    dom.verdictForecastBody.textContent = msg.body;
 }
 
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
@@ -48,9 +66,11 @@ function renderHero(state, m, dom) {
     dom.dialRing.style.strokeDashoffset = String(DIAL_CIRCUMFERENCE * (1 - m.dial.fraction));
     dom.dialRing.style.stroke = tierVar(m.dial.tier);
     dom.verdictEyebrow.textContent = m.eyebrow;
+    placeEyebrowBadge(state, dom);
     dom.verdictHeadline.textContent = m.message.headline;
     dom.verdictBody.textContent = m.message.body;
     dom.verdictGoRow.innerHTML = devicesHtml(m.devices);
+    renderForecastPage(state, dom);
     renderVerdictPager(state, m, dom);
 }
 
