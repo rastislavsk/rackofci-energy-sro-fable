@@ -19,6 +19,7 @@
  *   isDragging: boolean,
  *   wide: boolean,
  *   desktop: boolean,
+ *   chartSizes: Record<string, { w: number, h: number }>,
  * }} AppState
  */
 
@@ -39,6 +40,9 @@ export function initialState(now, season, layout) {
         isDragging: false,
         wide: layout.wide,
         desktop: layout.desktop,
+        // Skutočné rozmery plátien grafov. Napĺňa ich ResizeObserver v interactions.js;
+        // kým sú prázdne, grafy sa kreslia na pevné plátno z chartDims.
+        chartSizes: {},
     };
 }
 

@@ -322,7 +322,19 @@ test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }
     await expect(page.locator('#panel-predpoved')).toBeVisible();
     // Karta Predpoveď tu nemá vlastnú položku v navigácii - je vidno rovno vedľa Spotrebičov.
     await expect(page.locator('#nav-predpoved')).toBeHidden();
-    await expect(page.locator('#forecast-chart')).toHaveAttribute('viewBox', '0 0 680 420');
+    // Plátno grafu sa na širokej karte kreslí na jej skutočný rozmer (fillDims), nie na pevné
+    // 680x420 - viewBox preto musí sedieť s pixelmi 1:1, inak by sa graf naťahoval a popisky
+    // skresľovali. Zároveň mu musí ostať kladná plocha pod okrajmi plátna.
+    const chart = await page.evaluate(() => {
+        const el = document.getElementById('forecast-chart');
+        const [, , vw, vh] = (el.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+        const r = el.getBoundingClientRect();
+        return { vw, vh, w: Math.round(r.width), h: Math.round(r.height) };
+    });
+    expect(Math.abs(chart.vw - chart.w), `šírka plátna ${chart.vw} nesedí s kartou ${chart.w}`).toBeLessThanOrEqual(1);
+    expect(Math.abs(chart.vh - chart.h), `výška plátna ${chart.vh} nesedí s kartou ${chart.h}`).toBeLessThanOrEqual(1);
+    // padT (18) + padB (34) z chartDims; pod tým by graf kreslil do zápornej plochy.
+    expect(chart.vh, 'plátno grafu je nižšie než jeho vlastné okraje').toBeGreaterThan(18 + 34);
     // Odznak s tarifou nikde nad ciferníkom nie je (ani na desktope) - žije len v defaultnej
     // prvej stránke pageru, tá preto nesmie ostať prázdna.
     const expectedEyebrow = modelAt(atTime('13:00').wall).eyebrow;

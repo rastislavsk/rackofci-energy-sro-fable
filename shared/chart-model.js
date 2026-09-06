@@ -60,10 +60,19 @@ export function smoothPath(points) {
     return d;
 }
 
-/** Krok vodorovnej mriežky: najjemnejší s najviac 10 čiarami a okrúhlymi číslami. @param {number} maxKw */
-export function kwGridStep(maxKw) {
+// Aspoň toľko pixelov na jeden popisok osi Y, aby sa čísla nelepili na seba.
+const Y_LABEL_SPACE_PX = 22;
+
+/**
+ * Krok vodorovnej mriežky: najjemnejší s okrúhlymi číslami, ktorý sa na plátno ešte zmestí.
+ * `maxLines` obmedzuje počet čiar podľa dostupnej výšky - na nízkom plátne by ich desať
+ * splynulo do jedného stĺpca číslic.
+ * @param {number} maxKw @param {number} [maxLines]
+ */
+export function kwGridStep(maxKw, maxLines = 10) {
+    const limit = Math.max(1, Math.min(10, Math.floor(maxLines)));
     const steps = [0.25, 0.5, 1, 2, 2.5, 5, 10, 20];
-    return steps.find((s) => maxKw / s <= 10) || steps[steps.length - 1];
+    return steps.find((s) => maxKw / s <= limit) || steps[steps.length - 1];
 }
 
 /** Prevod hodina/kW -> súradnice plátna. @param {Dims} dims @param {number} maxKw */
@@ -88,7 +97,8 @@ function buildGrid(dims, scale, maxKw) {
     }
     const gridY = [];
     if (dims.yAxis) {
-        const step = kwGridStep(maxKw);
+        const plotH = dims.h - dims.padT - dims.padB;
+        const step = kwGridStep(maxKw, plotH / Y_LABEL_SPACE_PX);
         // Násobenie krokom, nie pripočítavanie - inak by sa nazbierala desatinná chyba.
         for (let i = 0; i * step <= maxKw; i++) gridY.push({ y: scale.y(i * step), label: formatGridKw(i * step) });
     }
@@ -273,16 +283,20 @@ function heatBand(frac) {
     return 'green';
 }
 
-/** Mapa výroby hodina × deň. @param {ForecastDay[]} days @param {number} selDay */
-export function weekHeatModel(days, selDay) {
-    const W = 440;
+/**
+ * Mapa výroby hodina × deň. Bez `size` si plátno určí sama (mobil), s ním sa roztiahne
+ * na skutočný rozmer karty - vtedy sa riadky rozdelia o dostupnú výšku.
+ * @param {ForecastDay[]} days @param {number} selDay @param {{ W: number, H: number } | null} [size]
+ */
+export function weekHeatModel(days, selDay, size = null) {
     const padL = 44;
     const padT = 20;
     const padR = 4;
     const gap = 2;
-    const rh = 24;
+    const W = size ? size.W : 440;
+    const rh = size ? Math.max(gap + 1, (size.H - padT - 4) / days.length) : 24;
     const cw = (W - padL - padR) / WEEK_HOURS.length;
-    const H = padT + days.length * rh + 4;
+    const H = size ? size.H : padT + days.length * rh + 4;
     const maps = days.map(hourMap);
     let max = 0.4;
     maps.forEach((map) => WEEK_HOURS.forEach((h) => (max = Math.max(max, map[h] ? map[h].kw : 0))));
@@ -326,7 +340,7 @@ export function weekHeatModel(days, selDay) {
     return { W, H, cells, hourLabels, dayLabels, selRect, max, legend };
 }
 
-/** Denná výroba v kWh so stropom jasnej oblohy. @param {ForecastDay[]} days @param {number} selDay @param {{ W: number, H: number }} size */
+/** Denná výroba v kWh so stropom jasnej oblohy. @param {ForecastDay[]} days @param {number} selDay @param {{ W: number, H: number }} [size] */
 export function weekBarsModel(days, selDay, size = { W: 440, H: 190 }) {
     const { W, H } = size;
     const padL = 30;
