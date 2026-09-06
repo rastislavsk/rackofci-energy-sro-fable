@@ -138,16 +138,21 @@ export function clearSkyAcKw(dateUtc, ambientC = 25) {
     return plantAcKw(clearSkyIrradiance(sun.elevationDeg), ambientC, sun);
 }
 
+// Formátovače sú drahé na vytvorenie a lacné na použitie, preto vzniknú raz pre celý modul.
+// Predpoveď ich volá tisíckrát; stavať ich pri každom volaní stálo 99 % času buildForecast.
+const HOUR_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: SITE.timezone, hour: '2-digit', hour12: false });
+const DATE_FORMAT = new Intl.DateTimeFormat('en-CA', { timeZone: SITE.timezone });
+
 /** Miestna hodina (0-23) pre UTC čas. @param {Date} dateUtc */
 export function localHour(dateUtc) {
-    const parts = new Intl.DateTimeFormat('en-GB', { timeZone: SITE.timezone, hour: '2-digit', hour12: false }).formatToParts(dateUtc);
+    const parts = HOUR_FORMAT.formatToParts(dateUtc);
     const hour = parts.find((p) => p.type === 'hour');
     return Number(hour ? hour.value : 0) % 24;
 }
 
 /** Miestny dátum "YYYY-MM-DD" pre UTC čas. @param {Date} dateUtc */
 export function localDateKey(dateUtc) {
-    return new Intl.DateTimeFormat('en-CA', { timeZone: SITE.timezone }).format(dateUtc);
+    return DATE_FORMAT.format(dateUtc);
 }
 
 /** Časť dňa pre text "silnejšie slnko príde ...". @param {Date} dateUtc */
@@ -176,8 +181,16 @@ export function hourlySeries(entries) {
  * @param {string} dayKey @param {HourEntry[]} entries @returns {ForecastDay}
  */
 function buildDay(dayKey, entries) {
+    // Mapa nahrádza hľadanie cez `find` v cykle. Prvý záznam hodiny vyhráva rovnako ako tam,
+    // takže zhoda s pôvodným správaním platí aj v deň prechodu na zimný čas, keď miestna
+    // hodina 2 existuje dvakrát (v noci, čiže strop je tak či tak nulový).
+    /** @type {Map<number, HourEntry>} */ const entryByHour = new Map();
+    for (const e of entries) {
+        const hour = localHour(e.dateUtc);
+        if (!entryByHour.has(hour)) entryByHour.set(hour, e);
+    }
     const hourly = hourlySeries(entries).map((h) => {
-        const entry = entries.find((e) => localHour(e.dateUtc) === h.hour);
+        const entry = entryByHour.get(h.hour);
         return { ...h, clearKw: entry ? round(clearSkyAcKw(entry.dateUtc, entry.tempC), 2) : 0 };
     });
     let peak = hourly[0] || { hour: null, kw: 0 };
