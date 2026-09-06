@@ -66,6 +66,22 @@ function initTimePreview(store, dom) {
     });
 }
 
+/** Index reálnej stránky pod prstom práve teraz, aj keď je pás ešte v pohybe - záporný/za
+ * koncom tok (klon) sa pre zobrazenie pripne na najbližší reálny okraj. @param {HTMLElement} pager @param {Dom} dom */
+function currentFlowPage(pager, dom) {
+    const width = pager.clientWidth || 1;
+    const realPages = dom.verdictPageWait.classList.contains('hidden') ? 4 : 5;
+    const flowIndex = Math.round(pager.scrollLeft / width);
+    return { realPages, flowIndex, logical: Math.min(Math.max(flowIndex - 1, 0), realPages - 1) };
+}
+
+/** Bodka nech prstu/kolieskam sleduje plynulo, nie až po ustálení pásu - toto len kozmeticky
+ * prepne triedu na dobu pohybu; naozajstný stav (a korekcia na kraji, viď nižšie) príde až
+ * z debounced časti. @param {Dom} dom @param {number} index */
+function highlightDot(dom, index) {
+    dom.verdictDotButtons.forEach((dot, i) => dot.classList.toggle('active', i === index));
+}
+
 /** Listovanie verdiktu posúva prehliadač sám. Pred prvou a za poslednou reálnou stránkou je
  * neviditeľný klon poslednej/prvej (obsah drží syncPagerClones v spotrebice.js) - keď sa naň
  * pás ustáli, znamená to, že sa listovalo za okraj, a JS ho bez animácie preskočí na skutočnú
@@ -87,11 +103,11 @@ function initVerdictPager(store, dom) {
     pager.addEventListener(
         'scroll',
         () => {
+            highlightDot(dom, currentFlowPage(pager, dom).logical);
+
             clearTimeout(timer);
             timer = setTimeout(() => {
-                const width = pager.clientWidth || 1;
-                const realPages = dom.verdictPageWait.classList.contains('hidden') ? 4 : 5;
-                const flowIndex = Math.round(pager.scrollLeft / width);
+                const { realPages, flowIndex } = currentFlowPage(pager, dom);
                 if (flowIndex <= 0) {
                     const lastPage = pager.children[realPages];
                     if (lastPage instanceof HTMLElement)
