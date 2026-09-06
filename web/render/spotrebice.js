@@ -53,7 +53,6 @@ function renderHero(state, m, dom) {
     dom.verdictHeadline.textContent = m.message.headline;
     dom.verdictBody.textContent = m.message.body;
     dom.verdictGoRow.innerHTML = devicesHtml(m.devices);
-    dom.verdictGoRow.classList.toggle('hidden', !m.devices.length);
     renderVerdictPager(state, m, dom);
 }
 
