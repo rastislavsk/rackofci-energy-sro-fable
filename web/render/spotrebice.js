@@ -18,9 +18,9 @@ function devicesHtml(devices) {
             const power = `${fmt1(d.powerKw)} kW`;
             const tierCls = d.state !== 'no' && d.tier ? ` tier-${d.tier}` : '';
             return (
-                `<button type="button" class="go-chip state-${d.state}${tierCls}"${d.state === 'no' ? ' disabled' : ''} data-device="${escapeHtml(d.name)}" aria-label="${escapeHtml(d.name)}, ${power}">` +
+                `<button type="button" class="go-chip state-${d.state}${tierCls}"${d.state === 'no' ? ' disabled' : ''} data-device="${escapeHtml(d.name)}" data-power="${power}" aria-label="${escapeHtml(d.name)}, ${power}">` +
                 (DEVICE_ICONS[d.name] || '') +
-                `<span class="go-name">${escapeHtml(d.name)}</span><span class="go-power">${power}</span><span class="chip-tooltip">${power}</span></button>`
+                `<span class="go-name">${escapeHtml(d.name)}</span><span class="go-power">${power}</span></button>`
             );
         })
         .join('');

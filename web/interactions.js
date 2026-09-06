@@ -143,17 +143,29 @@ function initRectTooltip(wrap, tooltip) {
     });
 }
 
-/** Klik na spotrebič prepne tooltip s príkonom; zmizne sám alebo klikom inde. @param {Dom} dom */
+/** Klik na spotrebič prepne tooltip s príkonom nad ním; zmizne sám alebo klikom inde.
+ * Tooltip je jeden zdieľaný prvok mimo pageru (position: fixed), pozíciu dopočíta JS
+ * podľa kliknutého chipu. @param {Dom} dom */
 function initDeviceChips(dom) {
     /** @type {ReturnType<typeof setTimeout> | undefined} */ let timer;
+    /** @type {HTMLElement | null} */ let openChip = null;
+    const hide = () => {
+        dom.verdictChipTooltip.classList.remove('visible');
+        openChip = null;
+    };
     document.addEventListener('click', (e) => {
         const chip = /** @type {HTMLElement} */ (e.target).closest('.go-chip');
-        const wasOpen = chip && chip.classList.contains('tooltip-open');
+        const wasOpen = chip === openChip;
         clearTimeout(timer);
-        dom.verdictGoRow.querySelectorAll('.go-chip.tooltip-open').forEach((c) => c.classList.remove('tooltip-open'));
-        if (chip && !wasOpen) {
-            chip.classList.add('tooltip-open');
-            timer = setTimeout(() => chip.classList.remove('tooltip-open'), TOOLTIP_HOLD_MS);
+        hide();
+        if (chip instanceof HTMLElement && !wasOpen) {
+            const rect = chip.getBoundingClientRect();
+            dom.verdictChipTooltip.textContent = chip.dataset.power || '';
+            dom.verdictChipTooltip.style.left = `${rect.left + rect.width / 2}px`;
+            dom.verdictChipTooltip.style.top = `${rect.top}px`;
+            dom.verdictChipTooltip.classList.add('visible');
+            openChip = chip;
+            timer = setTimeout(hide, TOOLTIP_HOLD_MS);
         }
     });
 }
