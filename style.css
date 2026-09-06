@@ -1438,10 +1438,14 @@ b {
 }
 
 /* ---- Utility (zámerne posledné) --------------------------------------------
-   .hidden má rovnakú špecificitu ako komponentové triedy (.preview-banner,
-   .chart-now, .stat-badge...), takže o výsledku rozhoduje poradie v súbore.
-   Preto stojí až za všetkými komponentmi a media queries - inak by ho neskoršie
-   `display: flex` prebilo a skryté prvky by ostali viditeľné. Žiadny !important. */
+   .hidden je jediná trieda (špecificita 0,1,0). Kým stála len na konci súboru bez
+   `!important`, spoliehalo sa na to, že ju nikto neprebije - a to neplatilo: pätnásť
+   pravidiel s `display` malo vyššiu špecificitu a dve z nich sa naozaj prejavili
+   (`.chart-legend span` nechávalo v legende položky ku krivkám, ktoré sa nekreslili).
+   Poradie v súbore proti vyššej špecificite nepomôže, preto tu `!important` je.
+   Je to jediné miesto v tomto súbore, kde sa používa, a je to zámer: prvok s triedou
+   .hidden nemá byť vidno nikdy, takže niet čo prebíjať. Stráži to e2e test
+   ".hidden skryje každý prvok v stránke". */
 .hidden {
-    display: none;
+    display: none !important;
 }
