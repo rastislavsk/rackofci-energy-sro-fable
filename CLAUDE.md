@@ -23,10 +23,18 @@ ktorý jej dodáva dáta. Podrobnosti v `README.md` a `docs/ARCHITECTURE.md`.
 
 ## Pozor na kaskádu v CSS
 
-Utilita `.hidden` stojí zámerne na konci `style.css` a nepoužíva `!important`. Má rovnakú
-špecificitu ako komponentové triedy, takže rozhoduje poradie. **Nikdy nepíš pravidlo s
-`display` cez selektor s ID** (napríklad `#panel-spotrebice`) – prebilo by `.hidden` a
-skrytý prvok by ostal viditeľný. Používaj triedy.
+**Invariant: nič nesmie prebiť utilitu `.hidden`.** Keď jej appka pridá triedu, prvok musí
+zmiznúť – inak by ukazovala niečo, čo tvrdí, že skrýva.
+
+`.hidden` preto ako **jediné miesto v `style.css` používa `!important`**. Nie je to
+nedbalosť: skôr stála len na konci súboru a spoliehala sa na poradie, lenže poradie
+rozhoduje iba pri rovnakej špecificite. Pätnásť pravidiel s `display` ju prebíjalo a dve
+z nich sa naozaj prejavili. Vymenúvať, čo je zakázané (ID selektory, potomkovské
+selektory, …), nefunguje – to sme už raz skúsili a chyba prišla dierou, ktorá v zozname
+nebola. Inde `!important` nepíš.
+
+Kontroluje to e2e test „`.hidden` skryje každý prvok v stránke“, ktorý prejde všetky
+prvky vo všetkých kartách. Nový prvok netreba nikam dopisovať – test ho uvidí sám.
 
 ## Ako overovať
 
