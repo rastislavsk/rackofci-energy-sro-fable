@@ -263,6 +263,13 @@ function cellTip(d, i, h) {
     };
 }
 
+/** Farebné pásmo bunky heatmapy podľa podielu z maxima (0..1): nízky výkon = červená, vysoký = zelená. @param {number} frac */
+function heatBand(frac) {
+    if (frac < 1 / 3) return 'red';
+    if (frac < 2 / 3) return 'amber';
+    return 'green';
+}
+
 /** Mapa výroby hodina × deň. @param {ForecastDay[]} days @param {number} selDay */
 export function weekHeatModel(days, selDay) {
     const W = 440;
@@ -294,19 +301,25 @@ export function weekHeatModel(days, selDay) {
     days.forEach((d, ri) => {
         WEEK_HOURS.forEach((h, ci) => {
             const v = maps[ri][h] ? maps[ri][h].kw : 0;
+            const frac = v / max;
             cells.push({
                 x: padL + ci * cw + gap / 2,
                 y: padT + ri * rh + gap / 2,
                 w: cw - gap,
                 h: rh - gap,
-                frac: v / max,
+                frac,
+                tier: frac <= 0.02 ? null : heatBand(frac),
                 dayIndex: ri,
                 tip: v > 0.02 ? cellTip(d, ri, h) : null,
             });
         });
     });
     const selRect = { x: padL - 1, y: padT + selDay * rh, w: W - padL - padR + 2, h: rh - gap };
-    return { W, H, cells, hourLabels, dayLabels, selRect, max, legendFracs: Array.from({ length: 10 }, (_, i) => i / 9) };
+    const legend = Array.from({ length: 10 }, (_, i) => {
+        const frac = i / 9;
+        return { frac, tier: heatBand(frac) };
+    });
+    return { W, H, cells, hourLabels, dayLabels, selRect, max, legend };
 }
 
 /** Denná výroba v kWh so stropom jasnej oblohy. @param {ForecastDay[]} days @param {number} selDay @param {{ W: number, H: number }} size */

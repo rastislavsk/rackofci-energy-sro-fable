@@ -153,7 +153,7 @@ export function renderSedemdni(state, dom) {
     dom.weekHeat.setAttribute('viewBox', `0 0 ${heat.W} ${heat.H}`);
     dom.weekHeat.setAttribute('height', String(heat.H));
     dom.weekHeat.innerHTML = weekHeatSvg(heat);
-    dom.weekHeatScale.innerHTML = `<span>0 kW</span><span class="sw">${heat.legendFracs.map((f) => `<i style="opacity:${(0.12 + f * 0.8).toFixed(2)}"></i>`).join('')}</span><span>${heat.max.toFixed(1)} kW</span>`;
+    dom.weekHeatScale.innerHTML = `<span>0 kW</span><span class="sw">${heat.legend.map((l) => `<i class="tier-${l.tier}" style="opacity:${(0.12 + l.frac * 0.8).toFixed(2)}"></i>`).join('')}</span><span>${heat.max.toFixed(1)} kW</span>`;
 
     const bars = weekBarsModel(days, sel);
     dom.weekBars.setAttribute('viewBox', `0 0 ${bars.W} ${bars.H}`);

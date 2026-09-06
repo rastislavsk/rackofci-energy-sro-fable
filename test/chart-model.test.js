@@ -106,6 +106,21 @@ test('weekHeatModel: 7 riadkov × 17 hodín, popisky a výber dňa', () => {
     assert.equal(m.hourLabels.map((l) => l.label).join(','), '8,12,16,20');
 });
 
+test('weekHeatModel: farebné pásma bunky - nízky výkon červená, vysoký zelená', () => {
+    const m = weekHeatModel(forecast.days, 0);
+    assert.ok(
+        m.cells.some((c) => c.tier === null),
+        'bunky bez výroby nemajú pásmo (sivá)',
+    );
+    assert.ok(m.cells.some((c) => c.tier === 'red'));
+    assert.ok(m.cells.some((c) => c.tier === 'amber'));
+    assert.ok(m.cells.some((c) => c.tier === 'green'));
+    assert.ok(m.cells.every((c) => c.tier === null || c.frac > 0.02));
+    assert.equal(m.legend.length, 10);
+    assert.equal(m.legend[0].tier, 'red');
+    assert.equal(m.legend[m.legend.length - 1].tier, 'green');
+});
+
 test('weekBarsModel: stĺpce s tooltipom a stropom, vybraný deň označený', () => {
     const m = weekBarsModel(forecast.days, 1);
     assert.equal(m.bars.length, 7);

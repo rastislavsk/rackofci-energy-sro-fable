@@ -1057,11 +1057,17 @@ b {
     stroke-width: 2;
 }
 .heat-cell {
-    fill: var(--green);
+    fill: var(--ink);
     cursor: pointer;
 }
-.heat-cell[data-empty] {
-    fill: var(--ink);
+.heat-cell.tier-red {
+    fill: var(--red);
+}
+.heat-cell.tier-amber {
+    fill: var(--amber);
+}
+.heat-cell.tier-green {
+    fill: var(--green);
 }
 .week-row-sel {
     fill: none;
@@ -1181,8 +1187,16 @@ b {
     width: 7px;
     height: 7px;
     border-radius: 1px;
-    background: var(--green);
     display: inline-block;
+}
+.heat-scale .sw i.tier-red {
+    background: var(--red);
+}
+.heat-scale .sw i.tier-amber {
+    background: var(--amber);
+}
+.heat-scale .sw i.tier-green {
+    background: var(--green);
 }
 
 /* ---- 7 dní: bloky a tabuľka ------------------------------------------------ */
