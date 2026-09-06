@@ -240,6 +240,45 @@ function initViewportZoomRealign() {
     vv.addEventListener('scroll', checkAlignment);
 }
 
+/**
+ * Skutočné rozmery plátien grafov idú do stavu, aby sa graf dal vykresliť presne na kartu
+ * namiesto na pevné plátno. Bez toho sa SVG buď roztiahne (a skreslí popisky), alebo si
+ * nechá pomer strán a v karte ostane prázdne miesto.
+ *
+ * Zapisuje sa len skutočná zmena. Prekreslenie totiž zapíše do plátna nové SVG a keby to
+ * jeho rozmer zmenilo, ResizeObserver by sa spustil znovu - porovnanie ten kruh zastaví.
+ * @param {Store} store @param {Dom} dom
+ */
+function initChartSizes(store, dom) {
+    /** @type {Array<[string, HTMLElement]>} */
+    const wraps = [
+        ['forecast', dom.forecastChartWrap],
+        ['weekHeat', dom.weekHeatWrap],
+        ['weekBars', dom.weekBarsWrap],
+        ['weekCurve', dom.weekCurveWrap],
+    ];
+    const measure = () => {
+        const prev = store.get().chartSizes;
+        /** @type {Record<string, { w: number, h: number }>} */ const next = {};
+        let zmena = false;
+        for (const [key, el] of wraps) {
+            const { width, height } = el.getBoundingClientRect();
+            if (!width || !height) {
+                if (prev[key]) next[key] = prev[key];
+                continue;
+            }
+            const w = Math.round(width);
+            const h = Math.round(height);
+            next[key] = { w, h };
+            if (!prev[key] || prev[key].w !== w || prev[key].h !== h) zmena = true;
+        }
+        if (zmena) store.setState({ chartSizes: next });
+    };
+    const observer = new ResizeObserver(measure);
+    for (const [, el] of wraps) observer.observe(el);
+    measure();
+}
+
 /** Hodiny, obnova dát, návrat z pozadia a zmeny šírky okna. @param {Store} store @param {{ wide: MediaQueryList, desktop: MediaQueryList }} mq */
 function initTicks(store, mq) {
     const refresh = async () => {
@@ -272,5 +311,6 @@ export function initInteractions(store, dom, mq) {
     initRectTooltip(dom.weekHeatWrap, dom.weekHeatTooltip);
     initRectTooltip(dom.weekBarsWrap, dom.weekBarsTooltip);
     initDeviceChips(dom);
+    initChartSizes(store, dom);
     return initTicks(store, mq);
 }

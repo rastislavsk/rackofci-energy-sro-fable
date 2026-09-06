@@ -1475,7 +1475,8 @@ b {
         height: 100%;
     }
 
-    /* Karta 7 dní: hlavička a štatistiky si vezmú svoje, mriežka grafov zvyšok. */
+    /* Karta 7 dní: hlavička, štatistiky a správa si vezmú svoje, mriežka grafov zvyšok.
+       Všetko okolo grafov je tu úspornejšie - každý ušetrený pixel ide krivkám. */
     #panel-7dni {
         display: grid;
         grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -1492,14 +1493,28 @@ b {
     #panel-7dni .stat {
         padding: var(--sp-2) var(--sp-3);
     }
+    #panel-7dni .msg-block {
+        padding: var(--sp-2) var(--sp-3);
+    }
+    #panel-7dni .msg-block h3 {
+        font-size: var(--fs-md);
+    }
+    #panel-7dni .msg-block p {
+        font-size: var(--fs-sm);
+    }
+
     /* Tabuľka dostane vlastný stĺpec cez obe rady. Na sedem riadkov potrebuje 315 px
        výšky a 385 px šírky (stĺpec má 400 px na lištu posúvania) - toľko jej celá
        výška mriežky dá aj na 768 px vysokej obrazovke. Grafy sa stlačiť dajú,
-       riadky tabuľky pod čitateľnosť nie, tak miesto dostane to, čo ho potrebuje. */
+       riadky tabuľky pod čitateľnosť nie, tak miesto dostane to, čo ho potrebuje.
+
+       Spodná rada je vyššia: graf Priebeh výroby má nad sebou prepínač dní aj
+       štatistiky a pod sebou legendu, takže z rovnakej rady by mu na krivku ostalo
+       menej, než zaberú okraje samotného plátna. */
     .week-grid {
         min-height: 0;
         grid-template-columns: 1fr 1fr 400px;
-        grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
         gap: var(--sp-3);
     }
     .week-block:nth-child(3) {
@@ -1528,10 +1543,12 @@ b {
         display: flex;
         flex-direction: column;
     }
+    /* Plátno sa nesmie zmestiť pod vlastné okraje (padT + padB = 52 px), inak by graf
+       kreslil do zápornej plochy. Radšej sa stránka o kúsok posunie. */
     .week-block .chart-wrap,
     #panel-predpoved .chart-wrap {
         flex: 1 1 auto;
-        min-height: 0;
+        min-height: 96px;
     }
     .week-block .chart-wrap svg,
     #panel-predpoved .chart-wrap svg {
@@ -1546,6 +1563,16 @@ b {
         flex: 1 1 auto;
         min-height: 0;
         overflow: auto;
+    }
+}
+
+/* Nízke okno na desktope: riadok nad grafom stĺpcov ("Spolu za 7 dní / Priemer /
+   Najsilnejší deň") hovorí to isté, čo kartička "7 dní spolu" nad ním, a keď sa zalomí
+   do dvoch riadkov, vytlačí popisky dní grafu do legendy pod ním. Tu preto ustúpi grafu;
+   na vyššej obrazovke ostáva. */
+@media (min-width: 1024px) and (max-height: 900px) {
+    #week-bars-stat {
+        display: none;
     }
 }
 

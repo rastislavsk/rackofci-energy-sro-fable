@@ -1,11 +1,24 @@
 // Karta Predpoveď: graf Dnes/Zajtra, štatistiky a správa dňa.
 
-import { chartDims, forecastChartModel, realProductionSoFar } from '../../shared/chart-model.js';
+import { chartDims, fillDims, forecastChartModel, realProductionSoFar } from '../../shared/chart-model.js';
 import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
 import { fmt1, hourFloatToTimeStr, hourLabel, pad2 } from '../../shared/format.js';
 import { EMPTY_MESSAGES, forecastDayMessage } from '../../shared/messages.js';
 import { changedKeys } from '../memo.js';
 import { forecastChartSvg } from '../svg.js';
+
+/**
+ * Plátno grafu: keď poznáme skutočný rozmer karty, kreslíme presne naň (viewBox potom sedí
+ * s pixelmi 1:1, takže sa nič neskresľuje ani nezostáva prázdne). Kým rozmer nepoznáme,
+ * platí pevné plátno podľa šírky okna.
+ * @param {import('../state.js').AppState} state @param {string} key
+ */
+export function dimsFor(state, key) {
+    // Len na širokej karte: fillDims berie okraje zo širokého plátna (os Y, väčšie odsadenie),
+    // na mobile by tým prepísalo úmyselne úspornejšie rozloženie z chartDims(false).
+    const size = state.wide ? state.chartSizes[key] : null;
+    return size ? fillDims(size.w, size.h) : chartDims(state.wide);
+}
 
 /** Vstup grafu odvodený zo stavu - rovnaký pre render aj pre tooltip. @param {import('../state.js').AppState} state */
 export function forecastChartInput(state) {
@@ -15,7 +28,7 @@ export function forecastChartInput(state) {
         pts,
         realPts: isToday && state.pv ? state.pv.realCurveToday : [],
         nowHour: isToday ? state.now.getHours() + state.now.getMinutes() / 60 : null,
-        dims: chartDims(state.wide),
+        dims: dimsFor(state, 'forecast'),
     };
 }
 
@@ -58,7 +71,8 @@ export function renderPredpoved(state, dom) {
     // Spotrebičov, takže sa pri každom pohybe prsta prekresľovala nadarmo - a hlavne špinila
     // layout, čo zdražilo ďalší krok gesta. Preto sa prekresľuje len pri zmene vlastných vstupov.
     const nowHour = state.now.getHours() + state.now.getMinutes() / 60;
-    if (!changedKeys('predpoved', [state.forecast, state.pv, state.forecastDay, state.wide, state.desktop, nowHour])) return;
+    if (!changedKeys('predpoved', [state.forecast, state.pv, state.forecastDay, state.wide, state.desktop, nowHour, state.chartSizes]))
+        return;
 
     // Tá istá správa je aj vlastnou stránkou v pageri karty Spotrebiče (vždy, aj na desktope) -
     // tu na desktope už nie je čo duplikovať, na mobile a tablete ostáva na oboch miestach.

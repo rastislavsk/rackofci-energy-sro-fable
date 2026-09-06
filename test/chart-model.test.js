@@ -4,6 +4,7 @@ import { INSTALLED_PV_KW } from '../shared/config.js';
 import {
     chartDims,
     chartTooltipModel,
+    fillDims,
     dayKwAt,
     dayStripModel,
     forecastChartModel,
@@ -48,6 +49,11 @@ test('smoothPath a kwGridStep', () => {
     assert.equal(kwGridStep(1.5), 0.25);
     assert.equal(kwGridStep(9), 1);
     assert.equal(kwGridStep(500), 20);
+    // Na nízkom plátne sa krok zhrubne, aby popisky osi Y nesplynuli do stĺpca číslic.
+    assert.equal(kwGridStep(9, 2), 5, 'dve čiary namiesto deviatich');
+    assert.equal(kwGridStep(9, 1), 10, 'jedna čiara');
+    assert.equal(kwGridStep(9, 0.4), 10, 'menej než jedna čiara sa berie ako jedna');
+    assert.equal(kwGridStep(9, 99), kwGridStep(9), 'nad desať čiar sa nejde ani tak');
 });
 
 test('forecastChartModel: null bez dát, maxKw = 1,15 × maximum, mriežka podľa plátna', () => {
@@ -145,6 +151,38 @@ test('weekHeatModel: tooltip bunky patrí svojmu dňu a svojej hodine', () => {
         );
         assert.ok(cell.tip.text.startsWith(`${(point ? point.kw : 0).toFixed(2)} kW`), `text bunky [${ri}][${ci}]: ${cell.tip.text}`);
     }
+});
+
+test('fillDims: okraje širokého plátna na skutočnom rozmere karty', () => {
+    const d = fillDims(498.6, 377.2);
+    assert.equal(d.w, 499, 'rozmer sa zaokrúhli na celý pixel, aby viewBox sedel s kartou');
+    assert.equal(d.h, 377);
+    const wide = chartDims(true);
+    assert.equal(d.padL, wide.padL, 'okraje aj os Y ostávajú tie zo širokého plátna');
+    assert.equal(d.yAxis, wide.yAxis);
+    assert.equal(d.hourStep, wide.hourStep);
+});
+
+test('weekHeatModel: so zadanou veľkosťou vyplní kartu, bez nej si plátno určí sama', () => {
+    const bez = weekHeatModel(forecast.days, 0);
+    assert.equal(bez.W, 440, 'predvolené plátno ostáva 440 široké');
+    assert.equal(bez.H, 20 + forecast.days.length * 24 + 4);
+
+    const so = weekHeatModel(forecast.days, 0, { W: 462, H: 481 });
+    assert.equal(so.W, 462);
+    assert.equal(so.H, 481, 'plátno je presne to, ktoré dostalo - inak by v karte ostalo prázdno');
+    assert.equal(so.cells.length, bez.cells.length, 'počet buniek sa veľkosťou nemení');
+    assert.ok(so.cells[0].h > bez.cells[0].h, 'vyššia karta = vyššie bunky');
+    // Posledný riadok musí končiť v plátne, inak by mapa pretiekla cez okraj karty.
+    const posledny = so.cells[so.cells.length - 1];
+    assert.ok(posledny.y + posledny.h <= so.H, `posledný riadok končí na ${posledny.y + posledny.h}, plátno má ${so.H}`);
+
+    // Aj v extrémne nízkej karte musí bunka ostať kladná, nie záporná.
+    const nizka = weekHeatModel(forecast.days, 0, { W: 300, H: 30 });
+    assert.ok(
+        nizka.cells.every((c) => c.h > 0),
+        'bunky nesmú mať zápornú výšku',
+    );
 });
 
 test('weekBarsModel: stĺpce s tooltipom a stropom, vybraný deň označený', () => {

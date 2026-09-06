@@ -1,10 +1,11 @@
 // Karta 7 dní: súhrn, mapa výroby, denné stĺpce, priebeh vybraného dňa, tabuľka, správa.
 
-import { chartDims, forecastChartModel, usePct, weekBarsModel, weekHeatModel, weekStatsModel } from '../../shared/chart-model.js';
+import { forecastChartModel, usePct, weekBarsModel, weekHeatModel, weekStatsModel } from '../../shared/chart-model.js';
 import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
 import { escapeHtml, fmt1, hourLabel, weekDateLabel, weekDayShort } from '../../shared/format.js';
 import { EMPTY_MESSAGES, weekMessage } from '../../shared/messages.js';
 import { ICON_CLOUD, ICON_PARTLY, ICON_SUN } from '../icons.js';
+import { dimsFor } from './predpoved.js';
 import { forecastChartSvg, weekBarsSvg, weekHeatSvg } from '../svg.js';
 
 /** @typedef {import('../../shared/solar.js').ForecastDay} ForecastDay */
@@ -15,7 +16,7 @@ export function weekCurveModel(state) {
     const day = days[state.weekSelDay];
     if (!day) return null;
     const nowHour = state.weekSelDay === 0 ? state.now.getHours() + state.now.getMinutes() / 60 : null;
-    return forecastChartModel({ pts: day.hourly, nowHour, dims: chartDims(state.wide) });
+    return forecastChartModel({ pts: day.hourly, nowHour, dims: dimsFor(state, 'weekCurve') });
 }
 
 /** @param {boolean} sunny @param {number | null} cloudPct */
@@ -149,13 +150,17 @@ export function renderSedemdni(state, dom) {
 
     renderStats(weekStatsModel(days, state.pv, state.forecast ? state.forecast.tomorrowSunny : false), dom);
 
-    const heat = weekHeatModel(days, sel);
+    // Mapa a stĺpce dostanú skutočný rozmer karty len na širokej obrazovke; na mobile si
+    // plátno určia samy, aby rozloženie ostalo také, aké bolo.
+    const heatSize = state.wide ? state.chartSizes.weekHeat : null;
+    const heat = weekHeatModel(days, sel, heatSize ? { W: heatSize.w, H: heatSize.h } : null);
     dom.weekHeat.setAttribute('viewBox', `0 0 ${heat.W} ${heat.H}`);
     dom.weekHeat.setAttribute('height', String(heat.H));
     dom.weekHeat.innerHTML = weekHeatSvg(heat);
     dom.weekHeatScale.innerHTML = `<span>0 kW</span><span class="sw">${heat.legend.map((l) => `<i class="tier-${l.tier}" style="opacity:${(0.12 + l.frac * 0.8).toFixed(2)}"></i>`).join('')}</span><span>${heat.max.toFixed(1)} kW</span>`;
 
-    const bars = weekBarsModel(days, sel);
+    const barsSize = state.wide ? state.chartSizes.weekBars : null;
+    const bars = weekBarsModel(days, sel, barsSize ? { W: barsSize.w, H: barsSize.h } : undefined);
     dom.weekBars.setAttribute('viewBox', `0 0 ${bars.W} ${bars.H}`);
     dom.weekBars.setAttribute('height', String(bars.H));
     dom.weekBars.innerHTML = weekBarsSvg(bars);
