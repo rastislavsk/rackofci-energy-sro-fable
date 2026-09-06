@@ -345,20 +345,15 @@ b {
     padding-top: var(--sp-1);
     margin-bottom: var(--sp-5);
 }
-.badge-row {
-    display: flex;
-    justify-content: center;
-    margin-bottom: var(--sp-1);
-}
 .badge {
     display: inline-flex;
     align-items: center;
     border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
     background: color-mix(in srgb, var(--accent) 16%, transparent);
     border-radius: var(--radius-pill);
-    padding: 6px 14px;
+    padding: 8px 18px;
     font-family: var(--font-mono);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-md);
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -374,8 +369,8 @@ b {
     justify-content: center;
     margin: 18px 0 var(--sp-1);
 }
-/* Väčšie ako na desktope (viď @media min-width:1024px) - na mobile a tablete uvoľnil
-   miesto odznak s tarifou, ktorý sa odtiaľ presunul do pageru (placeEyebrowBadge). */
+/* Odznak s tarifou nikde nad ciferníkom nie je (žije len v pageri karty Čo robiť teraz) -
+   ciferník tak môže byť na každej šírke rovnako veľký. */
 .dial-svg {
     width: 240px;
     height: 240px;
@@ -1352,11 +1347,6 @@ b {
     }
     .panel-spotrebice .preview-banner {
         grid-column: 1 / -1;
-    }
-    /* Odznak s tarifou tu ostáva nad ciferníkom (placeEyebrowBadge), miesto sa neuvoľňuje. */
-    .dial-svg {
-        width: 208px;
-        height: 208px;
     }
     .verdict {
         margin-bottom: var(--sp-4);

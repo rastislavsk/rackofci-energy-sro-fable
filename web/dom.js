@@ -28,8 +28,6 @@ function spotrebiceDom() {
         previewPill: byId('preview-pill'),
         previewTimeLabel: byId('preview-time-label'),
         previewReset: byId('preview-reset'),
-        verdictEyebrow: byId('verdict-eyebrow'),
-        dialBadgeRow: byId('dial-badge-row'),
         verdictEyebrowPage: byId('verdict-eyebrow-page'),
         verdictForecastTitle: byId('verdict-forecast-title'),
         verdictForecastBody: byId('verdict-forecast-body'),
