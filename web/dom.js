@@ -29,6 +29,8 @@ function spotrebiceDom() {
         previewTimeLabel: byId('preview-time-label'),
         previewReset: byId('preview-reset'),
         verdictEyebrow: byId('verdict-eyebrow'),
+        dialBadgeRow: byId('dial-badge-row'),
+        verdictPageEyebrow: byId('verdict-page-eyebrow'),
         dialRing: byId('dial-ring'),
         pvPower: byId('pv-power'),
         pvPowerUnit: byId('pv-power-unit'),

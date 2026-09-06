@@ -26,16 +26,24 @@ function devicesHtml(devices) {
         .join('');
 }
 
-/** Listovanie verdiktu: prvé dve stránky (teraz, spotrebiče) sú vždy, tretia ("lepšie bude")
- * len keď model pozná čas čakania. Pozíciu posunu drží prehliadač; sem sa zapisuje obsah
- * a bodky. @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
+/** Listovanie verdiktu: prvé tri stránky (teraz, spotrebiče, tarifa a slnko) sú vždy,
+ * štvrtá ("lepšie bude") len keď model pozná čas čakania. Pozíciu posunu drží prehliadač;
+ * sem sa zapisuje obsah a bodky. @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
 function renderVerdictPager(state, m, dom) {
-    const pages = m.waitTime ? 3 : 2;
+    const pages = m.waitTime ? 4 : 3;
     const page = Math.min(state.verdictPage, pages - 1);
     dom.verdictWaitTime.textContent = m.waitTime || '--:--';
     dom.verdictPageWait.classList.toggle('hidden', !m.waitTime);
     dom.verdictDotWait.classList.toggle('hidden', !m.waitTime);
     dom.verdictDotButtons.forEach((dot, i) => dot.classList.toggle('active', i === page));
+}
+
+/** Odznak s tarifou: na desktope ostáva nad ciferníkom (tam je naň dosť miesta), na mobile
+ * a tablete sa presunie do vlastnej stránky pageru, aby sa uvoľnilo miesto pre väčší ciferník.
+ * @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
+function placeEyebrowBadge(state, dom) {
+    const home = state.desktop ? dom.dialBadgeRow : dom.verdictPageEyebrow;
+    if (dom.verdictEyebrow.parentElement !== home) home.appendChild(dom.verdictEyebrow);
 }
 
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
@@ -48,6 +56,7 @@ function renderHero(state, m, dom) {
     dom.dialRing.style.strokeDashoffset = String(DIAL_CIRCUMFERENCE * (1 - m.dial.fraction));
     dom.dialRing.style.stroke = tierVar(m.dial.tier);
     dom.verdictEyebrow.textContent = m.eyebrow;
+    placeEyebrowBadge(state, dom);
     dom.verdictHeadline.textContent = m.message.headline;
     dom.verdictBody.textContent = m.message.body;
     dom.verdictGoRow.innerHTML = devicesHtml(m.devices);

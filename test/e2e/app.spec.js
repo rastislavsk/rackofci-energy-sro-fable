@@ -57,10 +57,14 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     await expect(page.locator('#pv-power')).toHaveText('6.41');
     await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
     await expect(page.locator('#pv-updated')).toContainText('aktualizované 13:00');
-    // Spotrebiče sú druhá stránka vždy - bodky sú vidno, no tretia (Lepšie bude) nie je.
+    // Spotrebiče a Tarifa a slnko sú tam vždy - bodky sú vidno, no štvrtá (Lepšie bude) nie je.
+    await expect(page.locator('#verdict-dots .pager-dot')).toHaveCount(4);
     await expect(page.locator('#verdict-dots')).toBeVisible();
     await expect(page.locator('#verdict-dot-wait')).toBeHidden();
     await expect(page.locator('#verdict-page-wait')).toBeHidden();
+    // Na mobile odznak s tarifou nie je nad ciferníkom, ale vo vlastnej stránke pageru.
+    await expect(page.locator('#verdict-page-eyebrow')).toContainText(expected.eyebrow);
+    await expect(page.locator('#dial-badge-row')).toBeEmpty();
     expect(errors).toEqual([]);
 });
 
@@ -78,7 +82,7 @@ test('klik na spotrebič (mobil) ukáže tooltip s príkonom, nie je orezaný pa
     await expect(tooltip).not.toHaveClass(/visible/);
 });
 
-test('verdikt sa listuje do strán: teraz, spotrebiče, kedy bude lepšie', async ({ page }) => {
+test('verdikt sa listuje do strán: teraz, spotrebiče, tarifa a slnko, kedy bude lepšie', async ({ page }) => {
     const { instant, wall } = atTime('09:00');
     // Fixtures nemajú pred sebou silnejšie okno, bez tejto úpravy by čakací čas nikdy nevznikol.
     const sunnier = { ...forecast, strongerWindowAhead: true, hoursAhead: 3, windowDaypart: 'poobede' };
@@ -87,7 +91,7 @@ test('verdikt sa listuje do strán: teraz, spotrebiče, kedy bude lepšie', asyn
 
     const dots = page.locator('#verdict-dots .pager-dot');
     await expect(page.locator('#verdict-dots')).toBeVisible();
-    await expect(dots.nth(2)).toBeVisible();
+    await expect(dots.nth(3)).toBeVisible();
     await expect(page.locator('#verdict-wait-time')).toHaveText(String(expected.waitTime));
     await expect(page.locator('#verdict-headline')).toHaveText(expected.message.headline);
     await expect(page.locator('#verdict-pager')).toHaveAttribute('tabindex', '0');
@@ -102,9 +106,15 @@ test('verdikt sa listuje do strán: teraz, spotrebiče, kedy bude lepšie', asyn
     await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
     await expect(page.locator('#verdict-go-row')).toBeInViewport();
 
-    // Ešte jeden posun na tretiu stránku "Lepšie bude".
+    // Ešte jeden posun na tretiu stránku "Tarifa a slnko".
     await page.mouse.wheel(400, 0);
     await expect(dots.nth(2)).toHaveClass(/active/);
+    await expect(page.locator('#verdict-page-eyebrow')).toHaveText(expected.eyebrow);
+    await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
+
+    // Posledný posun na štvrtú stránku "Lepšie bude".
+    await page.mouse.wheel(400, 0);
+    await expect(dots.nth(3)).toHaveClass(/active/);
     await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
 
     // Bodka posunie pás späť na prvú stránku.
@@ -215,6 +225,9 @@ test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }
     await expect(page.locator('#panel-spotrebice')).toBeVisible();
     await expect(page.locator('#panel-predpoved')).toBeVisible();
     await expect(page.locator('#forecast-chart')).toHaveAttribute('viewBox', '0 0 680 420');
+    // Na desktope má odznak s tarifou dosť miesta nad ciferníkom, do pageru sa nepresúva.
+    await expect(page.locator('#dial-badge-row #verdict-eyebrow')).toBeVisible();
+    await expect(page.locator('#verdict-page-eyebrow')).toBeEmpty();
     expect(errors).toEqual([]);
 });
 
