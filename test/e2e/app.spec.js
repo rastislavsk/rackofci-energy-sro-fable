@@ -189,6 +189,36 @@ test('náhľad iného času klikom na pás a návrat na teraz', async ({ page })
     await expect(page.locator('#pv-power-unit')).toHaveText('kW teraz');
 });
 
+test('ťahanie bežca: pás sa pri náhľade nemení, obnovené dáta ale dobehne', async ({ page }) => {
+    const errors = await openApp(page);
+    const strip = page.locator('#daystrip');
+    const box = await strip.boundingBox();
+    if (!box) throw new Error('pás dňa nemá rozmer');
+    const y = box.y + box.height / 2;
+
+    // Pás dňa nezávisí od náhľadu času - počas ťahania sa jeho obsah nesmie zmeniť.
+    const beforeDrag = await strip.innerHTML();
+    // Ťahanie musí začať na samotnom bežci - poslucháče sedia na ňom, nie na páse.
+    const handle = await page.locator('#strip-marker-handle').boundingBox();
+    if (!handle) throw new Error('bežec nemá rozmer');
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+    await page.mouse.down();
+    for (const frac of [0.4, 0.5, 0.6, 0.7]) await page.mouse.move(box.x + box.width * frac, y);
+    await expect(page.locator('#drag-tooltip')).toBeVisible();
+    await page.mouse.up();
+    await expect(page.locator('#preview-banner')).toBeVisible();
+    // 70 % šírky pásu je zhruba 16:48; presná minúta závisí od zaokrúhlenia pixelov.
+    await expect(page.locator('#preview-time-label')).toHaveText(/^Náhľad · 1[67]:\d{2}$/);
+    expect(await strip.innerHTML()).toBe(beforeDrag);
+
+    // Nové dáta zo siete musia pás prekresliť aj vtedy, keď v ňom stojí náhľad.
+    const halved = { ...forecast, hourlyToday: forecast.hourlyToday.map((h) => ({ ...h, kw: h.kw / 2 })) };
+    await page.route(WORKER_URL, (route) => route.fulfill({ json: { pv, forecast: halved, servedAt: FIXED_NOW.toISOString() } }));
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await expect.poll(() => strip.innerHTML()).not.toBe(beforeDrag);
+    expect(errors).toEqual([]);
+});
+
 test('predpoveď: štatistiky, prepnutie na zajtra, správa dňa', async ({ page }) => {
     const errors = await openApp(page);
     await page.locator('#nav-predpoved').click();
