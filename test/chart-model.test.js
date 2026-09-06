@@ -14,10 +14,12 @@ import {
     smoothPath,
     STRIP,
     usePct,
+    WEEK_HOURS,
     weekBarsModel,
     weekHeatModel,
     weekStatsModel,
 } from '../shared/chart-model.js';
+import { hourLabel, weekDateLabel, weekDayShort } from '../shared/format.js';
 import { fixtureData } from './helpers.js';
 
 const { pv, forecast } = fixtureData();
@@ -119,6 +121,30 @@ test('weekHeatModel: farebné pásma bunky - nízky výkon červená, vysoký ze
     assert.equal(m.legend.length, 10);
     assert.equal(m.legend[0].tier, 'red');
     assert.equal(m.legend[m.legend.length - 1].tier, 'green');
+});
+
+test('weekHeatModel: tooltip bunky patrí svojmu dňu a svojej hodine', () => {
+    const m = weekHeatModel(forecast.days, 0);
+    const cols = WEEK_HOURS.length;
+    // Bunka sa hľadá podľa vlastnej pozície, nie podľa poradia v poli - tak sa overí,
+    // že bunke nesedí tooltip susedného dňa ani susednej hodiny.
+    for (const [ri, ci] of [
+        [0, 6],
+        [3, 8],
+        [6, 10],
+    ]) {
+        const cell = m.cells[ri * cols + ci];
+        const hour = WEEK_HOURS[ci];
+        const day = forecast.days[ri];
+        assert.equal(cell.dayIndex, ri);
+        if (!cell.tip) continue;
+        const point = day.hourly.find((h) => h.hour === hour);
+        assert.equal(
+            cell.tip.title,
+            `${weekDayShort(day.date, ri)} ${weekDateLabel(day.date)} · ${hourLabel(hour)}–${hourLabel(hour + 1)}`,
+        );
+        assert.ok(cell.tip.text.startsWith(`${(point ? point.kw : 0).toFixed(2)} kW`), `text bunky [${ri}][${ci}]: ${cell.tip.text}`);
+    }
 });
 
 test('weekBarsModel: stĺpce s tooltipom a stropom, vybraný deň označený', () => {
