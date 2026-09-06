@@ -95,13 +95,19 @@ function buildGrid(dims, scale, maxKw) {
     return { gridX, gridY };
 }
 
+/** Body dňa v produkčnom okne grafu (HOUR_RANGE) - mimo neho sú len nulové nočné hodiny,
+ * ktoré by skreslili špičku aj text správy dňa. @param {HourPoint[]} pts */
+export function visibleHours(pts) {
+    return pts.filter((p) => p.hour >= HOUR_RANGE.min && p.hour <= HOUR_RANGE.max);
+}
+
 /**
  * Model grafu hodinovej výroby (Predpoveď Dnes/Zajtra aj Priebeh výroby na karte 7 dní).
  * @param {{ pts: HourPoint[], realPts?: Array<{hour: number, kw: number}>, nowHour?: number | null, dims: Dims }} input
  */
 export function forecastChartModel({ pts, realPts = [], nowHour = null, dims }) {
     const { min: hMin, max: hMax } = HOUR_RANGE;
-    const visible = pts.filter((p) => p.hour >= hMin && p.hour <= hMax);
+    const visible = visibleHours(pts);
     if (!visible.length) return null;
     const real = realPts.filter((p) => p.hour >= hMin && p.hour <= hMax);
     const maxKw = Math.max(...visible.map((p) => p.kw), ...real.map((p) => p.kw), 0.5) * 1.15;

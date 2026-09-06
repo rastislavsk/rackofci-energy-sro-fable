@@ -53,6 +53,9 @@ function renderEmpty(dom) {
 
 /** @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
 export function renderPredpoved(state, dom) {
+    // Tá istá správa je aj vlastnou stránkou v pageri karty Spotrebiče (vždy, aj na desktope) -
+    // tu na desktope už nie je čo duplikovať, na mobile a tablete ostáva na oboch miestach.
+    dom.forecastMsgBlock.classList.toggle('hidden', state.desktop);
     dom.forecastSub.textContent = `${SITE.name} · ${fmt1(INSTALLED_PV_KW)} kWp`;
     const isToday = state.forecastDay === 'today';
     dom.dayBtnToday.classList.toggle('active', isToday);

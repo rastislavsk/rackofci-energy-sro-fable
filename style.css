@@ -468,6 +468,12 @@ b {
 .pager-page-eyebrow {
     justify-content: center;
 }
+.pager-page-forecast h3 {
+    margin: 0 0 var(--sp-2);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    text-wrap: balance;
+}
 .pager-dots {
     display: flex;
     justify-content: center;

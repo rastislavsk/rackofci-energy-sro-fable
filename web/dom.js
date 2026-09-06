@@ -31,6 +31,8 @@ function spotrebiceDom() {
         verdictEyebrow: byId('verdict-eyebrow'),
         dialBadgeRow: byId('dial-badge-row'),
         verdictPageEyebrow: byId('verdict-page-eyebrow'),
+        verdictForecastTitle: byId('verdict-forecast-title'),
+        verdictForecastBody: byId('verdict-forecast-body'),
         dialRing: byId('dial-ring'),
         pvPower: byId('pv-power'),
         pvPowerUnit: byId('pv-power-unit'),
@@ -75,6 +77,7 @@ function predpovedDom() {
         forecastChart: byId('forecast-chart'),
         forecastTooltip: byId('forecast-tooltip'),
         forecastLiveLegend: byId('forecast-live-legend'),
+        forecastMsgBlock: byId('forecast-msg-block'),
         forecastMessageTitle: byId('forecast-message-title'),
         forecastMessageBody: byId('forecast-message-body'),
     };
