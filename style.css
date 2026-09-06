@@ -158,6 +158,26 @@ b {
     font-size: var(--fs-sm);
     color: var(--ink-70);
 }
+/* Na úzkych mobilných obrazovkách sa názov firmy s týmto letter-spacingom
+   nezmestí na jeden riadok vedľa hodín. Veľkosť škáluje s šírkou obrazovky
+   (clamp), hodiny majú flex-shrink: 0, aby pri nedostatku miesta ustupoval
+   vždy iba text loga a nikdy nezasahoval do zobrazenia času. Desktop
+   (od 768px) je nedotknutý. */
+@media (max-width: 767px) {
+    .appbar-top {
+        gap: var(--sp-2);
+    }
+    .appbar-label {
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: clamp(11px, 8px + 1.3vw, 16.5px);
+    }
+    .appbar-clock {
+        flex-shrink: 0;
+    }
+}
 .pv-updated-line {
     margin-top: var(--sp-1);
     font-family: var(--font-mono);
