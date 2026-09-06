@@ -26,8 +26,22 @@ function devicesHtml(devices) {
         .join('');
 }
 
-/** @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
-function renderHero(m, dom) {
+/** Listovanie verdiktu: druhá stránka je len vtedy, keď model pozná čas "lepšie bude".
+ * Pozíciu posunu drží prehliadač; sem sa zapisuje obsah, bodky a dostupnosť stránok.
+ * @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
+function renderVerdictPager(state, m, dom) {
+    const pages = m.waitTime ? 2 : 1;
+    const page = Math.min(state.verdictPage, pages - 1);
+    dom.verdictWaitTime.textContent = m.waitTime || '--:--';
+    dom.verdictPageWait.classList.toggle('hidden', !m.waitTime);
+    dom.verdictDots.classList.toggle('hidden', pages < 2);
+    dom.verdictDotButtons.forEach((dot, i) => dot.classList.toggle('active', i === page));
+    // Posuvná oblasť musí byť dosiahnuteľná klávesnicou, ale len keď je čím listovať.
+    dom.verdictPager.tabIndex = pages > 1 ? 0 : -1;
+}
+
+/** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
+function renderHero(state, m, dom) {
     const panel = dom.panels.spotrebice;
     panel.style.setProperty('--accent', tierVar(m.accent));
     dom.pvPower.textContent = m.powerText;
@@ -40,8 +54,7 @@ function renderHero(m, dom) {
     dom.verdictBody.textContent = m.message.body;
     dom.verdictGoRow.innerHTML = devicesHtml(m.devices);
     dom.verdictGoRow.classList.toggle('hidden', !m.devices.length);
-    dom.verdictWaitChip.classList.toggle('hidden', !m.waitTime);
-    dom.verdictWaitTime.textContent = m.waitTime || '--:--';
+    renderVerdictPager(state, m, dom);
 }
 
 /** Marker na krivke: X podľa minúty, výška bodky podľa krivky. @param {HTMLElement} el @param {number} minutes @param {{x: number, y: number}[]} points */
@@ -84,7 +97,7 @@ function renderPreviewUi(state, hero, dom) {
 /** @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
 export function renderSpotrebice(state, dom) {
     const hero = heroModel(state);
-    renderHero(hero, dom);
+    renderHero(state, hero, dom);
     renderStrip(state, hero, dom);
     renderPreviewUi(state, hero, dom);
 }

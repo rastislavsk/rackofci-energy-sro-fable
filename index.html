@@ -103,20 +103,31 @@
 
                     <div class="verdict card" id="verdict">
                         <div class="card-hd">Čo robiť teraz</div>
-                        <h1 id="verdict-headline">Načítavam…</h1>
-                        <p class="body" id="verdict-body"></p>
+                        <!-- Dve stránky na listovanie do strán: čo robiť teraz a kedy bude lepšie. -->
+                        <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán">
+                            <div class="pager-page" id="verdict-page-now">
+                                <h1 id="verdict-headline">Načítavam…</h1>
+                                <p class="body" id="verdict-body"></p>
+                            </div>
+                            <div class="pager-page pager-page-wait hidden" id="verdict-page-wait">
+                                <div class="wait-chip" id="verdict-wait-chip">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="9" />
+                                        <path d="M12 7v5l3 3" />
+                                    </svg>
+                                    <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pager-dots hidden" id="verdict-dots">
+                            <button class="pager-dot active" type="button" data-verdict-page="0" aria-label="Čo robiť teraz"></button>
+                            <button class="pager-dot" type="button" data-verdict-page="1" aria-label="Kedy bude lepšie"></button>
+                        </div>
                         <div class="go-row hidden" id="verdict-go-row"></div>
                         <div class="go-legend">
                             <span><i class="sw green"></i>najlepší čas</span>
                             <span><i class="sw amber"></i>ok, ale drahšie</span>
                             <span><i class="sw red"></i>radšej počkaj</span>
-                        </div>
-                        <div class="wait-chip hidden" id="verdict-wait-chip">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 7v5l3 3" />
-                            </svg>
-                            <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
                         </div>
                     </div>
                 </div>

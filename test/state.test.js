@@ -11,6 +11,7 @@ test('setState zlúči zmenu a zavolá odberateľa presne raz', () => {
     assert.equal(store.get().panel, '7dni');
     assert.equal(store.get().weekSelDay, 3);
     assert.equal(store.get().season, 'summer');
+    assert.equal(store.get().verdictPage, 0, 'verdikt začína na prvej stránke');
 });
 
 test('rovnaké hodnoty nespustia prekreslenie, odhlásenie funguje', () => {

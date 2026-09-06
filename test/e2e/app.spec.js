@@ -13,8 +13,8 @@ const { pv, forecast } = fixtureData();
 // preto sa z konzoly zbierajú len skutočné výnimky a chyby, nie hlásenia o nenačítaní zdroja.
 const IGNORED_CONSOLE = /Failed to load resource|net::ERR_FAILED/;
 
-/** @param {import('@playwright/test').Page} page @param {{ time?: Date, workerDown?: boolean }} [opts] */
-async function openApp(page, { time = FIXED_NOW, workerDown = false } = {}) {
+/** @param {import('@playwright/test').Page} page @param {{ time?: Date, workerDown?: boolean, forecastOverride?: typeof forecast }} [opts] */
+async function openApp(page, { time = FIXED_NOW, workerDown = false, forecastOverride = forecast } = {}) {
     /** @type {string[]} */
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -23,7 +23,7 @@ async function openApp(page, { time = FIXED_NOW, workerDown = false } = {}) {
         route.fulfill({ status: 200, body: '', contentType: 'text/plain' }),
     );
     await page.route(WORKER_URL, (route) =>
-        workerDown ? route.abort() : route.fulfill({ json: { pv, forecast, servedAt: time.toISOString() } }),
+        workerDown ? route.abort() : route.fulfill({ json: { pv, forecast: forecastOverride, servedAt: time.toISOString() } }),
     );
     await page.route(LEGACY_SOURCES.pv, (route) => route.abort());
     await page.route(LEGACY_SOURCES.forecast, (route) => route.abort());
@@ -57,6 +57,43 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     await expect(page.locator('#pv-power')).toHaveText('6.41');
     await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
     await expect(page.locator('#pv-updated')).toContainText('aktualizované 13:00');
+    // V zelenom okne sa nečaká, listovanie má jedinú stránku - bodky ani druhá stránka nie sú.
+    await expect(page.locator('#verdict-dots')).toBeHidden();
+    await expect(page.locator('#verdict-page-wait')).toBeHidden();
+    expect(errors).toEqual([]);
+});
+
+test('verdikt sa listuje do strán na "Lepšie bude"', async ({ page }) => {
+    const { instant, wall } = atTime('09:00');
+    // Fixtures nemajú pred sebou silnejšie okno, bez tejto úpravy by čakací čas nikdy nevznikol.
+    const sunnier = { ...forecast, strongerWindowAhead: true, hoursAhead: 3, windowDaypart: 'poobede' };
+    const errors = await openApp(page, { time: instant, forecastOverride: sunnier });
+    const expected = heroModel({ now: wall, season: 'summer', pv, forecast: sunnier, previewMinutes: null });
+
+    const dots = page.locator('#verdict-dots .pager-dot');
+    await expect(page.locator('#verdict-dots')).toBeVisible();
+    await expect(page.locator('#verdict-wait-time')).toHaveText(String(expected.waitTime));
+    await expect(page.locator('#verdict-headline')).toHaveText(expected.message.headline);
+    await expect(page.locator('#verdict-pager')).toHaveAttribute('tabindex', '0');
+    await expect(dots.nth(0)).toHaveClass(/active/);
+
+    // Posun do strán nad pásom = to isté gesto ako prst; stránku dopočíta scroll-snap.
+    const pager = page.locator('#verdict-pager');
+    await pager.hover();
+    await page.mouse.wheel(400, 0);
+    await expect(dots.nth(1)).toHaveClass(/active/);
+    await expect(dots.nth(0)).not.toHaveClass(/active/);
+    await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
+
+    // Bodka posunie pás späť na prvú stránku.
+    await dots.nth(0).click();
+    await expect(dots.nth(0)).toHaveClass(/active/);
+    await expect(pager).toHaveJSProperty('scrollLeft', 0);
+
+    // Posuvná oblasť bez prístupu z klávesnice je vážny nález axe - preto sa kontroluje tu.
+    const results = await new AxeBuilder({ page }).include('#panel-spotrebice').analyze();
+    const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(serious.map((v) => v.id)).toEqual([]);
     expect(errors).toEqual([]);
 });
 
