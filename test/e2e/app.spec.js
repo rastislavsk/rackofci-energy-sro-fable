@@ -341,6 +341,42 @@ test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }
     expect(errors).toEqual([]);
 });
 
+/**
+ * Na desktope má appka sadnúť na obrazovku bez scrollovania - grafy sa prispôsobia výške
+ * okna. Najtesnejší bežný prípad je notebook 1366x768; tam sa to buď zmestí, alebo nikde.
+ * Tabuľka sa kontroluje zvlášť: jej riadky sa na rozdiel od grafov zmenšiť nedajú, tak má
+ * vlastný stĺpec cez obe rady mriežky.
+ */
+test('desktop: appka sa zmestí na obrazovku bez scrollovania', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 });
+    const errors = await openApp(page);
+
+    for (const [nav, panel] of [
+        ['#nav-spotrebice', '#panel-spotrebice'],
+        ['#nav-7dni', '#panel-7dni'],
+        ['#nav-zdielat', '#panel-zdielat'],
+    ]) {
+        await page.locator(nav).click();
+        await expect(page.locator(panel)).toBeVisible();
+        const scroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+        expect(scroll, `karta ${panel} preteká cez výšku obrazovky o ${scroll} px`).toBeLessThanOrEqual(0);
+    }
+
+    // Na karte 7 dní musia byť vidno všetky dni naraz, nie po scrollovaní v tabuľke.
+    await page.locator('#nav-7dni').click();
+    const tabulka = await page.evaluate(() => {
+        const wrap = document.querySelector('.week-tbl-wrap');
+        const spodok = wrap.getBoundingClientRect().bottom;
+        const riadky = [...document.querySelectorAll('#week-tbody tr')];
+        return {
+            spolu: riadky.length,
+            vidno: riadky.filter((tr) => tr.getBoundingClientRect().bottom <= spodok + 1).length,
+        };
+    });
+    expect(tabulka.vidno, 'v tabuľke 7 dní nie je vidno všetky riadky naraz').toBe(tabulka.spolu);
+    expect(errors).toEqual([]);
+});
+
 test('široká obrazovka: prepnutie na 7 dní skryje kartu Spotrebiče', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     const errors = await openApp(page);
