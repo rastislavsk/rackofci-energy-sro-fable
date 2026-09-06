@@ -231,6 +231,9 @@ test('predpoveď: štatistiky, prepnutie na zajtra, správa dňa', async ({ page
     await page.locator('#day-btn-tomorrow').click();
     await expect(page.locator('#forecast-now-badge')).toBeHidden();
     await expect(page.locator('#forecast-chart path.line-real')).toHaveCount(0);
+    // Zajtra nemá nameranú výrobu, takže jej položka v legende musí zmiznúť - inak by
+    // legenda ohlasovala krivku, ktorá sa v grafe nekreslí.
+    await expect(page.locator('#forecast-live-legend')).toBeHidden();
     await expect(page.locator('#forecast-message-title')).not.toHaveText('Načítavam…');
     // Na mobile je tá istá správa duplicitne aj v karte Spotrebiče (v pageri) aj tu.
     await expect(page.locator('#forecast-msg-block')).toBeVisible();
@@ -268,6 +271,37 @@ test('bez dát: appka neukáže chybu, iba stav "dáta nedostupné"', async ({ p
     await expect(page.locator('#forecast-message-title')).toHaveText('Predpoveď sa pripravuje');
     await page.locator('#nav-7dni').click();
     await expect(page.locator('#week-msg-title')).toHaveText('Predpoveď sa pripravuje');
+    expect(errors).toEqual([]);
+});
+
+/**
+ * Utilita .hidden je jediná trieda (špecificita 0,1,0) a nepoužíva !important, takže ju
+ * prebije akékoľvek pravidlo s `display` a vyššou špecificitou - ID selektor (#panel-x),
+ * ale rovnako aj potomkovský (.chart-legend span). Appka by potom prvok "skryla" a on by
+ * ostal na obrazovke. Test preto neberie zoznam prvkov, ktorý by sa dal zabudnúť doplniť,
+ * ale prejde všetky prvky v stránke a overí, že .hidden na každom z nich naozaj zaberie.
+ */
+test('.hidden skryje každý prvok v stránke, nič ju neprebíja', async ({ page }) => {
+    const errors = await openApp(page);
+    // Karty sa vykresľujú až po otvorení, aby test videl aj ich obsah.
+    for (const nav of ['#nav-predpoved', '#nav-7dni', '#nav-zdielat', '#nav-spotrebice']) await page.locator(nav).click();
+
+    const broken = await page.evaluate(() => {
+        const out = [];
+        for (const el of document.body.querySelectorAll('*')) {
+            if (el.closest('script, style, template')) continue;
+            const had = el.classList.contains('hidden');
+            el.classList.add('hidden');
+            const display = getComputedStyle(el).display;
+            if (!had) el.classList.remove('hidden');
+            if (display !== 'none') {
+                const where = el.id ? `#${el.id}` : `${el.tagName.toLowerCase()}.${el.className}`;
+                out.push(`${where} -> display: ${display}`);
+            }
+        }
+        return out;
+    });
+    expect(broken, 'tieto prvky .hidden neskryje - niečo s vyššou špecificitou nastavuje display').toEqual([]);
     expect(errors).toEqual([]);
 });
 
