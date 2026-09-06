@@ -57,7 +57,6 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     await expect(page.locator('#current-time-display')).toHaveText('13:00');
     await expect(page.locator('#verdict-headline')).toHaveText(expected.message.headline);
     await expect(page.locator('#verdict-body')).toHaveText(expected.message.body);
-    await expect(page.locator('#verdict-eyebrow')).toHaveText(expected.eyebrow);
     await expect(page.locator('#pv-power')).toHaveText('6.41');
     await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
     await expect(page.locator('#pv-updated')).toContainText('aktualizované 13:00');
@@ -71,9 +70,8 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     const dots = page.locator('#verdict-dots .pager-dot');
     await expect(dots.nth(0)).toHaveClass(/active/);
     await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
-    // Na mobile odznak s tarifou nie je nad ciferníkom, ale vo vlastnej stránke pageru.
+    // Odznak s tarifou nie je nad ciferníkom, žije len vo vlastnej stránke pageru.
     await expect(page.locator('#verdict-page-eyebrow')).toContainText(expected.eyebrow);
-    await expect(page.locator('#dial-badge-row')).toBeHidden();
     // Správa o predpovedi dňa je tu v pageri (karta Predpoveď je na mobile teraz skrytá).
     await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
     await expect(page.locator('#verdict-forecast-body')).toHaveText(todayForecastMsg.body);
@@ -161,7 +159,7 @@ for (const [hm, label] of [
         const errors = await openApp(page, { time: instant });
         const expected = modelAt(wall);
         await expect(page.locator('#verdict-headline')).toHaveText(expected.message.headline);
-        await expect(page.locator('#verdict-eyebrow')).toHaveText(expected.eyebrow);
+        await expect(page.locator('#verdict-page-eyebrow')).toContainText(expected.eyebrow);
         expect(errors).toEqual([]);
     });
 }
@@ -249,12 +247,11 @@ test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }
     await expect(page.locator('#panel-spotrebice')).toBeVisible();
     await expect(page.locator('#panel-predpoved')).toBeVisible();
     await expect(page.locator('#forecast-chart')).toHaveAttribute('viewBox', '0 0 680 420');
-    // Na desktope má odznak s tarifou dosť miesta aj nad ciferníkom (duplicitne) - defaultná
-    // prvá stránka pageru s ním preto nesmie ostať prázdna.
+    // Odznak s tarifou nikde nad ciferníkom nie je (ani na desktope) - žije len v defaultnej
+    // prvej stránke pageru, tá preto nesmie ostať prázdna.
     const expectedEyebrow = modelAt(atTime('13:00').wall).eyebrow;
-    await expect(page.locator('#dial-badge-row #verdict-eyebrow')).toBeVisible();
-    await expect(page.locator('#dial-badge-row #verdict-eyebrow')).toHaveText(expectedEyebrow);
     await expect(page.locator('#verdict-dots .pager-dot').first()).toHaveClass(/active/);
+    await expect(page.locator('#verdict-page-eyebrow')).toBeVisible();
     await expect(page.locator('#verdict-page-eyebrow')).toHaveText(expectedEyebrow);
     // Správa o predpovedi dňa je na desktope už len v pageri, v karte Predpoveď sa neduplikuje.
     await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
