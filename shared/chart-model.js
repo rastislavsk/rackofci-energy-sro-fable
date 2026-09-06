@@ -253,9 +253,12 @@ function hourMap(day) {
     return map;
 }
 
-/** Popisky tooltipu pre bunku hodina × deň. @param {ForecastDay} d @param {number} i @param {number} h */
-function cellTip(d, i, h) {
-    const cell = hourMap(d)[h];
+/** Popisky tooltipu pre bunku hodina × deň. Mapu hodín dostáva hotovú - stavať ju pre každú
+ * bunku znovu znamenalo prejsť dáta dňa 13x namiesto raz.
+ * @param {ForecastDay} d @param {number} i @param {number} h
+ * @param {Record<number, import('./solar.js').DayHourPoint>} map */
+function cellTip(d, i, h, map) {
+    const cell = map[h];
     const cloudTxt = cell && cell.cloud != null ? ` · ${Math.round(cell.cloud)} % oblačnosť` : '';
     return {
         title: `${weekDayShort(d.date, i)} ${weekDateLabel(d.date)} · ${hourLabel(h)}–${hourLabel(h + 1)}`,
@@ -300,7 +303,8 @@ export function weekHeatModel(days, selDay) {
     const cells = [];
     days.forEach((d, ri) => {
         WEEK_HOURS.forEach((h, ci) => {
-            const v = maps[ri][h] ? maps[ri][h].kw : 0;
+            const cell = maps[ri][h];
+            const v = cell ? cell.kw : 0;
             const frac = v / max;
             cells.push({
                 x: padL + ci * cw + gap / 2,
@@ -310,7 +314,7 @@ export function weekHeatModel(days, selDay) {
                 frac,
                 tier: frac <= 0.02 ? null : heatBand(frac),
                 dayIndex: ri,
-                tip: v > 0.02 ? cellTip(d, ri, h) : null,
+                tip: v > 0.02 ? cellTip(d, ri, h, maps[ri]) : null,
             });
         });
     });
@@ -373,8 +377,12 @@ export function weekStatsModel(days, pv, tomorrowSunny) {
     const tomorrow = days[1] || null;
     const total = days.reduce((s, d) => s + d.kwhTotal, 0);
     let best = days[0];
-    days.forEach((d) => {
-        if (d.kwhTotal > best.kwhTotal) best = d;
+    let bestIndex = 0;
+    days.forEach((d, i) => {
+        if (d.kwhTotal > best.kwhTotal) {
+            best = d;
+            bestIndex = i;
+        }
     });
     const real = realProductionSoFar(pv);
     const progress =
@@ -389,8 +397,8 @@ export function weekStatsModel(days, pv, tomorrowSunny) {
         totalKwh: total,
         avgKwh: total / days.length,
         best: {
-            label: weekDayShort(best.date, days.indexOf(best)),
-            fullLabel: `${weekDayShort(best.date, days.indexOf(best))}${days.indexOf(best) > 1 ? ' ' + weekDateLabel(best.date) : ''}`,
+            label: weekDayShort(best.date, bestIndex),
+            fullLabel: `${weekDayShort(best.date, bestIndex)}${bestIndex > 1 ? ' ' + weekDateLabel(best.date) : ''}`,
             kwh: best.kwhTotal,
         },
         trendPct,
