@@ -1402,7 +1402,9 @@ b {
     .page[data-panel='spotrebice'],
     .page[data-panel='predpoved'] {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        /* minmax(0, 1fr), nie holé 1fr - inak by stĺpec preberal šírku podľa obsahu
+           (min-content) a karta so širším obsahom by narástla na úkor druhej. */
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: var(--sp-6);
         align-items: start;
     }
@@ -1410,7 +1412,9 @@ b {
        a karta by ostala viditeľná aj po prepnutí na inú kartu. */
     .panel-spotrebice {
         display: grid;
-        grid-template-columns: 1fr;
+        /* minmax(0, 1fr) z rovnakého dôvodu ako pri .page vyššie - holé 1fr by nechalo
+           stĺpec pretiecť podľa najširšieho obsahu (napr. graf Priebeh dňa). */
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--sp-4);
     }
     .panel-spotrebice .preview-banner {
