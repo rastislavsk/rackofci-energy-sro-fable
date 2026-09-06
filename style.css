@@ -350,9 +350,6 @@ b {
     justify-content: center;
     margin-bottom: var(--sp-1);
 }
-.badge-row:empty {
-    margin-bottom: 0;
-}
 .badge {
     display: inline-flex;
     align-items: center;

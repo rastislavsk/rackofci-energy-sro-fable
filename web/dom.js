@@ -30,7 +30,7 @@ function spotrebiceDom() {
         previewReset: byId('preview-reset'),
         verdictEyebrow: byId('verdict-eyebrow'),
         dialBadgeRow: byId('dial-badge-row'),
-        verdictPageEyebrow: byId('verdict-page-eyebrow'),
+        verdictEyebrowPage: byId('verdict-eyebrow-page'),
         verdictForecastTitle: byId('verdict-forecast-title'),
         verdictForecastBody: byId('verdict-forecast-body'),
         dialRing: byId('dial-ring'),

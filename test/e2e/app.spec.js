@@ -73,7 +73,7 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
     // Na mobile odznak s tarifou nie je nad ciferníkom, ale vo vlastnej stránke pageru.
     await expect(page.locator('#verdict-page-eyebrow')).toContainText(expected.eyebrow);
-    await expect(page.locator('#dial-badge-row')).toBeEmpty();
+    await expect(page.locator('#dial-badge-row')).toBeHidden();
     // Správa o predpovedi dňa je tu v pageri (karta Predpoveď je na mobile teraz skrytá).
     await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
     await expect(page.locator('#verdict-forecast-body')).toHaveText(todayForecastMsg.body);
@@ -249,9 +249,13 @@ test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }
     await expect(page.locator('#panel-spotrebice')).toBeVisible();
     await expect(page.locator('#panel-predpoved')).toBeVisible();
     await expect(page.locator('#forecast-chart')).toHaveAttribute('viewBox', '0 0 680 420');
-    // Na desktope má odznak s tarifou dosť miesta nad ciferníkom, do pageru sa nepresúva.
+    // Na desktope má odznak s tarifou dosť miesta aj nad ciferníkom (duplicitne) - defaultná
+    // prvá stránka pageru s ním preto nesmie ostať prázdna.
+    const expectedEyebrow = modelAt(atTime('13:00').wall).eyebrow;
     await expect(page.locator('#dial-badge-row #verdict-eyebrow')).toBeVisible();
-    await expect(page.locator('#verdict-page-eyebrow')).toBeEmpty();
+    await expect(page.locator('#dial-badge-row #verdict-eyebrow')).toHaveText(expectedEyebrow);
+    await expect(page.locator('#verdict-dots .pager-dot').first()).toHaveClass(/active/);
+    await expect(page.locator('#verdict-page-eyebrow')).toHaveText(expectedEyebrow);
     // Správa o predpovedi dňa je na desktope už len v pageri, v karte Predpoveď sa neduplikuje.
     await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
     await expect(page.locator('#forecast-msg-block')).toBeHidden();
