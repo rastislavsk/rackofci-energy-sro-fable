@@ -78,7 +78,8 @@ export function weekBarsSvg(m) {
         .join('');
     for (const b of m.bars) {
         out += `<rect class="bar${b.sel ? ' sel' : ''}" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="3"/>`;
-        out += `<line class="clear-cap" x1="${n(b.x - 2)}" y1="${n(b.clearY)}" x2="${n(b.x + b.w + 2)}" y2="${n(b.clearY)}"/>`;
+        if (b.clearY != null)
+            out += `<line class="clear-cap" x1="${n(b.x - 2)}" y1="${n(b.clearY)}" x2="${n(b.x + b.w + 2)}" y2="${n(b.clearY)}"/>`;
         out += `<text class="bar-value${b.sel ? ' sel' : ''}" x="${n(b.cx)}" y="${n(b.y - 6)}" text-anchor="middle">${b.valueLabel}</text>`;
         out += `<text class="day-label${b.today ? ' today' : ''}${b.sel ? ' sel' : ''}" x="${n(b.cx)}" y="${m.labelY}" text-anchor="middle">${b.dayLabel}</text>`;
         out += `<text class="axis-label" x="${n(b.cx)}" y="${m.dateY}" text-anchor="middle">${b.dateLabel}</text>`;

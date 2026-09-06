@@ -159,11 +159,14 @@ export function renderSedemdni(state, dom) {
     dom.weekHeat.innerHTML = weekHeatSvg(heat);
     dom.weekHeatScale.innerHTML = `<span>0 kW</span><span class="sw">${heat.legend.map((l) => `<i class="tier-${l.tier}" style="opacity:${(0.12 + l.frac * 0.8).toFixed(2)}"></i>`).join('')}</span><span>${heat.max.toFixed(1)} kW</span>`;
 
+    // Na desktope má karta dosť miesta na to, aby strop jasnej oblohy zbytočne
+    // neprekrýval čísla nad stĺpcami - tam ho preto nekreslíme, na mobile ostáva.
     const barsSize = state.wide ? state.chartSizes.weekBars : null;
-    const bars = weekBarsModel(days, sel, barsSize ? { W: barsSize.w, H: barsSize.h } : undefined);
+    const bars = weekBarsModel(days, sel, barsSize ? { W: barsSize.w, H: barsSize.h } : undefined, !state.wide);
     dom.weekBars.setAttribute('viewBox', `0 0 ${bars.W} ${bars.H}`);
     dom.weekBars.setAttribute('height', String(bars.H));
     dom.weekBars.innerHTML = weekBarsSvg(bars);
+    dom.weekBarsClearLegend.classList.toggle('hidden', state.wide);
 
     renderTableAndTabs(days, sel, dom);
     renderCurve(state, days[sel], dom);
