@@ -1437,6 +1437,138 @@ b {
     }
 }
 
+/* ---- Desktop: celá appka na jednu obrazovku --------------------------------
+   Na desktope sa stránka správa ako obrazovka, nie ako dokument: nescrolluje sa
+   a karty vyplnia výšku okna. Grafy sa tak samy natiahnu na veľkom monitore
+   a stlačia na nízkom notebooku.
+
+   Meranie pred touto zmenou: karty Spotrebiče a Zdieľať sa zmestili už predtým
+   (na 1920x1080 im ostávalo 347 px prázdneho miesta), pretekala len karta 7 dní
+   a to o 97 az 409 px podľa výšky okna. */
+@media (min-width: 1024px) {
+    html,
+    body {
+        height: 100%;
+    }
+    body {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .appbar {
+        position: static;
+        flex: 0 0 auto;
+    }
+    .page {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding-top: var(--sp-3);
+        padding-bottom: var(--sp-3);
+    }
+    /* Karty sa naťahujú na výšku stránky, nie na výšku svojho obsahu. */
+    .page[data-panel='spotrebice'],
+    .page[data-panel='predpoved'] {
+        align-items: stretch;
+    }
+    .panel {
+        min-height: 0;
+        height: 100%;
+    }
+
+    /* Karta 7 dní: hlavička a štatistiky si vezmú svoje, mriežka grafov zvyšok. */
+    #panel-7dni {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        gap: var(--sp-3);
+    }
+    #panel-7dni .section-head,
+    #panel-7dni .stat-trio,
+    #panel-7dni .msg-block {
+        margin: 0;
+    }
+    #panel-7dni .stat-trio {
+        gap: var(--sp-2);
+    }
+    #panel-7dni .stat {
+        padding: var(--sp-2) var(--sp-3);
+    }
+    /* Tabuľka dostane vlastný stĺpec cez obe rady. Na sedem riadkov potrebuje 315 px
+       výšky a 385 px šírky (stĺpec má 400 px na lištu posúvania) - toľko jej celá
+       výška mriežky dá aj na 768 px vysokej obrazovke. Grafy sa stlačiť dajú,
+       riadky tabuľky pod čitateľnosť nie, tak miesto dostane to, čo ho potrebuje. */
+    .week-grid {
+        min-height: 0;
+        grid-template-columns: 1fr 1fr 400px;
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--sp-3);
+    }
+    .week-block:nth-child(3) {
+        grid-column: 1 / 3;
+    }
+    .week-block:nth-child(4) {
+        grid-column: 3;
+        grid-row: 1 / 3;
+    }
+    .week-table th,
+    .week-table td {
+        padding: 5px 10px;
+    }
+
+    /* Graf v karte si vezme všetko, čo po textoch okolo neho zostane. */
+    .week-block,
+    #panel-predpoved {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    .week-block .chart-card,
+    #panel-predpoved .chart-card {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    .week-block .chart-wrap,
+    #panel-predpoved .chart-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+    .week-block .chart-wrap svg,
+    #panel-predpoved .chart-wrap svg {
+        height: 100%;
+    }
+    /* Pevný pomer strán by tu bránil grafu vyplniť výšku. */
+    #forecast-chart,
+    #week-curve {
+        aspect-ratio: auto;
+    }
+    .week-tbl-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+    }
+}
+
+/* Nízke okno na desktope: ciferník je jediné, čo má pevnú veľkosť a nezmestí sa.
+   Číslo v ňom sa zmenšuje s ním, aby ostalo v prstenci. Dasharray prstenca je
+   v jednotkách viewBoxu, takže zmena veľkosti v CSS ho neovplyvní. */
+@media (min-width: 1024px) and (max-height: 720px) {
+    .dial-svg {
+        width: 190px;
+        height: 190px;
+    }
+    .dial-num .val {
+        font-size: 34px;
+    }
+    .dial-wrap {
+        margin: var(--sp-2) 0 0;
+    }
+    .badge {
+        padding: 5px 14px;
+        font-size: var(--fs-sm);
+    }
+}
+
 /* ---- Utility (zámerne posledné) --------------------------------------------
    .hidden je jediná trieda (špecificita 0,1,0). Kým stála len na konci súboru bez
    `!important`, spoliehalo sa na to, že ju nikto neprebije - a to neplatilo: pätnásť
