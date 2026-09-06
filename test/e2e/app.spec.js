@@ -67,6 +67,10 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     await expect(page.locator('#verdict-dots')).toBeVisible();
     await expect(page.locator('#verdict-dot-wait')).toBeHidden();
     await expect(page.locator('#verdict-page-wait')).toBeHidden();
+    // Defaultne otvorená prvá stránka je "Tarifa a slnko".
+    const dots = page.locator('#verdict-dots .pager-dot');
+    await expect(dots.nth(0)).toHaveClass(/active/);
+    await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
     // Na mobile odznak s tarifou nie je nad ciferníkom, ale vo vlastnej stránke pageru.
     await expect(page.locator('#verdict-page-eyebrow')).toContainText(expected.eyebrow);
     await expect(page.locator('#dial-badge-row')).toBeEmpty();
@@ -90,7 +94,9 @@ test('klik na spotrebič (mobil) ukáže tooltip s príkonom, nie je orezaný pa
     await expect(tooltip).not.toHaveClass(/visible/);
 });
 
-test('verdikt sa listuje do strán: teraz, spotrebiče, tarifa a slnko, predpoveď dňa, kedy bude lepšie', async ({ page }) => {
+test('verdikt sa listuje do strán: tarifa a slnko (defaultne prvá), teraz, spotrebiče, predpoveď dňa, kedy bude lepšie', async ({
+    page,
+}) => {
     const { instant, wall } = atTime('09:00');
     // Fixtures nemajú pred sebou silnejšie okno, bez tejto úpravy by čakací čas nikdy nevznikol.
     const sunnier = { ...forecast, strongerWindowAhead: true, hoursAhead: 3, windowDaypart: 'poobede' };
@@ -101,9 +107,11 @@ test('verdikt sa listuje do strán: teraz, spotrebiče, tarifa a slnko, predpove
     await expect(page.locator('#verdict-dots')).toBeVisible();
     await expect(dots.nth(4)).toBeVisible();
     await expect(page.locator('#verdict-wait-time')).toHaveText(String(expected.waitTime));
-    await expect(page.locator('#verdict-headline')).toHaveText(expected.message.headline);
     await expect(page.locator('#verdict-pager')).toHaveAttribute('tabindex', '0');
+    // Defaultne otvorená prvá stránka je "Tarifa a slnko".
     await expect(dots.nth(0)).toHaveClass(/active/);
+    await expect(page.locator('#verdict-page-eyebrow')).toHaveText(expected.eyebrow);
+    await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
 
     // Posun do strán nad pásom = to isté gesto ako prst; stránku dopočíta scroll-snap.
     const pager = page.locator('#verdict-pager');
@@ -111,14 +119,14 @@ test('verdikt sa listuje do strán: teraz, spotrebiče, tarifa a slnko, predpove
     await page.mouse.wheel(400, 0);
     await expect(dots.nth(1)).toHaveClass(/active/);
     await expect(dots.nth(0)).not.toHaveClass(/active/);
-    await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
-    await expect(page.locator('#verdict-go-row')).toBeInViewport();
+    await expect(page.locator('#verdict-headline')).toHaveText(expected.message.headline);
+    await expect(page.locator('#verdict-headline')).toBeInViewport();
 
-    // Ešte jeden posun na tretiu stránku "Tarifa a slnko".
+    // Ešte jeden posun na tretiu stránku "Spotrebiče".
     await page.mouse.wheel(400, 0);
     await expect(dots.nth(2)).toHaveClass(/active/);
-    await expect(page.locator('#verdict-page-eyebrow')).toHaveText(expected.eyebrow);
-    await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
+    await expect(page.locator('#verdict-go-row .go-chip')).toHaveCount(5);
+    await expect(page.locator('#verdict-go-row')).toBeInViewport();
 
     // Ešte jeden posun na štvrtú stránku "Predpoveď dňa".
     await page.mouse.wheel(400, 0);

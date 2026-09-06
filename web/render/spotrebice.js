@@ -27,9 +27,9 @@ function devicesHtml(devices) {
         .join('');
 }
 
-/** Listovanie verdiktu: prvé štyri stránky (teraz, spotrebiče, tarifa a slnko, predpoveď dňa)
- * sú vždy, piata ("lepšie bude") len keď model pozná čas čakania. Pozíciu posunu drží
- * prehliadač; sem sa zapisuje obsah a bodky. @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
+/** Listovanie verdiktu: prvé štyri stránky (tarifa a slnko - defaultne prvá, teraz, spotrebiče,
+ * predpoveď dňa) sú vždy, piata ("lepšie bude") len keď model pozná čas čakania. Pozíciu posunu
+ * drží prehliadač; sem sa zapisuje obsah a bodky. @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
 function renderVerdictPager(state, m, dom) {
     const pages = m.waitTime ? 5 : 4;
     const page = Math.min(state.verdictPage, pages - 1);
