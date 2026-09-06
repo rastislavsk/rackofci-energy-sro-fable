@@ -23,10 +23,15 @@ function initNavigation(store, dom) {
         const weekBtn = target.closest('[data-day-index]');
         if (weekBtn instanceof Element && dom.panels['7dni'].contains(weekBtn))
             store.setState({ weekSelDay: Number(weekBtn.getAttribute('data-day-index')) });
-        // Bodka len posunie pás; stránka sa dopočíta z výslednej pozície ako pri prste.
+        // Bodka len posunie pás; stránka sa dopočíta z výslednej pozície ako pri prste. Cieľ je
+        // samotná stránka (scrollIntoView), nie index krát clientWidth - ten je celočíselný, kým
+        // skutočná šírka stránky býva desatinná, čo na desktope (klik na bodku, nie prstom) nechávalo
+        // pás o pár pixelov mimo prichytenia a cez okraj presvital kúsok susednej stránky.
         const pageBtn = target.closest('[data-verdict-page]');
-        if (pageBtn instanceof HTMLElement)
-            dom.verdictPager.scrollTo({ left: Number(pageBtn.dataset.verdictPage) * dom.verdictPager.clientWidth });
+        if (pageBtn instanceof HTMLElement) {
+            const pageEl = dom.verdictPager.children[Number(pageBtn.dataset.verdictPage)];
+            if (pageEl instanceof HTMLElement) pageEl.scrollIntoView({ inline: 'start', block: 'nearest' });
+        }
     });
     dom.previewReset.addEventListener('click', () => store.setState({ previewMinutes: null, isDragging: false }));
 }
