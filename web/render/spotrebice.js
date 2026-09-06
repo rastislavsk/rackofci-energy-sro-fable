@@ -39,12 +39,14 @@ function renderVerdictPager(state, m, dom) {
     dom.verdictDotButtons.forEach((dot, i) => dot.classList.toggle('active', i === page));
 }
 
-/** Odznak s tarifou: na desktope ostáva nad ciferníkom (tam je naň dosť miesta), na mobile
- * a tablete sa presunie do vlastnej stránky pageru, aby sa uvoľnilo miesto pre väčší ciferník.
- * @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
-function placeEyebrowBadge(state, dom) {
-    const home = state.desktop ? dom.dialBadgeRow : dom.verdictPageEyebrow;
-    if (dom.verdictEyebrow.parentElement !== home) home.appendChild(dom.verdictEyebrow);
+/** Odznak s tarifou: vlastná stránka pageru ho má vždy (aj na desktope, kde by inak defaultná
+ * prvá stránka ostala prázdna). Nad ciferníkom sa duplikuje len na desktope - tam je naň dosť
+ * miesta a uvoľnené miesto na mobile a tablete využíva väčší ciferník.
+ * @param {ReturnType<typeof heroModel>} m @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
+function renderEyebrowBadge(m, state, dom) {
+    dom.verdictEyebrow.textContent = m.eyebrow;
+    dom.verdictEyebrowPage.textContent = m.eyebrow;
+    dom.dialBadgeRow.classList.toggle('hidden', !state.desktop);
 }
 
 /** Správa o dnešnej predpovedi - tá istá, čo je v karte Predpoveď, len vždy pre dnešok
@@ -65,8 +67,7 @@ function renderHero(state, m, dom) {
     dom.pvPowerUnit.textContent = m.unitText;
     dom.dialRing.style.strokeDashoffset = String(DIAL_CIRCUMFERENCE * (1 - m.dial.fraction));
     dom.dialRing.style.stroke = tierVar(m.dial.tier);
-    dom.verdictEyebrow.textContent = m.eyebrow;
-    placeEyebrowBadge(state, dom);
+    renderEyebrowBadge(m, state, dom);
     dom.verdictHeadline.textContent = m.message.headline;
     dom.verdictBody.textContent = m.message.body;
     dom.verdictGoRow.innerHTML = devicesHtml(m.devices);
