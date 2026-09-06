@@ -1,4 +1,4 @@
-# Račkofci Energy · Kedy zapínať spotrebiče
+# Račkofci Energy s.r.o.
 
 Mobilná webová appka pre domácnosť s fotovoltikou v Dvoranoch nad Nitrou. Na jednej
 obrazovke odpovedá na otázku „môžem teraz zapnúť práčku?“ a k tomu ukazuje živý výkon
