@@ -7,19 +7,28 @@ import { renderSedemdni } from './sedemdni.js';
 import { renderSpotrebice } from './spotrebice.js';
 import { renderZdielat } from './zdielat.js';
 
+/** Na desktope Predpoveď nemá vlastnú navigáciu (viď .nav-item-predpoved v style.css) a
+ * splynie so Spotrebičmi - aj keby sa stav dostal na 'predpoved' inak (napr. cez dial-hero),
+ * ktorý má data-panel="predpoved" na každej šírke. @param {import('../state.js').AppState} state */
+function effectivePanel(state) {
+    return state.desktop && state.panel === 'predpoved' ? 'spotrebice' : state.panel;
+}
+
 /** Na širokej obrazovke sú Spotrebiče a Predpoveď vedľa seba. @param {import('../state.js').AppState} state */
 export function isForecastVisible(state) {
-    return state.panel === 'predpoved' || (state.desktop && state.panel === 'spotrebice');
+    const panel = effectivePanel(state);
+    return panel === 'predpoved' || (state.desktop && panel === 'spotrebice');
 }
 
 /** @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
 function renderPanels(state, dom) {
-    dom.page.dataset.panel = state.panel;
+    const panel = effectivePanel(state);
+    dom.page.dataset.panel = panel;
     for (const p of PANELS) {
-        const visible = p === state.panel || (p === 'predpoved' && isForecastVisible(state));
+        const visible = p === panel || (p === 'predpoved' && isForecastVisible(state));
         dom.panels[p].classList.toggle('hidden', !visible);
-        dom.navs[p].classList.toggle('active', p === state.panel);
-        if (p === state.panel) dom.navs[p].setAttribute('aria-current', 'page');
+        dom.navs[p].classList.toggle('active', p === panel);
+        if (p === panel) dom.navs[p].setAttribute('aria-current', 'page');
         else dom.navs[p].removeAttribute('aria-current');
     }
 }

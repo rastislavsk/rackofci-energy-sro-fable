@@ -1308,6 +1308,28 @@ b {
     .page {
         padding-bottom: var(--sp-6);
     }
+    /* "Aktualizované" ide vedľa hodín namiesto pod ne - appbar-top si drží vlastné
+       rozostupy (label...hodiny), len už nie je sám na celú šírku appbar-inner. */
+    .appbar-inner {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-3);
+        padding: 5px 20px;
+    }
+    .appbar-top {
+        flex: 1;
+        min-width: 0;
+    }
+    .appbar-label,
+    .appbar-clock {
+        line-height: 1.2;
+    }
+    .pv-updated-line {
+        flex: 0 0 auto;
+        margin-top: 0;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
     .bottomnav {
         position: sticky;
         bottom: auto;
@@ -1323,13 +1345,25 @@ b {
     }
     .nav-item {
         flex-direction: row;
-        padding: 10px 0;
+        padding: 5px 0;
+    }
+    .nav-item svg {
+        width: 16px;
+        height: 16px;
+    }
+    .nav-item .lbl {
+        line-height: 1.2;
     }
     .nav-item.active::after {
         top: auto;
         bottom: -1px;
         left: 0;
         right: 0;
+    }
+    /* Predpoveď tu nie je samostatná destinácia - zobrazuje sa rovno vedľa Spotrebičov
+       (viď isForecastVisible v web/render/index.js), položka v navigácii by bola duplicitná. */
+    .nav-item-predpoved {
+        display: none;
     }
     .page[data-panel='spotrebice'],
     .page[data-panel='predpoved'] {
