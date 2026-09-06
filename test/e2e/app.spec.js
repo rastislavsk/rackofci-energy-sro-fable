@@ -400,3 +400,21 @@ test('široká obrazovka: prepnutie na 7 dní skryje kartu Spotrebiče', async (
     await expect(page.locator('#panel-spotrebice')).toBeHidden();
     expect(errors).toEqual([]);
 });
+
+/**
+ * Strop jasnej oblohy (bodkovaná čiara nad stĺpcom) na širokej karte prechádzal cez
+ * číslo výroby nad stĺpcom. Na desktope sa preto nekreslí - a keďže sa nekreslí, ani
+ * legenda k nemu nesmie zostať vidno (rovnaký prípad ako živá krivka v Predpovedi).
+ */
+test('7 dní - strop jasnej oblohy: na desktope zmizne aj s legendou, na mobile ostáva', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 });
+    const errors = await openApp(page);
+    await page.locator('#nav-7dni').click();
+    await expect(page.locator('#week-bars .clear-cap')).toHaveCount(0);
+    await expect(page.locator('#week-bars-clear-legend')).toBeHidden();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.locator('#week-bars .clear-cap')).toHaveCount(7);
+    await expect(page.locator('#week-bars-clear-legend')).toBeVisible();
+    expect(errors).toEqual([]);
+});

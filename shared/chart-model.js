@@ -340,8 +340,8 @@ export function weekHeatModel(days, selDay, size = null) {
     return { W, H, cells, hourLabels, dayLabels, selRect, max, legend };
 }
 
-/** Denná výroba v kWh so stropom jasnej oblohy. @param {ForecastDay[]} days @param {number} selDay @param {{ W: number, H: number }} [size] */
-export function weekBarsModel(days, selDay, size = { W: 440, H: 190 }) {
+/** Denná výroba v kWh, voliteľne so stropom jasnej oblohy. @param {ForecastDay[]} days @param {number} selDay @param {{ W: number, H: number }} [size] @param {boolean} [showCeiling] */
+export function weekBarsModel(days, selDay, size = { W: 440, H: 190 }, showCeiling = true) {
     const { W, H } = size;
     const padL = 30;
     const padT = 14;
@@ -350,7 +350,7 @@ export function weekBarsModel(days, selDay, size = { W: 440, H: 190 }) {
     const slot = (W - padL - padR) / days.length;
     const bw = slot * 0.5;
     const plotH = H - padT - padB;
-    const maxV = Math.max(...days.map((d) => Math.max(d.kwhTotal, d.clearKwhTotal)), 1) * 1.08;
+    const maxV = Math.max(...days.map((d) => Math.max(d.kwhTotal, showCeiling ? d.clearKwhTotal : 0)), 1) * 1.08;
     const gridStep = maxV > 80 ? 40 : maxV > 40 ? 20 : maxV > 16 ? 10 : 5;
     const yFor = (/** @type {number} */ v) => padT + plotH - (v / maxV) * plotH;
 
@@ -368,7 +368,7 @@ export function weekBarsModel(days, selDay, size = { W: 440, H: 190 }) {
             w: bw,
             h: Math.max(0, (d.kwhTotal / maxV) * plotH),
             cx,
-            clearY: yFor(d.clearKwhTotal),
+            clearY: showCeiling ? yFor(d.clearKwhTotal) : null,
             valueLabel: d.kwhTotal.toFixed(1),
             dayLabel: weekDayShort(d.date, i),
             dateLabel: weekDateLabel(d.date),

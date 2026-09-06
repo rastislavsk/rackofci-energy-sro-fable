@@ -197,6 +197,15 @@ test('weekBarsModel: stĺpce s tooltipom a stropom, vybraný deň označený', (
     assert.ok(m.grid.length >= 2);
 });
 
+test('weekBarsModel: showCeiling = false vypne čiaru stropu, ale nie tooltip', () => {
+    const m = weekBarsModel(forecast.days, 1, undefined, false);
+    assert.ok(
+        m.bars.every((b) => b.clearY === null),
+        'bez stropu nemá žiadny stĺpec clearY',
+    );
+    assert.match(m.bars[0].tip.text, /kWh · strop/, 'tooltip pri hoveri stále ukáže strop');
+});
+
 test('weekStatsModel a realProductionSoFar', () => {
     assert.equal(realProductionSoFar(null), null);
     const real = realProductionSoFar(pv);
