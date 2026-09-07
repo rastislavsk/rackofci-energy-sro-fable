@@ -420,33 +420,42 @@ test('7 dní - strop jasnej oblohy: na desktope zmizne aj s legendou, na mobile 
 });
 
 /**
- * Správa "Najsilnejší deň" (.msg-block) je v HTML naschvál až za mriežkou grafov, aby na
- * mobile a tablete ostala bez zmeny v päte karty. Na desktope ju CSS grid premiestni do
- * riadku nadpisu - grid-row aj grid-column ju tam stotožnia s .section-head, takže musí
- * skutočne sedieť vedľa neho (rovnaká horná hrana), nie nad mriežkou grafov.
+ * Správa "Najsilnejší deň" (.msg-block) je v HTML naschvál posledným potomkom .week-grid,
+ * hneď za kartou tabuľky - na mobile a tablete tak ostáva presne tam, kde bola predtým
+ * (vlastná karta hneď za Prehľadom dní). Na desktope zdieľa s kartou tabuľky
+ * (.week-block:nth-child(4)) tú istú bunku a align-self ju zospodu zasunie do voľného
+ * miesta pod siedmimi riadkami - nesmie prekryť ani posunúť samotnú tabuľku.
  */
-test('7 dní - správa "Najsilnejší deň": na desktope v hlavičke, na mobile v päte', async ({ page }) => {
+test('7 dní - správa "Najsilnejší deň": na desktope pod tabuľkou v tej istej karte, na mobile za ňou', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 768 });
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
 
     const desktop = await page.evaluate(() => {
         const rect = (sel) => document.querySelector(sel).getBoundingClientRect();
-        return { msg: rect('#panel-7dni .msg-block'), head: rect('#panel-7dni .section-head'), grid: rect('#panel-7dni .week-grid') };
+        const rows = [...document.querySelectorAll('#week-tbody tr')];
+        return {
+            msg: rect('#panel-7dni .msg-block'),
+            table: rect('#panel-7dni .week-block:nth-child(4)'),
+            lastRowBottom: rows[rows.length - 1].getBoundingClientRect().bottom,
+            rowCount: rows.length,
+        };
     });
-    // Sedí v riadku nadpisu, nie nad mriežkou grafov ani pod ňou.
-    expect(Math.abs(desktop.msg.top - desktop.head.top)).toBeLessThanOrEqual(20);
-    expect(desktop.msg.top).toBeLessThan(desktop.grid.top);
-    // Zarovnaná doprava k rovnakej hrane, akú má mriežka grafov pod ňou.
-    expect(Math.abs(desktop.msg.right - desktop.grid.right)).toBeLessThanOrEqual(2);
-    // Nepresahuje strop 66 % šírky stĺpca.
-    expect(desktop.msg.width).toBeLessThanOrEqual(desktop.grid.width * 0.67);
+    // Zdieľa kartu s tabuľkou - rovnaký ľavý aj pravý okraj, žiadny vlastný rám navyše.
+    expect(Math.abs(desktop.msg.left - desktop.table.left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(desktop.msg.right - desktop.table.right)).toBeLessThanOrEqual(1);
+    // Pod posledným riadkom tabuľky, nie cez neho.
+    expect(desktop.msg.top).toBeGreaterThanOrEqual(desktop.lastRowBottom - 1);
+    // Zasunutá dolu, k päte tej istej karty.
+    expect(Math.abs(desktop.msg.bottom - desktop.table.bottom)).toBeLessThanOrEqual(2);
+    // Tabuľku to neovplyvnilo - všetkých 7 riadkov je stále vidno.
+    expect(desktop.rowCount).toBe(7);
 
     await page.setViewportSize({ width: 390, height: 844 });
     const mobile = await page.evaluate(() => ({
         msgTop: document.querySelector('#panel-7dni .msg-block').getBoundingClientRect().top,
-        gridBottom: document.querySelector('#panel-7dni .week-grid').getBoundingClientRect().bottom,
+        tableBottom: document.querySelector('#panel-7dni .week-block:nth-child(4)').getBoundingClientRect().bottom,
     }));
-    expect(mobile.msgTop).toBeGreaterThanOrEqual(mobile.gridBottom - 1);
+    expect(mobile.msgTop).toBeGreaterThanOrEqual(mobile.tableBottom - 1);
     expect(errors).toEqual([]);
 });

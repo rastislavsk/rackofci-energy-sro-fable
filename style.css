@@ -1211,6 +1211,13 @@ b {
        sa celý stĺpec (a s ním grafy aj tabuľka) roztiahne mimo viewport na mobile. */
     min-width: 0;
 }
+/* .msg-block je tu piatym potomkom .week-grid (za kartou tabuľky), nie súrodencom za
+   celou mriežkou - vlastný margin-top by sa preto sčítal s medzerou .week-grid gap
+   navyše. Na mobile aj tablete to je jediná zmena oproti predošlému umiestneniu mimo
+   mriežky - vizuálne (medzera aj poradie) je to totožné. */
+.week-grid > .msg-block {
+    margin-top: 0;
+}
 .week-tbl-wrap {
     overflow-x: auto;
     border: 1px solid var(--ink-08);
@@ -1482,19 +1489,7 @@ b {
     }
 
     /* Karta 7 dní: hlavička, štatistiky a správa si vezmú svoje, mriežka grafov zvyšok.
-       Všetko okolo grafov je tu úspornejšie - každý ušetrený pixel ide krivkám.
-
-       Správa "Najsilnejší deň" (.msg-block) je v HTML naschvál až za mriežkou grafov -
-       na mobile a tablete tak ostáva na svojom mieste bez zmeny. Na desktope ju sem
-       grid len premiestni: obe dostanú rovnaké grid-row aj grid-column (1/1), teda tú
-       istú bunku, a justify-self ich v nej roztlačí na opačné okraje - nadpis doľava,
-       správu doprava. DOM ani žiadny iný panel sa nemení.
-
-       Grid-column 1 musí byť na oboch napísaný explicitne, nielen grid-row - inak si ich
-       auto-placement (nechce, aby sa dva prvky prekryli) rozhodí do dvoch stĺpcov namiesto
-       jednej bunky a stat-trio aj mriežka grafov po nich zdedia druhý stĺpec navyše, teda
-       skončia vedľa seba v jednej aute-výške rade miesto pod sebou. (Takto to raz naozaj
-       vyzeralo - stat-trio sa naťahovalo na výšku celej mriežky grafov vedľa neho.) */
+       Všetko okolo grafov je tu úspornejšie - každý ušetrený pixel ide krivkám. */
     #panel-7dni {
         display: grid;
         grid-template-columns: 1fr;
@@ -1506,11 +1501,6 @@ b {
     #panel-7dni .msg-block {
         margin: 0;
     }
-    #panel-7dni .section-head {
-        grid-row: 1;
-        grid-column: 1;
-        justify-self: start;
-    }
     #panel-7dni .stat-trio {
         gap: var(--sp-2);
     }
@@ -1518,11 +1508,6 @@ b {
         padding: var(--sp-2) var(--sp-3);
     }
     #panel-7dni .msg-block {
-        grid-row: 1;
-        grid-column: 1;
-        justify-self: end;
-        align-self: center;
-        max-width: 66%;
         padding: var(--sp-2) var(--sp-3);
     }
     #panel-7dni .msg-block h3 {
@@ -1552,6 +1537,26 @@ b {
     .week-block:nth-child(4) {
         grid-column: 3;
         grid-row: 1 / 3;
+    }
+
+    /* Správa "Najsilnejší deň" (.msg-block) je v HTML naschvál až za tabuľkou, vnútri
+       .week-grid - na mobile a tablete tak ostáva presne tam, kde bola: hneď za kartou
+       Prehľad dní, na celú šírku, s vlastným orámovaním (žiadna z týchto pravidiel tu
+       neplatí, sú v @media). Na desktope zdieľa s kartou tabuľky (.week-block:nth-child(4))
+       tú istú bunku - obe dostanú grid-column 3 aj grid-row 1/3 (rovnaký dôvod ako pri
+       predošlom umiestnení v hlavičke: explicitné na oboch, inak si ich auto-placement
+       stat-trio a week-grid rozhodí do druhého stĺpca) - a align-self: end ju zospodu
+       zasunie do voľného miesta, ktoré pod siedmimi riadkami v .week-tbl-wrap ostáva.
+       Vlastné orámovanie preto stráca zmysel (prekrývalo by kartu tabuľky druhým rámom
+       tej istej farby) - namiesto neho len tenká deliaca čiara zhora. */
+    .week-grid > .msg-block {
+        grid-column: 3;
+        grid-row: 1 / 3;
+        align-self: end;
+        background: none;
+        border: 0;
+        border-top: 1px solid var(--ink-08);
+        border-radius: 0;
     }
     .week-table th,
     .week-table td {
