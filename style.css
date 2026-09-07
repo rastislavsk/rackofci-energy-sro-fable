@@ -1218,6 +1218,15 @@ b {
 .week-grid > .msg-block {
     margin-top: 0;
 }
+/* Na mobile a tablete (do 1024 px) ide "Prehľad dní" ako prvý - je to tabuľka, dá sa v nej
+   čítať bez posúvania grafov, kým k mape výroby sa treba doscrollovať. Len poradie zobrazenia
+   (order), DOM poradie ostáva - od 1024 px vyššie ho používa explicitné umiestnenie cez
+   nth-child a to sa meniť nesmie (desktop ostáva ako je). */
+@media (max-width: 1023px) {
+    .week-block:nth-child(4) {
+        order: -1;
+    }
+}
 .week-tbl-wrap {
     overflow-x: auto;
     border: 1px solid var(--ink-08);
