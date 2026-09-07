@@ -845,8 +845,9 @@ b {
 .stat-pair {
     grid-template-columns: 1fr 1fr;
 }
-/* Na mobile sú tri rovnaké stĺpce príliš úzke (číslo aj popisky sa lámu),
-   preto Dnes a Zajtra vedľa seba a súčet cez celú šírku. */
+/* Na mobile sú tri rovnaké stĺpce príliš úzke (číslo aj popisky sa lámu), preto sú vedľa
+   seba len dve kartičky a tretia (.hi) dostane celú šírku - viac miesta pre tú, ktorá má
+   najviac dát (aktuálne Dnes: odznak počasia, špička aj priebeh dňa). */
 .stat-trio {
     grid-template-columns: 1fr 1fr;
 }
@@ -930,9 +931,9 @@ b {
 .stat-meta {
     display: none;
 }
-/* "7 dní spolu" má na mobile celú šírku karty pre seba (.stat-trio .stat.hi vyššie),
-   takže na rozdiel od Dnes/Zajtra sa doň zmestí aj meta riadok z desktop verzie
-   (priemer za deň, najsilnejší deň) - inak by tam ostalo prázdne miesto. */
+/* Kartička .hi má na mobile celú šírku pre seba (.stat-trio .stat.hi vyššie), takže na
+   rozdiel od tých dvoch úzkych sa do nej zmestí aj meta riadok z desktop verzie -
+   inak by tam ostalo prázdne miesto. */
 .stat-trio .stat.hi .stat-meta {
     display: flex;
     flex-wrap: wrap;
