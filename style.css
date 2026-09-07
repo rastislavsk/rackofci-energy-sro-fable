@@ -917,6 +917,18 @@ b {
 .stat-meta {
     display: none;
 }
+/* "7 dní spolu" má na mobile celú šírku karty pre seba (.stat-trio .stat.hi vyššie),
+   takže na rozdiel od Dnes/Zajtra sa doň zmestí aj meta riadok z desktop verzie
+   (priemer za deň, najsilnejší deň) - inak by tam ostalo prázdne miesto. */
+.stat-trio .stat.hi .stat-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-3);
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-35);
+}
 .trend {
     font-family: var(--font-mono);
     font-size: var(--fs-xs);

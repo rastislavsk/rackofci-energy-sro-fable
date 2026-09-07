@@ -2,9 +2,10 @@
 // doménovou logikou (shared/), takže test chytí rozdiel medzi modelom a tým, čo je v DOM.
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { visibleHours } from '../../shared/chart-model.js';
+import { visibleHours, weekStatsModel } from '../../shared/chart-model.js';
 import { APP_URL, LEGACY_SOURCES, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
+import { fmt1 } from '../../shared/format.js';
 import { forecastDayMessage } from '../../shared/messages.js';
 import { FIXED_NOW, fixtureData } from '../helpers.js';
 
@@ -252,6 +253,23 @@ test('7 dní: tabuľka, výber dňa naprieč komponentmi', async ({ page }) => {
     await page.locator('#week-tbody tr[data-day-index="5"]').click();
     await expect(page.locator('#week-day-tabs .utab.active')).toHaveAttribute('data-day-index', '5');
     await expect(page.locator('#week-msg-title')).toContainText('Najsilnejší deň');
+    expect(errors).toEqual([]);
+});
+
+/**
+ * Karta "7 dní spolu" má na mobile celú šírku pre seba (Dnes a Zajtra sú vedľa seba užšie),
+ * takže na rozdiel od nich má miesto aj na meta riadok, ktorý má inak (pre nedostatok miesta)
+ * zobrazený len desktop - inak by tam ostal nevyužitý priestor.
+ */
+test('7 dní: karta "7 dní spolu" má na mobile aj meta riadok z desktop verzie', async ({ page }) => {
+    const errors = await openApp(page);
+    await page.locator('#nav-7dni').click();
+    const s = weekStatsModel(forecast.days, pv, forecast.tomorrowSunny);
+    await expect(page.locator('#week-total-meta')).toBeVisible();
+    await expect(page.locator('#week-total-meta')).toHaveText(`ø ${fmt1(s.avgKwh)} kWh/deňnajlepší: ${s.best.label}`);
+    // Dnes/Zajtra ostávajú na mobile bez meta riadku - na to majú príliš úzky stĺpec.
+    await expect(page.locator('#week-today-meta')).toBeHidden();
+    await expect(page.locator('#week-tomorrow-meta')).toBeHidden();
     expect(errors).toEqual([]);
 });
 
