@@ -11,7 +11,9 @@
         <link rel="manifest" href="manifest.webmanifest" />
         <!-- Safari na iOS nerešpektuje "display" z manifestu, otvára appku vždy vo vlastnej
              karte prehliadača - bez tejto trojice meta tagov by po pridaní na plochu ostala
-             navigačná lišta aj tam. Android/Chrome si vystačí so samotným manifestom vyššie. -->
+             navigačná lišta aj tam. "apple-mobile-web-app-capable" je pre Chrome zastarané
+             (varovanie priamo z DevTools), preto je vedľa neho aj štandardné meno bez "apple-". -->
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Račkofci Energy s.r.o." />
