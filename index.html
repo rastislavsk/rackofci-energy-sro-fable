@@ -8,6 +8,13 @@
         <title>Račkofci Energy s.r.o.</title>
         <link rel="icon" type="image/svg+xml" href="favicon.svg" />
         <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+        <link rel="manifest" href="manifest.webmanifest" />
+        <!-- Safari na iOS nerešpektuje "display" z manifestu, otvára appku vždy vo vlastnej
+             karte prehliadača - bez tejto trojice meta tagov by po pridaní na plochu ostala
+             navigačná lišta aj tam. Android/Chrome si vystačí so samotným manifestom vyššie. -->
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Račkofci Energy s.r.o." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
             rel="stylesheet"
