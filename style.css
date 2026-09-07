@@ -1476,16 +1476,34 @@ b {
     }
 
     /* Karta 7 dní: hlavička, štatistiky a správa si vezmú svoje, mriežka grafov zvyšok.
-       Všetko okolo grafov je tu úspornejšie - každý ušetrený pixel ide krivkám. */
+       Všetko okolo grafov je tu úspornejšie - každý ušetrený pixel ide krivkám.
+
+       Správa "Najsilnejší deň" (.msg-block) je v HTML naschvál až za mriežkou grafov -
+       na mobile a tablete tak ostáva na svojom mieste bez zmeny. Na desktope ju sem
+       grid len premiestni: obe dostanú rovnaké grid-row aj grid-column (1/1), teda tú
+       istú bunku, a justify-self ich v nej roztlačí na opačné okraje - nadpis doľava,
+       správu doprava. DOM ani žiadny iný panel sa nemení.
+
+       Grid-column 1 musí byť na oboch napísaný explicitne, nielen grid-row - inak si ich
+       auto-placement (nechce, aby sa dva prvky prekryli) rozhodí do dvoch stĺpcov namiesto
+       jednej bunky a stat-trio aj mriežka grafov po nich zdedia druhý stĺpec navyše, teda
+       skončia vedľa seba v jednej aute-výške rade miesto pod sebou. (Takto to raz naozaj
+       vyzeralo - stat-trio sa naťahovalo na výšku celej mriežky grafov vedľa neho.) */
     #panel-7dni {
         display: grid;
-        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto minmax(0, 1fr);
         gap: var(--sp-3);
     }
     #panel-7dni .section-head,
     #panel-7dni .stat-trio,
     #panel-7dni .msg-block {
         margin: 0;
+    }
+    #panel-7dni .section-head {
+        grid-row: 1;
+        grid-column: 1;
+        justify-self: start;
     }
     #panel-7dni .stat-trio {
         gap: var(--sp-2);
@@ -1494,6 +1512,11 @@ b {
         padding: var(--sp-2) var(--sp-3);
     }
     #panel-7dni .msg-block {
+        grid-row: 1;
+        grid-column: 1;
+        justify-self: end;
+        align-self: center;
+        max-width: 66%;
         padding: var(--sp-2) var(--sp-3);
     }
     #panel-7dni .msg-block h3 {

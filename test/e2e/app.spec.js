@@ -418,3 +418,35 @@ test('7 dní - strop jasnej oblohy: na desktope zmizne aj s legendou, na mobile 
     await expect(page.locator('#week-bars-clear-legend')).toBeVisible();
     expect(errors).toEqual([]);
 });
+
+/**
+ * Správa "Najsilnejší deň" (.msg-block) je v HTML naschvál až za mriežkou grafov, aby na
+ * mobile a tablete ostala bez zmeny v päte karty. Na desktope ju CSS grid premiestni do
+ * riadku nadpisu - grid-row aj grid-column ju tam stotožnia s .section-head, takže musí
+ * skutočne sedieť vedľa neho (rovnaká horná hrana), nie nad mriežkou grafov.
+ */
+test('7 dní - správa "Najsilnejší deň": na desktope v hlavičke, na mobile v päte', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 });
+    const errors = await openApp(page);
+    await page.locator('#nav-7dni').click();
+
+    const desktop = await page.evaluate(() => {
+        const rect = (sel) => document.querySelector(sel).getBoundingClientRect();
+        return { msg: rect('#panel-7dni .msg-block'), head: rect('#panel-7dni .section-head'), grid: rect('#panel-7dni .week-grid') };
+    });
+    // Sedí v riadku nadpisu, nie nad mriežkou grafov ani pod ňou.
+    expect(Math.abs(desktop.msg.top - desktop.head.top)).toBeLessThanOrEqual(20);
+    expect(desktop.msg.top).toBeLessThan(desktop.grid.top);
+    // Zarovnaná doprava k rovnakej hrane, akú má mriežka grafov pod ňou.
+    expect(Math.abs(desktop.msg.right - desktop.grid.right)).toBeLessThanOrEqual(2);
+    // Nepresahuje strop 66 % šírky stĺpca.
+    expect(desktop.msg.width).toBeLessThanOrEqual(desktop.grid.width * 0.67);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobile = await page.evaluate(() => ({
+        msgTop: document.querySelector('#panel-7dni .msg-block').getBoundingClientRect().top,
+        gridBottom: document.querySelector('#panel-7dni .week-grid').getBoundingClientRect().bottom,
+    }));
+    expect(mobile.msgTop).toBeGreaterThanOrEqual(mobile.gridBottom - 1);
+    expect(errors).toEqual([]);
+});
