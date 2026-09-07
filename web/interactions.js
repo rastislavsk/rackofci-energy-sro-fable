@@ -148,14 +148,20 @@ function bindPointer(wrap, tooltip, handle) {
     wrap.addEventListener('touchend', () => setTimeout(hide, TOOLTIP_HOLD_MS));
 }
 
-/** @param {HTMLElement} tooltip @param {string} time @param {string} text @param {number} left @param {number} top */
-function showTooltip(tooltip, time, text, left, top) {
+/** Tooltip je vodorovne vystredený na `pos.left` (CSS transform: translateX(-50%)). Bez orezania
+ * by pri bode blízko okraja grafu presiahol .chart-wrap aj viewport - mobilné prehliadače potom
+ * natrvalo rozšíria layout viewport, aj keď je tooltip už dávno preč (viď README/PR história
+ * pinch-zoom opravy). @param {HTMLElement} tooltip @param {string} time @param {string} text
+ * @param {{ left: number, top: number, maxWidth: number }} pos maxWidth = šírka .chart-wrap */
+function showTooltip(tooltip, time, text, pos) {
     const t = tooltip.querySelector('.tt-time');
     const k = tooltip.querySelector('.tt-kw');
     if (t) t.textContent = time;
     if (k) k.textContent = text;
-    tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${top}px`;
+    const half = tooltip.offsetWidth / 2;
+    const clampedLeft = Math.min(Math.max(pos.left, half), Math.max(pos.maxWidth - half, half));
+    tooltip.style.left = `${clampedLeft}px`;
+    tooltip.style.top = `${pos.top}px`;
     tooltip.classList.add('visible');
 }
 
@@ -170,7 +176,11 @@ function initCurveTooltip(store, wrap, svg, tooltip, modelFor) {
         const extra =
             (tip.clearKw !== null ? ` · strop ${tip.clearKw.toFixed(2)} kW` : '') +
             (tip.cloud !== null ? ` · ${tip.cloud}% oblačnosť` : '');
-        showTooltip(tooltip, tip.time, `${tip.kw.toFixed(2)} kW${extra}`, clientX - rect.left, tip.yFrac * rect.height);
+        showTooltip(tooltip, tip.time, `${tip.kw.toFixed(2)} kW${extra}`, {
+            left: clientX - rect.left,
+            top: tip.yFrac * rect.height,
+            maxWidth: rect.width,
+        });
     });
 }
 
@@ -182,13 +192,11 @@ function initRectTooltip(wrap, tooltip) {
         if (!(target instanceof Element)) return tooltip.classList.remove('visible');
         const wrapRect = wrap.getBoundingClientRect();
         const cell = target.getBoundingClientRect();
-        showTooltip(
-            tooltip,
-            target.getAttribute('data-tip-title') || '',
-            target.getAttribute('data-tip') || '',
-            cell.left - wrapRect.left + cell.width / 2,
-            cell.top - wrapRect.top,
-        );
+        showTooltip(tooltip, target.getAttribute('data-tip-title') || '', target.getAttribute('data-tip') || '', {
+            left: cell.left - wrapRect.left + cell.width / 2,
+            top: cell.top - wrapRect.top,
+            maxWidth: wrapRect.width,
+        });
     });
 }
 
