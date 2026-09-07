@@ -2,10 +2,10 @@
 // doménovou logikou (shared/), takže test chytí rozdiel medzi modelom a tým, čo je v DOM.
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { visibleHours, weekStatsModel } from '../../shared/chart-model.js';
+import { usePct, visibleHours } from '../../shared/chart-model.js';
 import { APP_URL, LEGACY_SOURCES, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
-import { fmt1 } from '../../shared/format.js';
+import { hourLabel } from '../../shared/format.js';
 import { forecastDayMessage } from '../../shared/messages.js';
 import { FIXED_NOW, fixtureData } from '../helpers.js';
 
@@ -257,19 +257,23 @@ test('7 dní: tabuľka, výber dňa naprieč komponentmi', async ({ page }) => {
 });
 
 /**
- * Karta "7 dní spolu" má na mobile celú šírku pre seba (Dnes a Zajtra sú vedľa seba užšie),
- * takže na rozdiel od nich má miesto aj na meta riadok, ktorý má inak (pre nedostatok miesta)
- * zobrazený len desktop - inak by tam ostal nevyužitý priestor.
+ * Karta "Dnes" má najviac dát (odznak počasia, špičku, priebeh dňa), preto dostane na
+ * mobile celú šírku (Zajtra a 7 dní spolu sú vedľa seba užšie) a s ňou aj meta riadok,
+ * ktorý má inak (pre nedostatok miesta) zobrazený len desktop - inak by tam ostal
+ * nevyužitý priestor.
  */
-test('7 dní: karta "7 dní spolu" má na mobile aj meta riadok z desktop verzie', async ({ page }) => {
+test('7 dní: karta "Dnes" má na mobile aj meta riadok z desktop verzie', async ({ page }) => {
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
-    const s = weekStatsModel(forecast.days, pv, forecast.tomorrowSunny);
-    await expect(page.locator('#week-total-meta')).toBeVisible();
-    await expect(page.locator('#week-total-meta')).toHaveText(`ø ${fmt1(s.avgKwh)} kWh/deňnajlepší: ${s.best.label}`);
-    // Dnes/Zajtra ostávajú na mobile bez meta riadku - na to majú príliš úzky stĺpec.
-    await expect(page.locator('#week-today-meta')).toBeHidden();
+    const today = forecast.days[0];
+    const pct = usePct(today);
+    const expectedMeta =
+        `⚡ ${today.peakKw.toFixed(1)} kW o ${hourLabel(today.peakHour)}` + (pct == null ? '' : `${pct} % z jasnej oblohy`);
+    await expect(page.locator('#week-today-meta')).toBeVisible();
+    await expect(page.locator('#week-today-meta')).toHaveText(expectedMeta);
+    // Zajtra/7 dní spolu ostávajú na mobile bez meta riadku - na to majú príliš úzky stĺpec.
     await expect(page.locator('#week-tomorrow-meta')).toBeHidden();
+    await expect(page.locator('#week-total-meta')).toBeHidden();
     expect(errors).toEqual([]);
 });
 
