@@ -1587,6 +1587,21 @@ b {
         display: flex;
         flex-direction: column;
     }
+    /* Legenda "predpoveď" karty Denná výroba (.week-block:nth-child(2)) je v HTML za
+       grafom - na mobile a tablete tak ostáva presne tam, kde bola. Na desktope ju
+       flex poradie presunie nad graf, hneď pod nadpis, a .chart-card tak zostáva
+       posledným potomkom - vyplní zvyšok karty a jeho spodný okraj sa zarovná so
+       susednou kartou Mapa výroby (tá pod grafom žiadnu pätu nemá). */
+    .week-block:nth-child(2) .chart-footer.plain {
+        order: 1;
+        margin-bottom: var(--sp-2);
+    }
+    .week-block:nth-child(2) .stat-line {
+        order: 2;
+    }
+    .week-block:nth-child(2) .chart-card {
+        order: 3;
+    }
     /* Plátno sa nesmie zmestiť pod vlastné okraje (padT + padB = 52 px), inak by graf
        kreslil do zápornej plochy. Radšej sa stránka o kúsok posunie. */
     .week-block .chart-wrap,
