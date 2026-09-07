@@ -439,6 +439,7 @@ b {
 /* ---- Spotrebiče: verdikt a spotrebiče ------------------------------------- */
 .verdict {
     margin-bottom: var(--sp-6);
+    text-align: center;
 }
 .verdict h1 {
     font-size: var(--fs-xl);
@@ -476,8 +477,6 @@ b {
 .pager-page-eyebrow {
     display: flex;
     align-items: center;
-}
-.pager-page-eyebrow {
     justify-content: center;
 }
 .pager-page-forecast h3 {
@@ -596,6 +595,7 @@ b {
 .go-legend {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: var(--sp-3);
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
