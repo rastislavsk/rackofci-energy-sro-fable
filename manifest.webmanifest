@@ -3,6 +3,7 @@
     "short_name": "Račkofci Energy",
     "description": "Kedy zapínať spotrebiče: živý výkon fotovoltiky, predpoveď výroby a odporúčania podľa tarify.",
     "lang": "sk",
+    "id": "/rackofci-energy-sro-fable/index.html",
     "start_url": "./index.html",
     "scope": "./",
     "display": "standalone",
@@ -10,7 +11,6 @@
     "theme_color": "#0a0a0a",
     "icons": [
         { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-        { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
-        { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+        { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
     ]
 }
