@@ -8,8 +8,8 @@ import { renderSpotrebice } from './spotrebice.js';
 import { renderZdielat } from './zdielat.js';
 
 /** Na desktope Predpoveď nemá vlastnú navigáciu (viď .nav-item-predpoved v style.css) a
- * splynie so Spotrebičmi - aj keby sa stav dostal na 'predpoved' inak (napr. cez dial-hero),
- * ktorý má data-panel="predpoved" na každej šírke. @param {import('../state.js').AppState} state */
+ * splynie so Spotrebičmi - aj keby stav ostal na 'predpoved' zo šírky, kde má nav vlastnú
+ * položku. @param {import('../state.js').AppState} state */
 function effectivePanel(state) {
     return state.desktop && state.panel === 'predpoved' ? 'spotrebice' : state.panel;
 }
