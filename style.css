@@ -1303,6 +1303,12 @@ b {
     text-align: center;
     margin: 0;
 }
+.share-credit {
+    font-size: var(--fs-xs);
+    color: var(--ink-20);
+    text-align: center;
+    margin: 0;
+}
 
 /* ---- Širšie obrazovky ----------------------------------------------------- */
 @media (min-width: 768px) {
