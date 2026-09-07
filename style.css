@@ -440,14 +440,25 @@ b {
 .verdict {
     margin-bottom: var(--sp-6);
     text-align: center;
+    /* Container query jednotky (cqw) nižšie potrebujú predka s inline-size kontajnmentom -
+       na rozdiel od vw sa tak veľkosť písma odvíja od skutočnej šírky karty, nie okna.
+       To je podstatné, lebo táto šírka sa naprieč breakpointami nemení monotónne
+       (tablet na výšku má kartu širšiu než malý desktop so stĺpcami vedľa seba). */
+    container-type: inline-size;
 }
+/* Nadpisy (h1 aj h3 nižšie) majú font-size ako % šírky karty, nie pevné číslo - vďaka tomu
+   sa vždy zmestia na jeden riadok bez ohľadu na dĺžku textu aj šírku obrazovky. Koeficient
+   je odmeraný na najdlhší reálny text z shared/messages.js (viď PR popis), s malou rezervou.
+   white-space/ellipsis je len poistka pre nečakane dlhší text v budúcnosti. */
 .verdict h1 {
-    font-size: var(--fs-xl);
+    font-size: clamp(10px, 4.1cqw, var(--fs-xl));
     font-weight: 600;
     letter-spacing: -0.01em;
     line-height: 1.15;
     margin: 0 0 var(--sp-2);
-    text-wrap: balance;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .verdict .body {
     margin: 0 0 var(--sp-4);
@@ -481,9 +492,11 @@ b {
 }
 .pager-page-forecast h3 {
     margin: 0 0 var(--sp-2);
-    font-size: var(--fs-lg);
+    font-size: clamp(10px, 6.8cqw, var(--fs-lg));
     font-weight: 600;
-    text-wrap: balance;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .pager-dots {
     display: flex;
