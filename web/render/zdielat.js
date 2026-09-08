@@ -6,7 +6,6 @@ let qrInitialized = false;
 
 /** @param {import('../state.js').AppState} _state @param {import('../dom.js').Dom} dom */
 export function renderZdielat(_state, dom) {
-    dom.shareUrl.textContent = APP_URL;
     dom.shareWhatsapp.href = `https://wa.me/?text=${encodeURIComponent(APP_URL)}`;
     // Ak knižnica ešte nie je načítaná (pomalá sieť), skúsi sa to pri ďalšom otvorení; zvyšok karty funguje.
     const QRCode = /** @type {any} */ (globalThis).QRCode;

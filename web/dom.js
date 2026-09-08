@@ -135,7 +135,6 @@ function zdielatDom() {
     return {
         qrcode: byId('qrcode'),
         shareWhatsapp: /** @type {HTMLAnchorElement} */ (byId('share-whatsapp')),
-        shareUrl: byId('share-url'),
     };
 }
 
