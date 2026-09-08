@@ -1392,9 +1392,10 @@ b {
     color: var(--ink-35);
     border-bottom: 1px solid var(--ink-08);
 }
-/* Stĺpec Obloha nesie jedinú ikonu - naľavo pôsobila ako nedopísaný text, na stred robí
-   čitateľný pás značiek. Trieda (nie poradie stĺpca), nech to prežije zmenu tabuľky. */
-.week-table .sky {
+/* Obloha (ikona) a Využitie (percento) sú v bunke samy - naľavo pôsobili ako nedopísaný
+   text, na stred robia čitateľný pás. Trieda (nie poradie stĺpca), nech to prežije zmenu
+   tabuľky. */
+.week-table .mid {
     text-align: center;
 }
 .week-table tbody tr {
