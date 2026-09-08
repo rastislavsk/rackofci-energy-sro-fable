@@ -1398,6 +1398,13 @@ b {
 .week-table .mid {
     text-align: center;
 }
+/* Odtieň percenta využitia - prahy sú v useTier() vo web/render/sedemdni.js. */
+.week-table .use-hi {
+    color: var(--green);
+}
+.week-table .use-lo {
+    color: var(--ink-35);
+}
 .week-table tbody tr {
     cursor: pointer;
     border-bottom: 1px solid var(--ink-05);

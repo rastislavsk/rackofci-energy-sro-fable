@@ -6,6 +6,7 @@ import { usePct, visibleHours } from '../../shared/chart-model.js';
 import { APP_URL, LEGACY_SOURCES, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
 import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
+import { useTier } from '../../web/render/sedemdni.js';
 import { forecastDayMessage } from '../../shared/messages.js';
 import { FIXED_NOW, fixtureData } from '../helpers.js';
 
@@ -267,6 +268,11 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
     await expect(page.locator('#week-msg-title')).toContainText('Najsilnejší deň');
     await expect(page.locator('#week-day-head')).toBeHidden();
     expect(await viditelneBloky(page)).toEqual(['week-block-table']);
+
+    // Percento využitia má odtieň podľa toho, aký silný deň je - očakávanie sa počíta tou
+    // istou funkciou ako v appke. Štvrtý stĺpec tabuľky je Využitie.
+    for (const [i, day] of forecast.days.entries())
+        await expect(page.locator(`#week-tbody tr[data-day-index="${i}"] td:nth-child(4)`)).toHaveClass(`mid${useTier(usePct(day))}`);
 
     // Klik na deň otvorí jeho detail.
     await page.locator('#week-tbody tr[data-day-index="5"]').click();

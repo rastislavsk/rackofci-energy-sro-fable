@@ -75,6 +75,17 @@ function skyCell(cloudPct) {
     return `<span class="cloud-cell cloud" title="zamračené">${ICON_CLOUD}</span>`;
 }
 
+/**
+ * Odtieň percenta využitia: silný deň (od 80 % stropu jasnej oblohy) svieti, slabý (pod
+ * 50 %) stmavne. Ide o to, aby sa dobrý deň dal v tabuľke nájsť očami bez čítania čísel.
+ * @param {number | null} pct
+ */
+export function useTier(pct) {
+    if (pct == null) return '';
+    if (pct >= 80) return ' use-hi';
+    return pct < 50 ? ' use-lo' : '';
+}
+
 /** @param {ForecastDay[]} days @param {number} sel @param {import('../dom.js').Dom} dom */
 function renderTableAndTabs(days, sel, dom) {
     dom.weekDayTabs.innerHTML = days
@@ -90,7 +101,7 @@ function renderTableAndTabs(days, sel, dom) {
             const peakAt = d.peakHour == null ? '–' : `o ${hourLabel(d.peakHour)}`;
             return (
                 `<tr class="${i === 0 ? 'today' : ''}${i === sel ? ' sel' : ''}" data-day-index="${i}"><td>${weekDayShort(d.date, i)}${dateSub}</td>` +
-                `<td>${d.kwhTotal.toFixed(1)} kWh</td><td class="mid">${skyCell(d.cloudAvgPct)}</td><td class="mid">${pct == null ? '–' : `${pct} %`}</td>` +
+                `<td>${d.kwhTotal.toFixed(1)} kWh</td><td class="mid">${skyCell(d.cloudAvgPct)}</td><td class="mid${useTier(pct)}">${pct == null ? '–' : `${pct} %`}</td>` +
                 `<td>${d.peakKw.toFixed(1)} kW<span class="sub">${peakAt}</span></td></tr>`
             );
         })
