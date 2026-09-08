@@ -5,7 +5,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { usePct, visibleHours } from '../../shared/chart-model.js';
 import { APP_URL, LEGACY_SOURCES, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
-import { hourLabel } from '../../shared/format.js';
+import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
 import { forecastDayMessage } from '../../shared/messages.js';
 import { FIXED_NOW, fixtureData } from '../helpers.js';
 
@@ -241,18 +241,73 @@ test('predpoveď: štatistiky, prepnutie na zajtra, správa dňa', async ({ page
     expect(errors).toEqual([]);
 });
 
-test('7 dní: tabuľka, výber dňa naprieč komponentmi', async ({ page }) => {
+/** Poradie viditeľných blokov karty 7 dní zhora nadol - tak, ako ich vidí používateľ
+ * (CSS `order` mení poradie oproti HTML). @param {import('@playwright/test').Page} page */
+function viditelneBloky(page) {
+    return page.evaluate(() =>
+        [...document.querySelectorAll('#panel-7dni .week-block')]
+            .filter((b) => b.getBoundingClientRect().height > 0)
+            .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+            .map((b) => b.id),
+    );
+}
+
+/**
+ * Karta 7 dní je na mobile rozdelená na dve obrazovky: prehľad (tri bubliny, tabuľka,
+ * najsilnejší deň) a detail dňa, ktorý sa otvorí klikom na deň v tabuľke. V detaile ide
+ * Denná výroba, Priebeh výroby a až potom Mapa výroby so zvýrazneným dňom.
+ */
+test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ page }) => {
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
+
+    // Prehľad: bubliny a tabuľka, grafy sú až v detaile.
     await expect(page.locator('#week-tbody tr')).toHaveCount(7);
-    await expect(page.locator('#week-today')).toHaveText(forecast.days[0].kwhTotal.toFixed(1).replace('.', ','));
+    await expect(page.locator('#week-today')).toHaveText(fmt1(forecast.days[0].kwhTotal));
+    await expect(page.locator('#week-msg-title')).toContainText('Najsilnejší deň');
+    await expect(page.locator('#week-day-head')).toBeHidden();
+    expect(await viditelneBloky(page)).toEqual(['week-block-table']);
+
+    // Klik na deň otvorí jeho detail.
+    await page.locator('#week-tbody tr[data-day-index="5"]').click();
+    await expect(page.locator('#week-day-title')).toHaveText(weekDayLong(forecast.days[5].date, 5));
+    await expect(page.locator('#week-trio')).toBeHidden();
+    await expect(page.locator('#week-day-tabs')).toBeHidden();
+    expect(await viditelneBloky(page)).toEqual(['week-block-bars', 'week-block-curve', 'week-block-heat']);
+
+    // Všetky tri grafy ukazujú ten istý deň: zvýraznený stĺpec, jeho krivka a riadok mapy.
+    await expect(page.locator('#week-bars rect.bar.sel')).toHaveCount(1);
+    await expect(page.locator('#week-curve-stat')).toContainText(`${fmt1(forecast.days[5].kwhTotal)} kWh`);
+    await expect(page.locator('#week-heat .day-label.sel')).toHaveAttribute('data-day-index', '5');
+
+    // Späť sa vraciame na prehľad, výber dňa v ňom ostáva.
+    await page.locator('#week-day-back').click();
+    await expect(page.locator('#week-day-head')).toBeHidden();
+    await expect(page.locator('#week-tbody tr.sel')).toHaveAttribute('data-day-index', '5');
+    expect(await viditelneBloky(page)).toEqual(['week-block-table']);
+
+    // Odchod na inú kartu a návrat začína zase na prehľade.
+    await page.locator('#nav-spotrebice').click();
+    await page.locator('#nav-7dni').click();
+    await expect(page.locator('#week-day-head')).toBeHidden();
+    expect(errors).toEqual([]);
+});
+
+/** Na širokej obrazovke je na celú kartu miesto naraz - detail dňa sa tam neotvára a klik
+ * v tabuľke, v prepínači dní aj v grafoch len prepína vybraný deň, ako doteraz. */
+test('7 dní na desktope: karta ostáva celá, výber dňa naprieč komponentmi', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 });
+    const errors = await openApp(page);
+    await page.locator('#nav-7dni').click();
     await page.locator('#week-day-tabs [data-day-index="3"]').click();
     await expect(page.locator('#week-day-tabs .utab.active')).toHaveAttribute('data-day-index', '3');
     await expect(page.locator('#week-tbody tr.sel')).toHaveAttribute('data-day-index', '3');
     await expect(page.locator('#week-bars rect.bar.sel')).toHaveCount(1);
     await page.locator('#week-tbody tr[data-day-index="5"]').click();
     await expect(page.locator('#week-day-tabs .utab.active')).toHaveAttribute('data-day-index', '5');
-    await expect(page.locator('#week-msg-title')).toContainText('Najsilnejší deň');
+    await expect(page.locator('#week-day-head')).toBeHidden();
+    await expect(page.locator('#week-block-table')).toBeVisible();
+    await expect(page.locator('#week-block-heat')).toBeVisible();
     expect(errors).toEqual([]);
 });
 
@@ -335,6 +390,12 @@ test('prístupnosť: žiadne závažné nálezy axe na žiadnej karte', async ({
         const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
         expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
     }
+    // Detail dňa je vlastná obrazovka s vlastným ovládaním (šípka späť), preto sa kontroluje zvlášť.
+    await page.locator('#nav-7dni').click();
+    await page.locator('#week-tbody tr[data-day-index="5"]').click();
+    const detail = await new AxeBuilder({ page }).analyze();
+    const vazne = detail.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(vazne.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
 });
 
 test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }) => {
@@ -429,7 +490,9 @@ test('7 dní - strop jasnej oblohy: na desktope zmizne aj s legendou, na mobile 
     await expect(page.locator('#week-bars .clear-cap')).toHaveCount(0);
     await expect(page.locator('#week-bars-clear-legend')).toBeHidden();
 
+    // Na mobile žijú stĺpce v detaile dňa - strop aj jeho legenda sa kontrolujú tam.
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator('#week-tbody tr[data-day-index="0"]').click();
     await expect(page.locator('#week-bars .clear-cap')).toHaveCount(7);
     await expect(page.locator('#week-bars-clear-legend')).toBeVisible();
     expect(errors).toEqual([]);

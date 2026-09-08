@@ -14,6 +14,7 @@
  *   dataError: boolean,
  *   forecastDay: 'today' | 'tomorrow',
  *   weekSelDay: number,
+ *   weekDetail: boolean,
  *   verdictPage: number,
  *   previewMinutes: number | null,
  *   isDragging: boolean,
@@ -35,6 +36,9 @@ export function initialState(now, season, layout) {
         dataError: false,
         forecastDay: 'today',
         weekSelDay: 0,
+        // Karta 7 dní má na mobile dve obrazovky: prehľad dní a detail vybraného dňa.
+        // Na širokej obrazovke je na všetko miesto naraz a toto pole sa neprejaví.
+        weekDetail: false,
         verdictPage: 0,
         previewMinutes: null,
         isDragging: false,
