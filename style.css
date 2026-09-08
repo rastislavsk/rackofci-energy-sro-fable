@@ -97,14 +97,6 @@ svg {
     width: 100%;
     text-align: left;
 }
-.card-hd {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-35);
-    margin-bottom: var(--sp-2);
-}
 .lbl {
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
@@ -306,9 +298,9 @@ b {
 
 /* ---- Spotrebiče: náhľad času -----------------------------------------------
    Visí nad legendou pása dňa (position:absolute, ukotvená na .col-b), nie vo
-   vlastnom riadku nad ciferníkom - medzera pod kartou "Čo robiť teraz" (jej
-   margin-bottom) je vždy dosť veľká, aby sa doň zmestila, takže zobrazenie
-   ani skrytie banneru nič v layoute neposunie. */
+   vlastnom riadku nad ciferníkom - medzera pod kartou .verdict (jej margin-bottom)
+   je vždy dosť veľká, aby sa doň zmestila, takže zobrazenie ani skrytie banneru
+   nič v layoute neposunie. */
 .col-b {
     position: relative;
 }
@@ -415,7 +407,7 @@ b {
     justify-content: center;
     margin: 18px 0 var(--sp-1);
 }
-/* Odznak s tarifou nikde nad ciferníkom nie je (žije len v pageri karty Čo robiť teraz) -
+/* Odznak s tarifou nikde nad ciferníkom nie je (žije len v pageri karty .verdict) -
    ciferník tak môže byť na každej šírke rovnako veľký. */
 .dial-svg {
     width: 240px;
@@ -835,6 +827,35 @@ b {
     font-size: var(--fs-sm);
     font-weight: 600;
     white-space: nowrap;
+}
+
+/* Mobil a tablet (do 1023px): karta stráca nadpisy "Aktuálny výkon" a "Čo robiť teraz",
+   uvoľnené miesto dostanú menšie medzery medzi ciferníkom, odporúčaním a pásom dňa -
+   komponenty tak sedia bližšie pri sebe namiesto toho, aby po nadpisoch ostala diera.
+   Na desktope (viď nižšie) ide uvoľnené miesto inam - do väčšieho ciferníka - preto sa
+   táto medzera netrhá tam.
+   Medzera pod kartou "Čo robiť teraz" (.verdict margin-bottom) sa naschvál nemení - musí
+   ostať dosť veľká pre banner s náhľadom času (viď komentár pri .preview-banner vyššie),
+   ten sa doň nezmestí. */
+@media (max-width: 1023px) {
+    .dial-hero {
+        margin-bottom: var(--sp-3);
+    }
+    .dial-wrap {
+        margin-top: 10px;
+    }
+    .verdict h1 {
+        margin-bottom: var(--sp-1);
+    }
+    .verdict .body {
+        margin-bottom: var(--sp-2);
+    }
+    .pager-dots {
+        margin-bottom: var(--sp-2);
+    }
+    .footline {
+        margin-bottom: var(--sp-1);
+    }
 }
 
 /* ---- Predpoveď a 7 dní: štatistiky ----------------------------------------- */
@@ -1491,8 +1512,11 @@ b {
         grid-template-columns: minmax(0, 1fr);
         gap: var(--sp-4);
     }
+    /* sp-6, nie menej: spolu s medzerou mriežky (gap na .panel-spotrebice vyššie) musí
+       táto medzera pojať banner s náhľadom času (#preview-banner, position:absolute,
+       visí nad pásom dňa) bez toho, aby ho orezala - viď komentár pri .preview-banner. */
     .verdict {
-        margin-bottom: var(--sp-4);
+        margin-bottom: var(--sp-6);
     }
 }
 
@@ -1680,6 +1704,17 @@ b {
         flex: 1 1 auto;
         min-height: 0;
         overflow: auto;
+    }
+
+    /* Karta Terazky stráca nadpisy "Aktuálny výkon" a "Čo robiť teraz" - namiesto toho,
+       aby pod pásom dňa ostala len prázdna diera (karta sa naťahuje na výšku obrazovky,
+       viď .panel vyššie), dostane uvoľnené miesto väčší ciferník. */
+    .dial-svg {
+        width: 320px;
+        height: 320px;
+    }
+    .dial-num .val {
+        font-size: 58px;
     }
 }
 
