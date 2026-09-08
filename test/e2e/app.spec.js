@@ -286,6 +286,13 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
     await expect(page.locator('#week-curve-stat')).toContainText(`${fmt1(forecast.days[5].kwhTotal)} kWh`);
     await expect(page.locator('#week-heat .day-label.sel')).toHaveAttribute('data-day-index', '5');
 
+    // Z detailu vedie späť jedine šípka vľavo hore. Atribút data-panel nesie aj #page, takže
+    // klik kdekoľvek v stránke sa kedysi tváril ako prepnutie karty a detail zavrel.
+    await page.locator('#week-curve-stat').click();
+    await page.locator('#week-block-heat .chart-top').click();
+    await expect(page.locator('#week-day-head')).toBeVisible();
+    expect(await viditelneBloky(page)).toEqual(['week-block-bars', 'week-block-curve', 'week-block-heat']);
+
     // Späť sa vraciame na prehľad, výber dňa v ňom ostáva.
     await page.locator('#week-day-back').click();
     await expect(page.locator('#week-day-head')).toBeHidden();

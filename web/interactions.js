@@ -15,7 +15,10 @@ import { weekCurveModel } from './render/sedemdni.js';
 function initNavigation(store, dom) {
     document.addEventListener('click', (e) => {
         const target = /** @type {HTMLElement} */ (e.target);
-        const panelBtn = target.closest('[data-panel]');
+        // Selektor musí byť `button[data-panel]`, nie `[data-panel]`: ten istý atribút nesie aj
+        // #page (nastavuje ho renderPanels pre CSS), takže by ho našiel klik kdekoľvek v stránke
+        // a zavrel detail dňa - kartu by to prepínalo na tú istú, na ktorej používateľ stojí.
+        const panelBtn = target.closest('button[data-panel]');
         // Prepnutie karty vždy začína na prehľade dní - detail dňa je vec jedného pozretia,
         // nie stav, do ktorého by sa appka mala vrátiť o hodinu neskôr.
         if (panelBtn instanceof HTMLElement && panelBtn.dataset.panel)
