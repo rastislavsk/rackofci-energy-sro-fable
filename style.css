@@ -304,13 +304,25 @@ b {
     color: var(--ink-45);
 }
 
-/* ---- Spotrebiče: náhľad času ---------------------------------------------- */
+/* ---- Spotrebiče: náhľad času -----------------------------------------------
+   Visí nad legendou pása dňa (position:absolute, ukotvená na .col-b), nie vo
+   vlastnom riadku nad ciferníkom - medzera pod kartou "Čo robiť teraz" (jej
+   margin-bottom) je vždy dosť veľká, aby sa doň zmestila, takže zobrazenie
+   ani skrytie banneru nič v layoute neposunie. */
+.col-b {
+    position: relative;
+}
 .preview-banner {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: var(--sp-2);
-    margin-bottom: var(--sp-4);
+    margin-bottom: 0;
+    padding-bottom: var(--sp-3);
 }
 .preview-pill {
     display: flex;
@@ -1464,9 +1476,6 @@ b {
            stĺpec pretiecť podľa najširšieho obsahu (napr. graf Priebeh dňa). */
         grid-template-columns: minmax(0, 1fr);
         gap: var(--sp-4);
-    }
-    .panel-spotrebice .preview-banner {
-        grid-column: 1 / -1;
     }
     .verdict {
         margin-bottom: var(--sp-4);

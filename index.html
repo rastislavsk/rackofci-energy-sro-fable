@@ -73,23 +73,6 @@
         <main class="page" id="page">
             <!-- PANEL: SPOTREBIČE -->
             <section id="panel-spotrebice" class="panel panel-spotrebice" aria-labelledby="verdict-headline">
-                <div class="preview-banner hidden" id="preview-banner">
-                    <div class="preview-pill" id="preview-pill">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <circle cx="12" cy="12" r="9" />
-                            <path d="M12 7v5l3 3" />
-                        </svg>
-                        <span id="preview-time-label">Náhľad · --:--</span>
-                    </div>
-                    <button class="preview-reset" id="preview-reset" type="button">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M9 14l-4-4 4-4" />
-                            <path d="M5 10h9a5 5 0 015 5v1" />
-                        </svg>
-                        Teraz
-                    </button>
-                </div>
-
                 <div class="col-a">
                     <div class="dial-hero card" id="dial-hero">
                         <div class="card-hd">Aktuálny výkon</div>
@@ -167,6 +150,26 @@
                 </div>
 
                 <div class="col-b">
+                    <!-- Visí nad legendou pása dňa (position:absolute, viď .preview-banner v
+                         style.css) namiesto toho, aby stála vo vlastnom riadku nad ciferníkom -
+                         medzera pod kartou "Čo robiť teraz" na ňu má miesto vždy, takže sa
+                         zobrazením nič neposunie. -->
+                    <div class="preview-banner hidden" id="preview-banner">
+                        <div class="preview-pill" id="preview-pill">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 7v5l3 3" />
+                            </svg>
+                            <span id="preview-time-label">Náhľad · --:--</span>
+                        </div>
+                        <button class="preview-reset" id="preview-reset" type="button">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9 14l-4-4 4-4" />
+                                <path d="M5 10h9a5 5 0 015 5v1" />
+                            </svg>
+                            Teraz
+                        </button>
+                    </div>
                     <div class="footline">
                         <span class="strip-head">
                             <span class="chart-label">Priebeh dňa</span>
