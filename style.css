@@ -376,6 +376,23 @@ b {
     opacity: 0.55;
     transition: opacity 0.15s;
 }
+/* Na mobile a tablete banner visel hneď nad pásom dňa (bottom:100%, viď .preview-banner
+   vyššie) - dotýkal sa nadpisu "Priebeh dňa" a zhora zasahoval do bodiek pageru. Kým je
+   banner vidno (:has() nižšie), medzera pod .verdict aj nad .footline o kúsok narastie,
+   presne o toľko, aby banner vyšiel na stred medzi bodky a nadpis (premerané cez
+   Playwright, viď PR popis). Mimo mobil/tablet sa banner do pôvodnej, tesnejšej medzery
+   zmestí bez prekrývania (viď komentár pri .preview-banner), tam sa nič nemení.
+   Bezpečné pre garanciu bez scrollovania z predošlého PR: .col-b má vlastný min-height
+   (viď @media nižšie), takže narastenú medzeru si vždy odrieka len pás dňa, nikdy
+   nescrolluje appka ako celok. */
+@media (max-width: 1023px) {
+    .panel-spotrebice:has(#preview-banner:not(.hidden)) .verdict {
+        margin-bottom: calc(var(--sp-6) + 16px);
+    }
+    .panel-spotrebice:has(#preview-banner:not(.hidden)) .footline {
+        margin-top: 8px;
+    }
+}
 
 /* ---- Spotrebiče: ciferník --------------------------------------------------- */
 .dial-hero {
