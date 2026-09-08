@@ -364,6 +364,20 @@ b {
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--bg);
+    /* Nepretržitý pulz, kým je tlačidlo vidno - v tichom rozhraní inak ľahko zapadne
+       medzi ostatné jantárové prvky karty. */
+    animation: preview-reset-pulse 1.6s ease-in-out infinite;
+}
+/* box-shadow, nie transform: scale - meniace sa rozmery by v e2e testoch (aj Playwright
+   actionability checku) robili tlačidlo trvalo "nestabilné" pre klik. */
+@keyframes preview-reset-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--amber-rgb), 0.45);
+    }
+    50% {
+        box-shadow: 0 0 0 7px rgba(var(--amber-rgb), 0);
+    }
 }
 .panel-spotrebice.preview-dim .dial-hero,
 .panel-spotrebice.preview-dim .verdict {
