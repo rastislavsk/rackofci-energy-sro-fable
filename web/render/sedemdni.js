@@ -90,7 +90,7 @@ function renderTableAndTabs(days, sel, dom) {
             const peakAt = d.peakHour == null ? '–' : `o ${hourLabel(d.peakHour)}`;
             return (
                 `<tr class="${i === 0 ? 'today' : ''}${i === sel ? ' sel' : ''}" data-day-index="${i}"><td>${weekDayShort(d.date, i)}${dateSub}</td>` +
-                `<td>${d.kwhTotal.toFixed(1)} kWh</td><td>${skyCell(d.cloudAvgPct)}</td><td>${pct == null ? '–' : `${pct} %`}</td>` +
+                `<td>${d.kwhTotal.toFixed(1)} kWh</td><td class="sky">${skyCell(d.cloudAvgPct)}</td><td>${pct == null ? '–' : `${pct} %`}</td>` +
                 `<td>${d.peakKw.toFixed(1)} kW<span class="sub">${peakAt}</span></td></tr>`
             );
         })

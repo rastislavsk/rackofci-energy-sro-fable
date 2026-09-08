@@ -1392,6 +1392,11 @@ b {
     color: var(--ink-35);
     border-bottom: 1px solid var(--ink-08);
 }
+/* Stĺpec Obloha nesie jedinú ikonu - naľavo pôsobila ako nedopísaný text, na stred robí
+   čitateľný pás značiek. Trieda (nie poradie stĺpca), nech to prežije zmenu tabuľky. */
+.week-table .sky {
+    text-align: center;
+}
 .week-table tbody tr {
     cursor: pointer;
     border-bottom: 1px solid var(--ink-05);
