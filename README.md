@@ -14,8 +14,9 @@ Cloudflare Worker.
   Potiahnutím bežca alebo klikom na pás si pozrieš, ako to bude vyzerať v inom čase.
 - **Predpoveď** – hodinová krivka výroby na dnes alebo zajtra, oblačnosť a skutočná
   nameraná výroba nad ňou.
-- **7 dní** – mapa výroby hodina × deň, denné súčty proti stropu jasnej oblohy, priebeh
-  vybraného dňa a tabuľka.
+- **7 dní** – prehľad dní v tabuľke a súhrn za dnes, zajtra a celý týždeň. Klik na deň
+  otvorí jeho detail: dennú výrobu, priebeh výroby a mapu výroby hodina × deň so
+  zvýrazneným dňom. Na širokej obrazovke je vidno všetko naraz.
 - **Zdieľať** – QR kód a odkaz na appku.
 
 ## Ako to funguje

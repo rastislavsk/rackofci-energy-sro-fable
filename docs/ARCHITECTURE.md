@@ -87,6 +87,28 @@ plátno presne na kartu. Rozmer teda prichádza tou istou cestou ako každý in�
 - **Tarifné okná sú dáta, nie HTML.** Pôvodne boli v `data-` atribútoch skrytého zoznamu,
   teraz v `config.js`, odkiaľ ich číta appka aj testy.
 
+## Karta 7 dní na mobile
+
+Na telefóne mala karta štyri grafy a tabuľku pod sebou – pätnásť obrazoviek scrollovania,
+kým sa človek dostal k tomu, čo ho zaujímalo. Je preto rozdelená na dve obrazovky:
+
+- **Prehľad dní** – tri kartičky (Dnes, Zajtra, 7 dní spolu), tabuľka a správa
+  „Najsilnejší deň“. Zmestí sa takmer celá na jednu obrazovku.
+- **Detail dňa** – otvorí ho klik na riadok v tabuľke: denná výroba, priebeh výroby
+  a mapa výroby so zvýrazneným dňom, plus hlavička so šípkou späť.
+
+Rozhoduje o tom jediné pole v stave (`weekDetail`), prepínajú sa len triedy `.hidden` –
+žiadny presun prvkov v DOM. Poradie na detaile robí jedno pravidlo `order` v CSS, lebo
+mapa výroby je v HTML prvá, ale na detaile má ísť posledná.
+
+Od 1024 px je detail vypnutý: tam je na celú kartu miesto naraz a klik na deň ho, ako
+doteraz, len vyberie vo všetkých grafoch. Preto je podmienka `!state.wide` v `renderSedemdni`
+a pravidlá detailu žijú v `@media (max-width: 1023px)`.
+
+Z tabuľky zmizol stĺpec „Oblačnosť“ – ten istý údaj hovoril aj stĺpec „Obloha“ a tabuľka
+sa kvôli nemu musela na telefóne posúvať do strán, takže šípku do detailu na konci riadku
+nebolo vidno.
+
 ## Rozloženie na desktope
 
 Od 1024 px sa stránka správa ako obrazovka, nie ako dokument: `body` nescrolluje a karta

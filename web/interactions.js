@@ -16,13 +16,19 @@ function initNavigation(store, dom) {
     document.addEventListener('click', (e) => {
         const target = /** @type {HTMLElement} */ (e.target);
         const panelBtn = target.closest('[data-panel]');
+        // Prepnutie karty vždy začína na prehľade dní - detail dňa je vec jedného pozretia,
+        // nie stav, do ktorého by sa appka mala vrátiť o hodinu neskôr.
         if (panelBtn instanceof HTMLElement && panelBtn.dataset.panel)
-            store.setState({ panel: /** @type {Panel} */ (panelBtn.dataset.panel) });
+            store.setState({ panel: /** @type {Panel} */ (panelBtn.dataset.panel), weekDetail: false });
         const dayBtn = target.closest('[data-day]');
         if (dayBtn instanceof HTMLElement) store.setState({ forecastDay: dayBtn.dataset.day === 'tomorrow' ? 'tomorrow' : 'today' });
+        // Deň sa dá vybrať v tabuľke, v prepínači dní aj priamo v grafoch. Klik v tabuľke
+        // navyše otvorí detail dňa (na mobile; na širokej obrazovke sa stav neprejaví).
         const weekBtn = target.closest('[data-day-index]');
-        if (weekBtn instanceof Element && dom.panels['7dni'].contains(weekBtn))
-            store.setState({ weekSelDay: Number(weekBtn.getAttribute('data-day-index')) });
+        if (weekBtn instanceof Element && dom.panels['7dni'].contains(weekBtn)) {
+            const weekSelDay = Number(weekBtn.getAttribute('data-day-index'));
+            store.setState(dom.weekTbody.contains(weekBtn) ? { weekSelDay, weekDetail: true } : { weekSelDay });
+        }
         // Bodka len posunie pás; stránka sa dopočíta z výslednej pozície ako pri prste. Cieľ je
         // samotná stránka (scrollIntoView), nie index krát clientWidth - ten je celočíselný, kým
         // skutočná šírka stránky býva desatinná, čo na desktope (klik na bodku, nie prstom) nechávalo
@@ -35,6 +41,7 @@ function initNavigation(store, dom) {
         }
     });
     dom.previewReset.addEventListener('click', () => store.setState({ previewMinutes: null, isDragging: false }));
+    dom.weekDayBack.addEventListener('click', () => store.setState({ weekDetail: false }));
 }
 
 /** @param {Dom} dom @param {number} clientX */

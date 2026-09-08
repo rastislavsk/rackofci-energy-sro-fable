@@ -1,8 +1,10 @@
 // Karta 7 dní: súhrn, mapa výroby, denné stĺpce, priebeh vybraného dňa, tabuľka, správa.
+// Na mobile je to rozdelené na dve obrazovky - prehľad dní a detail vybraného dňa (weekDetail
+// v stave); na širokej obrazovke je miesta dosť a vidno všetko naraz.
 
 import { forecastChartModel, usePct, weekBarsModel, weekHeatModel, weekStatsModel } from '../../shared/chart-model.js';
 import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
-import { escapeHtml, fmt1, hourLabel, weekDateLabel, weekDayShort } from '../../shared/format.js';
+import { escapeHtml, fmt1, hourLabel, weekDateLabel, weekDayLong, weekDayShort } from '../../shared/format.js';
 import { EMPTY_MESSAGES, weekMessage } from '../../shared/messages.js';
 import { ICON_CLOUD, ICON_PARTLY, ICON_SUN } from '../icons.js';
 import { dimsFor } from './predpoved.js';
@@ -41,8 +43,8 @@ function trendBadge(pct) {
     return pct > 0 ? `<span class="trend up">▲ ${pct} %</span>` : `<span class="trend down">▼ ${Math.abs(pct)} %</span>`;
 }
 
-/** @param {ReturnType<typeof weekStatsModel>} s @param {import('../dom.js').Dom} dom */
-function renderStats(s, dom) {
+/** @param {ReturnType<typeof weekStatsModel>} s @param {import('../dom.js').Dom} dom @param {boolean} detail */
+function renderStats(s, dom, detail) {
     dom.weekToday.textContent = fmt1(s.today.kwhTotal);
     dom.weekTodayBadge.innerHTML = weatherBadge(false, s.today.cloudAvgPct);
     dom.weekTodayMeta.innerHTML = peakMetaLine(s.today);
@@ -58,9 +60,11 @@ function renderStats(s, dom) {
     dom.weekTomorrowTrend.innerHTML = trendBadge(s.trendPct);
     dom.weekTotal.textContent = String(Math.round(s.totalKwh));
     dom.weekTotalMeta.innerHTML = `<span>ø <b>${fmt1(s.avgKwh)} kWh</b>/deň</span><span>najlepší: <b>${escapeHtml(s.best.label)}</b></span>`;
+    // Najsilnejší deň hovorí o celom týždni - na detaile dňa ho už povedala správa pod
+    // prehľadom dní, tam by bol druhýkrát.
     dom.weekBarsStat.innerHTML =
         `<span>Spolu za 7 dní <b>${fmt1(s.totalKwh)} kWh</b></span><span>Priemer <b>${fmt1(s.avgKwh)} kWh/deň</b></span>` +
-        `<span>Najsilnejší deň <b>${escapeHtml(s.best.fullLabel)} · ${fmt1(s.best.kwh)} kWh</b></span>`;
+        (detail ? '' : `<span>Najsilnejší deň <b>${escapeHtml(s.best.fullLabel)} · ${fmt1(s.best.kwh)} kWh</b></span>`);
 }
 
 /** @param {number | null} cloudPct */
@@ -71,11 +75,15 @@ function skyCell(cloudPct) {
     return `<span class="cloud-cell cloud" title="zamračené">${ICON_CLOUD}</span>`;
 }
 
-/** @param {number | null} cloudPct */
-function cloudCell(cloudPct) {
-    if (cloudPct == null) return '–';
-    const sunny = cloudPct < 50;
-    return `<span class="cloud-cell ${sunny ? 'sun' : 'cloud'}">${sunny ? ICON_SUN : ICON_CLOUD}${Math.round(cloudPct)} %</span>`;
+/**
+ * Odtieň percenta využitia: silný deň (od 80 % stropu jasnej oblohy) svieti, slabý (pod
+ * 50 %) stmavne. Ide o to, aby sa dobrý deň dal v tabuľke nájsť očami bez čítania čísel.
+ * @param {number | null} pct
+ */
+export function useTier(pct) {
+    if (pct == null) return '';
+    if (pct >= 80) return ' use-hi';
+    return pct < 50 ? ' use-lo' : '';
 }
 
 /** @param {ForecastDay[]} days @param {number} sel @param {import('../dom.js').Dom} dom */
@@ -93,8 +101,8 @@ function renderTableAndTabs(days, sel, dom) {
             const peakAt = d.peakHour == null ? '–' : `o ${hourLabel(d.peakHour)}`;
             return (
                 `<tr class="${i === 0 ? 'today' : ''}${i === sel ? ' sel' : ''}" data-day-index="${i}"><td>${weekDayShort(d.date, i)}${dateSub}</td>` +
-                `<td>${d.kwhTotal.toFixed(1)} kWh</td><td>${skyCell(d.cloudAvgPct)}</td><td>${pct == null ? '–' : `${pct} %`}</td>` +
-                `<td>${d.peakKw.toFixed(1)} kW<span class="sub">${peakAt}</span></td><td>${cloudCell(d.cloudAvgPct)}</td></tr>`
+                `<td>${d.kwhTotal.toFixed(1)} kWh</td><td class="mid">${skyCell(d.cloudAvgPct)}</td><td class="mid${useTier(pct)}">${pct == null ? '–' : `${pct} %`}</td>` +
+                `<td>${d.peakKw.toFixed(1)} kW<span class="sub">${peakAt}</span></td></tr>`
             );
         })
         .join('');
@@ -111,6 +119,21 @@ function renderCurve(state, day, dom) {
     parts.push(`<span>Výroba <b>${fmt1(day.kwhTotal)} kWh</b></span>`);
     if (day.cloudAvgPct != null) parts.push(`<span>Oblačnosť <b>${Math.round(day.cloudAvgPct)} %</b></span>`);
     dom.weekCurveStat.innerHTML = parts.join('');
+}
+
+/**
+ * Prehľad dní a detail dňa sú na mobile dve obrazovky tej istej karty: prehľad má bubliny,
+ * tabuľku a správu, detail má tri grafy a vlastnú hlavičku so šípkou späť. Na širokej
+ * obrazovke (`narrow` je false) je detail vypnutý a karta ostáva celá pokope ako doteraz.
+ * @param {boolean} detail @param {boolean} narrow @param {import('../dom.js').Dom} dom
+ */
+function renderView(detail, narrow, dom) {
+    dom.panels['7dni'].classList.toggle('detail', detail);
+    for (const el of [dom.weekHead, dom.weekTrio, dom.weekBlockTable, dom.weekMsgBlock]) el.classList.toggle('hidden', detail);
+    for (const el of [dom.weekBlockHeat, dom.weekBlockBars, dom.weekBlockCurve]) el.classList.toggle('hidden', narrow && !detail);
+    dom.weekDayHead.classList.toggle('hidden', !detail);
+    // Deň si používateľ vybral klikom v prehľade, prepínač dní nad krivkou je tu navyše.
+    dom.weekDayTabs.classList.toggle('hidden', detail);
 }
 
 /** @param {import('../dom.js').Dom} dom */
@@ -145,10 +168,14 @@ function renderEmpty(dom) {
 export function renderSedemdni(state, dom) {
     dom.weekSub.textContent = `${SITE.name} · ${fmt1(INSTALLED_PV_KW)} kWp`;
     const days = state.forecast && Array.isArray(state.forecast.days) ? state.forecast.days : [];
+    // Bez dát nie je čo otvárať - karta ostáva na prehľade so správou "Predpoveď sa pripravuje".
+    const detail = !state.wide && state.weekDetail && days.length > 0;
+    renderView(detail, !state.wide, dom);
     if (!days.length) return renderEmpty(dom);
     const sel = Math.min(state.weekSelDay, days.length - 1);
 
-    renderStats(weekStatsModel(days, state.pv, state.forecast ? state.forecast.tomorrowSunny : false), dom);
+    dom.weekDayTitle.textContent = weekDayLong(days[sel].date, sel);
+    renderStats(weekStatsModel(days, state.pv, state.forecast ? state.forecast.tomorrowSunny : false), dom, detail);
 
     // Mapa a stĺpce dostanú skutočný rozmer karty len na širokej obrazovke; na mobile si
     // plátno určia samy, aby rozloženie ostalo také, aké bolo.

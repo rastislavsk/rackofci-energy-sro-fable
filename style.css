@@ -1421,7 +1421,74 @@ b {
     .week-block:nth-child(4) {
         order: -1;
     }
+    /* Detail dňa ide od čísla dňa k jeho priebehu a až potom k mape celého týždňa; mapa je
+       v HTML prvá, tak ju poradie posunie na koniec. Zvyšné bloky idú v poradí z HTML. */
+    #panel-7dni.detail #week-block-heat {
+        order: 1;
+    }
+    /* Riadok tabuľky otvára detail dňa - šípka to hovorí bez toho, aby si to používateľ
+       musel domyslieť. Kreslí ju posledná bunka, aby tabuľka nepotrebovala stĺpec navyše
+       (a s ním prázdnu hlavičku). Na desktope sa detail neotvára, tam by šípka klamala. */
+    .week-table tbody td:last-child {
+        position: relative;
+        padding-right: 24px;
+    }
+    .week-table tbody td:last-child::after {
+        content: '›';
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--ink-35);
+        font-size: var(--fs-md);
+        line-height: 1;
+    }
 }
+/* Hlavička obrazovky s detailom dňa: šípka späť a názov dňa. Zobrazuje sa len vtedy, keď
+   je karta v detaile (renderSedemdni jej inak pridá .hidden). */
+.day-head {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+}
+.day-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid var(--ink-08);
+    border-radius: var(--radius-md);
+    background: var(--card-bg);
+    color: inherit;
+    cursor: pointer;
+}
+.day-back svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.day-head-title {
+    margin: 0;
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+.day-head-sub {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-35);
+}
+
 .week-tbl-wrap {
     overflow-x: auto;
     border: 1px solid var(--ink-08);
@@ -1446,6 +1513,19 @@ b {
     text-transform: uppercase;
     color: var(--ink-35);
     border-bottom: 1px solid var(--ink-08);
+}
+/* Obloha (ikona) a Využitie (percento) sú v bunke samy - naľavo pôsobili ako nedopísaný
+   text, na stred robia čitateľný pás. Trieda (nie poradie stĺpca), nech to prežije zmenu
+   tabuľky. */
+.week-table .mid {
+    text-align: center;
+}
+/* Odtieň percenta využitia - prahy sú v useTier() vo web/render/sedemdni.js. */
+.week-table .use-hi {
+    color: var(--green);
+}
+.week-table .use-lo {
+    color: var(--ink-35);
 }
 .week-table tbody tr {
     cursor: pointer;

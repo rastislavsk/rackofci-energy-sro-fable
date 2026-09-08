@@ -275,24 +275,11 @@
 
             <!-- PANEL: 7 DNÍ -->
             <section id="panel-7dni" class="panel hidden" aria-labelledby="week-title">
-                <div class="section-head">
+                <div class="section-head" id="week-head">
                     <h2 class="section-title" id="week-title">Predpoveď na 7 dní</h2>
                     <div class="section-sub" id="week-sub"></div>
                 </div>
-                <div class="stat-trio">
-                    <div class="stat">
-                        <div class="stat-top"><span class="lbl">7 dní spolu</span></div>
-                        <div class="stat-num-row"><span class="num" id="week-total">–</span><span class="u">kWh</span></div>
-                        <div class="stat-meta" id="week-total-meta"></div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-top"><span class="lbl">Zajtra</span><span class="stat-badge" id="week-tomorrow-badge"></span></div>
-                        <div class="stat-num-row">
-                            <span class="num" id="week-tomorrow">–</span><span class="u">kWh</span
-                            ><span class="trend" id="week-tomorrow-trend"></span>
-                        </div>
-                        <div class="stat-meta" id="week-tomorrow-meta"></div>
-                    </div>
+                <div class="stat-trio" id="week-trio">
                     <div class="stat hi">
                         <div class="stat-top"><span class="lbl">Dnes</span><span class="stat-badge" id="week-today-badge"></span></div>
                         <div class="stat-num-row"><span class="num" id="week-today">–</span><span class="u">kWh</span></div>
@@ -304,9 +291,31 @@
                             </div>
                         </div>
                     </div>
+                    <div class="stat">
+                        <div class="stat-top"><span class="lbl">Zajtra</span><span class="stat-badge" id="week-tomorrow-badge"></span></div>
+                        <div class="stat-num-row">
+                            <span class="num" id="week-tomorrow">–</span><span class="u">kWh</span
+                            ><span class="trend" id="week-tomorrow-trend"></span>
+                        </div>
+                        <div class="stat-meta" id="week-tomorrow-meta"></div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-top"><span class="lbl">7 dní spolu</span></div>
+                        <div class="stat-num-row"><span class="num" id="week-total">–</span><span class="u">kWh</span></div>
+                        <div class="stat-meta" id="week-total-meta"></div>
+                    </div>
+                </div>
+                <div class="day-head hidden" id="week-day-head">
+                    <button type="button" class="day-back" id="week-day-back" aria-label="Späť na prehľad dní">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+                    </button>
+                    <div>
+                        <h2 class="day-head-title" id="week-day-title">Deň</h2>
+                        <div class="day-head-sub">Detail dňa</div>
+                    </div>
                 </div>
                 <div class="week-grid">
-                    <section class="week-block">
+                    <section class="week-block" id="week-block-heat">
                         <div class="chart-top">
                             <span class="lbl">Mapa výroby (kW) · hodina × deň</span
                             ><span class="heat-scale mono" id="week-heat-scale"></span>
@@ -321,7 +330,7 @@
                             </div>
                         </div>
                     </section>
-                    <section class="week-block">
+                    <section class="week-block" id="week-block-bars">
                         <div class="chart-top"><span class="lbl">Denná výroba (kWh)</span></div>
                         <div class="stat-line" id="week-bars-stat"></div>
                         <div class="chart-card">
@@ -340,7 +349,7 @@
                             </div>
                         </div>
                     </section>
-                    <section class="week-block">
+                    <section class="week-block" id="week-block-curve">
                         <div class="chart-top"><span class="lbl">Priebeh výroby</span></div>
                         <div class="utabs" id="week-day-tabs" role="tablist"></div>
                         <div class="stat-line" id="week-curve-stat"></div>
@@ -365,7 +374,7 @@
                             </div>
                         </div>
                     </section>
-                    <section class="week-block">
+                    <section class="week-block" id="week-block-table">
                         <div class="chart-top"><span class="lbl">Prehľad dní</span></div>
                         <div class="week-tbl-wrap" tabindex="0" role="region" aria-label="Prehľad dní, vodorovne posúvateľná tabuľka">
                             <table class="week-table">
@@ -373,17 +382,16 @@
                                     <tr>
                                         <th>Deň</th>
                                         <th>Výroba</th>
-                                        <th>Obloha</th>
-                                        <th>Využitie</th>
+                                        <th class="mid">Obloha</th>
+                                        <th class="mid">Využitie</th>
                                         <th>Špička</th>
-                                        <th>Oblačnosť</th>
                                     </tr>
                                 </thead>
                                 <tbody id="week-tbody"></tbody>
                             </table>
                         </div>
                     </section>
-                    <div class="msg-block">
+                    <div class="msg-block" id="week-msg-block">
                         <h3 id="week-msg-title">Načítavam…</h3>
                         <p id="week-msg-body">Týždenná predpoveď sa načítava.</p>
                     </div>

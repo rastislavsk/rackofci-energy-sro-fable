@@ -1,6 +1,7 @@
 // Formátovanie času a čísel pre slovenské UI. Čisté funkcie bez DOM.
 
 const WEEK_DAYS_SHORT = ['Ne', 'Po', 'Ut', 'St', 'Št', 'Pi', 'So'];
+const WEEK_DAYS_LONG = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
 
 /** @param {number} n */
 export function pad2(n) {
@@ -71,6 +72,14 @@ export function weekDateLabel(dateStr) {
 export function weekDayLabel(dateStr, index) {
     if (index < 2) return weekDayShort(dateStr, index);
     return `${weekDayShort(dateStr, index)} ${weekDateLabel(dateStr)}`;
+}
+
+/** "Dnes", "Zajtra", inak "Štvrtok 10.9." - nadpis obrazovky s detailom dňa, kde je na
+ * celé slovo miesto (v tabuľke a v grafoch ho na skratku tlačí šírka stĺpca).
+ * @param {string} dateStr @param {number} index */
+export function weekDayLong(dateStr, index) {
+    if (index < 2) return weekDayShort(dateStr, index);
+    return `${WEEK_DAYS_LONG[dateParts(dateStr).dow]} ${weekDateLabel(dateStr)}`;
 }
 
 /** Ošetrenie textu pred vložením do HTML/SVG reťazca. @param {unknown} value */

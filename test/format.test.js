@@ -8,6 +8,7 @@ import {
     minutesToTimeStr,
     timeStrToMinutes,
     weekDayLabel,
+    weekDayLong,
     weekDayShort,
 } from '../shared/format.js';
 
@@ -28,5 +29,7 @@ test('čísla a popisky', () => {
     assert.equal(weekDayShort('2026-09-06', 1), 'Zajtra');
     assert.equal(weekDayShort('2026-09-07', 2), 'Po');
     assert.equal(weekDayLabel('2026-09-09', 4), 'St 9.9.');
+    assert.equal(weekDayLong('2026-09-10', 5), 'Štvrtok 10.9.');
+    assert.equal(weekDayLong('2026-09-05', 0), 'Dnes');
     assert.equal(escapeHtml('<a href="x">&\'</a>'), '&lt;a href=&quot;x&quot;&gt;&amp;&#39;&lt;/a&gt;');
 });

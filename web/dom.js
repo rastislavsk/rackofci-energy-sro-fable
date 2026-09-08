@@ -88,6 +88,16 @@ function predpovedDom() {
 function sedemdniDom() {
     return {
         weekSub: byId('week-sub'),
+        weekHead: byId('week-head'),
+        weekTrio: byId('week-trio'),
+        weekDayHead: byId('week-day-head'),
+        weekDayBack: byId('week-day-back'),
+        weekDayTitle: byId('week-day-title'),
+        weekBlockHeat: byId('week-block-heat'),
+        weekBlockBars: byId('week-block-bars'),
+        weekBlockCurve: byId('week-block-curve'),
+        weekBlockTable: byId('week-block-table'),
+        weekMsgBlock: byId('week-msg-block'),
         weekToday: byId('week-today'),
         weekTodayBadge: byId('week-today-badge'),
         weekTodayMeta: byId('week-today-meta'),
