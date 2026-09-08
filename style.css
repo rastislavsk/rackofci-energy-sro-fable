@@ -1604,13 +1604,6 @@ b {
     height: 18px;
     fill: currentColor;
 }
-.share-url {
-    font-size: var(--fs-xs);
-    color: var(--ink-35);
-    word-break: break-all;
-    text-align: center;
-    margin: 0;
-}
 .share-credit {
     font-size: var(--fs-xs);
     color: var(--ink-20);

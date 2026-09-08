@@ -3,7 +3,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { usePct, visibleHours } from '../../shared/chart-model.js';
-import { APP_URL, LEGACY_SOURCES, WORKER_URL } from '../../shared/config.js';
+import { LEGACY_SOURCES, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
 import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
 import { useTier } from '../../web/render/sedemdni.js';
@@ -348,7 +348,6 @@ test('7 dní: karta "Dnes" má na mobile aj meta riadok z desktop verzie', async
 test('zdieľať: odkaz na appku', async ({ page }) => {
     await openApp(page);
     await page.locator('#nav-zdielat').click();
-    await expect(page.locator('#share-url')).toHaveText(APP_URL);
     await expect(page.locator('#share-whatsapp')).toHaveAttribute('href', /wa\.me/);
 });
 
