@@ -858,6 +858,128 @@ b {
     }
 }
 
+/* Mobil a tablet, karta Terazky: tvrdá garancia bez scrollovania - nielen "spravidla sa
+   zmestí", ale appka sa na túto kartu správa ako obrazovka, nie dokument (rovnaký princíp
+   ako .panel na desktope nižšie). :has() zapne režim len vtedy, keď #page má
+   data-panel="spotrebice" (nastavuje ho renderPanels vo web/render/index.js) - iné karty
+   (Dnes-Zajtra, 7 dní, Zdieľať) zostávajú bežne scrollovateľné, nič na nich sa nemení.
+
+   Telo obrazovky je stĺpec s pevnou výškou 100dvh (nie 100vh - to na mobile nepočíta
+   s mizajúcou/objavujúcou sa adresovou lištou, dvh áno) a overflow:hidden, takže scroll
+   nie je čo ani len skúsiť. Hlavička si necháva svoju prirodzenú výšku (flex: 0 0 auto),
+   .page dostane všetko, čo zvyšné (flex: 1 1 auto; min-height: 0 - bez neho by flex-item
+   nešiel zmenšiť pod výšku svojho obsahu). Spodná navigácia ostáva position:fixed ako
+   predtým (nie je v tomto stĺpci, žije v .appbar) - .page preto potrebuje len o kúsok
+   menšie padding-bottom než v bežnom (scrollovateľnom) režime, viď --nav-h nižšie.
+
+   Vnútri karty sa voľné miesto neminie na pevné rozmery: .col-a (ciferník + odporúčanie)
+   si necháva prirodzenú výšku, .col-b (pás dňa) dostane zvyšok (flex: 1 1 auto) a graf
+   .daystrip sa v ňom naťahuje/zmršťuje presne na to, čo ostane (min-height: 20px je len
+   poistka proti úplnému zmiznutiu na extrémne nízkych obrazovkách). SVG grafu má
+   preserveAspectRatio="none" (viď web/svg.js), takže zmena výšky kontajnera ho len
+   naťahuje, nič neorezáva. Bežec .strip-marker/.strip-now-ghost mal predtým pevnú výšku
+   60px zhodnú s .daystrip - teraz namiesto height používa bottom:37px (nameraná
+   vzdialenosť od spodku .daystrip po spodok .daystrip-wrap: odsadenie časovej osi + jej
+   margin-top + padding-bottom rezervované pre úchytku), takže výšku grafu sleduje
+   automaticky nech je akákoľvek. */
+@media (max-width: 1023px) {
+    body:has(#page[data-panel='spotrebice']) {
+        height: 100dvh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    body:has(#page[data-panel='spotrebice']) .appbar {
+        flex: 0 0 auto;
+        position: static;
+    }
+    body:has(#page[data-panel='spotrebice']) .page {
+        /* width:100% - .page je teraz flex-item stĺpca (flex-direction:column na body vyššie)
+           a margin:0 auto (viď .page vyššie) sa v tomto kontexte správa inak než v bežnom
+           dokumentovom toku: bez explicitnej šírky by auto-margin prebil align-items:stretch
+           a stránka by sa zmenšila na šírku obsahu namiesto zabratia celej šírky. */
+        width: 100%;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: var(--nav-h);
+    }
+    body:has(#page[data-panel='spotrebice']) #panel-spotrebice {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    body:has(#page[data-panel='spotrebice']) .col-a {
+        flex: 0 0 auto;
+    }
+    body:has(#page[data-panel='spotrebice']) .col-b {
+        flex: 1 1 auto;
+        /* 80px, nie 0 - skutočné dno .footline (~23px) + .daystrip-wrap (58px, viď jeho
+           min-height nižšie), aby sa pás dňa nezmestil "na papieri" (bez overflow:hidden
+           by pretiekol von), ale doslova. */
+        min-height: 80px;
+        display: flex;
+        flex-direction: column;
+    }
+    body:has(#page[data-panel='spotrebice']) .footline {
+        flex: 0 0 auto;
+    }
+    body:has(#page[data-panel='spotrebice']) .daystrip-wrap {
+        flex: 1 1 auto;
+        /* 58px, nie 0: .strip-ticks (13px + margin-top 6px) a padding-bottom (18px,
+           rezervovaný pre úchytku .strip-marker-handle) neustupujú, len .daystrip nad nimi
+           (min-height 20px nižšie) - dovoliť tu zmršťovanie pod ich súčet by pri extrémne
+           nízkych obrazovkách zrátalo výšku bežca (top:0; bottom:37px vyššie) do záporu. */
+        min-height: 58px;
+        display: flex;
+        flex-direction: column;
+    }
+    body:has(#page[data-panel='spotrebice']) .daystrip {
+        flex: 1 1 auto;
+        min-height: 20px;
+        height: auto;
+    }
+    body:has(#page[data-panel='spotrebice']) .strip-ticks {
+        flex: 0 0 auto;
+    }
+    body:has(#page[data-panel='spotrebice']) .strip-marker,
+    body:has(#page[data-panel='spotrebice']) .strip-now-ghost {
+        height: auto;
+        bottom: 37px;
+    }
+}
+
+/* Nízka mobilná obrazovka: ciferník je jediné, čo má pevnú veľkosť a na výšku sa nemusí
+   zmestiť - .col-a (ciferník + odporúčanie) totiž zámerne neustupuje (flex: 0 0 auto
+   vyššie), aby text neskákal vo veľkosti. Namiesto neho tu ustúpi ciferník, plynulo
+   (clamp s dvh), nie v pevných krokoch - diskrétne skoky (vyskúšané, viď PR popis) majú
+   vždy nejakú hranicu výšky tesne pod sebou, kde ešte neustúpili dosť.
+
+   450px v calc() je zmeraný súčet všetkého okolo ciferníka, s rezervou: hlavička (~68px)
+   + horný padding stránky (--sp-5, 22px) + spodný padding stránky pre fixnú navigáciu
+   (--nav-h, 72px) + "chrome" karty .col-a okolo samotného kruhu (medzera pod ciferníkom +
+   karta .verdict + jej margin-bottom, ~185px pri jednoriadkovom odznaku tarify, no ten na
+   úzkych obrazovkách (do cca 370px) vie zalomiť na dva riadky a pridať ~20px - odznak
+   nemá, na rozdiel od nadpisov v .verdict, font-size v cqw, viď PR popis) + dno pása dňa,
+   ktoré neustupuje (.col-b min-height 80px nižšie). Ciferník tak dostane menej, než by sa
+   na jednoriadkový odznak zmestilo - to je zámer, rezerva pre ten dvojriadkový prípad.
+   120px je len poistka proti úplne neviditeľnému ciferníku na extrémne nízkych
+   obrazovkách (napr. mobil na šírku) - odtiaľ nadol už garancia bez scrollovania stojí
+   len na .page { overflow: hidden } vyššie, nie na tom, že sa všetko vizuálne zmestí. */
+@media (max-width: 1023px) {
+    body:has(#page[data-panel='spotrebice']) .dial-svg {
+        width: clamp(120px, calc(100dvh - 450px), 240px);
+        height: clamp(120px, calc(100dvh - 450px), 240px);
+    }
+    body:has(#page[data-panel='spotrebice']) .dial-num .val {
+        font-size: clamp(22px, calc(0.18 * (100dvh - 450px)), var(--fs-num));
+    }
+}
+
 /* ---- Predpoveď a 7 dní: štatistiky ----------------------------------------- */
 .utabs {
     display: flex;

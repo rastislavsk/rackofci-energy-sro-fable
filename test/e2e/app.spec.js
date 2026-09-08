@@ -405,6 +405,35 @@ test('desktop: appka sa zmestí na obrazovku bez scrollovania', async ({ page })
     expect(errors).toEqual([]);
 });
 
+/**
+ * Na mobile a tablete (do 1023px) sa karta Terazky správa ako obrazovka, nie dokument
+ * (rovnaký princíp ako desktop vyššie): ciferník ustupuje podľa výšky okna (clamp s dvh),
+ * aby pod ním vždy ostalo miesto na pás dňa. Testuje sa naprieč bežnými výškami mobilov,
+ * od veľkého telefónu (844px) po malý (667px, iPhone SE) - všade musí byť vidno naraz
+ * ciferník, odporúčanie aj celý pás dňa (vrátane časovej osi 00-24), bez scrollovania a
+ * bez toho, aby čokoľvek zapadlo pod spodnú navigáciu.
+ */
+test('mobil: karta Terazky sa vždy zmestí na obrazovku bez scrollovania', async ({ page }) => {
+    for (const height of [844, 740, 667, 620]) {
+        await page.setViewportSize({ width: 390, height });
+        const errors = await openApp(page);
+
+        const scroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+        expect(scroll, `výška ${height}px: appka preteká o ${scroll} px`).toBeLessThanOrEqual(0);
+
+        const geometria = await page.evaluate(() => ({
+            pasDnaSpodok: document.querySelector('.col-b').getBoundingClientRect().bottom,
+            navVrch: document.querySelector('.bottomnav').getBoundingClientRect().top,
+        }));
+        expect(geometria.pasDnaSpodok, `výška ${height}px: pás dňa zapadá pod spodnú navigáciu`).toBeLessThanOrEqual(geometria.navVrch);
+
+        await expect(page.locator('.dial-svg'), `výška ${height}px`).toBeVisible();
+        await expect(page.locator('#verdict-dots'), `výška ${height}px`).toBeVisible();
+        await expect(page.locator('.strip-ticks'), `výška ${height}px`).toBeVisible();
+        expect(errors).toEqual([]);
+    }
+});
+
 test('široká obrazovka: prepnutie na 7 dní skryje kartu Spotrebiče', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     const errors = await openApp(page);
