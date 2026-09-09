@@ -94,7 +94,7 @@ function highlightDot(dom, index) {
 }
 
 /** Listovanie verdiktu posúva prehliadač sám. Pred prvou a za poslednou reálnou stránkou je
- * neviditeľný klon poslednej/prvej (obsah drží syncPagerClones v spotrebice.js) - keď sa naň
+ * neviditeľný klon poslednej/prvej (obsah drží syncPagerClones v terazky.js) - keď sa naň
  * pás ustáli, znamená to, že sa listovalo za okraj, a JS ho bez animácie preskočí na skutočnú
  * stránku na druhom konci, takže to pôsobí ako kolotoč. Do stavu ide až ustálená stránka - inak
  * by prekreslenie uprostred gesta prepisovalo bodky tam a späť. @param {Store} store @param {Dom} dom */

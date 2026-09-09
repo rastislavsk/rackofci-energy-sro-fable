@@ -7,7 +7,11 @@ const byId = (/** @type {string} */ id) => {
     return el;
 };
 
-export const PANELS = /** @type {const} */ (['spotrebice', 'predpoved', '7dni', 'zdielat']);
+// Karty v poradí navigácie. Kódový názov a popiska v navigácii nie sú vždy to isté slovo,
+// preto tu ostáva mapovanie: terazky = „Terazky", predpoved = „Dnes-Zajtra", 7dni = „7 dní",
+// zdielat = „Zdieľať". Popiska je text pre používateľa a mení sa podľa chuti; kódový názov
+// drží HTML id, CSS selektory aj stav, tak nech ho popiska nemusí naháňať.
+export const PANELS = /** @type {const} */ (['terazky', 'predpoved', '7dni', 'zdielat']);
 
 function headerDom() {
     return {
@@ -22,7 +26,7 @@ function headerDom() {
     };
 }
 
-function spotrebiceDom() {
+function terazkyDom() {
     return {
         previewBanner: byId('preview-banner'),
         previewPill: byId('preview-pill'),
@@ -139,7 +143,7 @@ function zdielatDom() {
 }
 
 export function collectDom() {
-    return { ...headerDom(), ...spotrebiceDom(), ...predpovedDom(), ...sedemdniDom(), ...zdielatDom() };
+    return { ...headerDom(), ...terazkyDom(), ...predpovedDom(), ...sedemdniDom(), ...zdielatDom() };
 }
 
 /** @typedef {ReturnType<typeof collectDom>} Dom */

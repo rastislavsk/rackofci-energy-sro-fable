@@ -5,7 +5,7 @@ import { PANELS } from './dom.js';
 
 /**
  * @typedef {import('../shared/config.js').Season} Season
- * @typedef {'spotrebice' | 'predpoved' | '7dni' | 'zdielat'} Panel
+ * @typedef {'terazky' | 'predpoved' | '7dni' | 'zdielat'} Panel
  * @typedef {{
  *   now: Date,
  *   season: Season,
@@ -31,7 +31,7 @@ export function initialState(now, season, layout) {
     return {
         now,
         season,
-        panel: 'spotrebice',
+        panel: 'terazky',
         pv: null,
         forecast: null,
         source: null,

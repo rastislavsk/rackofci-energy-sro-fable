@@ -76,7 +76,7 @@ function syncPagerClones(dom) {
 
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
 function renderHero(state, m, dom) {
-    const panel = dom.panels.spotrebice;
+    const panel = dom.panels.terazky;
     panel.style.setProperty('--accent', tierVar(m.accent));
     dom.pvPower.textContent = m.powerText;
     dom.pvPower.style.color = Number.isFinite(m.power) ? tierVar(m.accent) : 'var(--ink)';
@@ -137,7 +137,7 @@ function renderStrip(state, hero, dom) {
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} hero @param {import('../dom.js').Dom} dom */
 function renderPreviewUi(state, hero, dom) {
     const pinned = hero.preview && !state.isDragging;
-    dom.panels.spotrebice.classList.toggle('preview-dim', state.isDragging);
+    dom.panels.terazky.classList.toggle('preview-dim', state.isDragging);
     dom.previewBanner.classList.toggle('hidden', !pinned);
     dom.previewTimeLabel.textContent = hero.previewLabel || 'Náhľad · --:--';
     dom.previewPill.style.setProperty('--preview-accent', tierVar(hero.accent));
@@ -146,7 +146,7 @@ function renderPreviewUi(state, hero, dom) {
 }
 
 /** @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
-export function renderSpotrebice(state, dom) {
+export function renderTerazky(state, dom) {
     const hero = heroModel(state);
     renderHero(state, hero, dom);
     renderStrip(state, hero, dom);

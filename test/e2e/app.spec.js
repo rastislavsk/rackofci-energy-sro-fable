@@ -155,7 +155,7 @@ test('verdikt sa listuje do strán: tarifa a slnko (defaultne prvá), teraz, spo
     await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
 
     // Posuvná oblasť bez prístupu z klávesnice je vážny nález axe - preto sa kontroluje tu.
-    const results = await new AxeBuilder({ page }).include('#panel-spotrebice').analyze();
+    const results = await new AxeBuilder({ page }).include('#panel-terazky').analyze();
     const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(serious.map((v) => v.id)).toEqual([]);
     expect(errors).toEqual([]);
@@ -300,7 +300,7 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
     expect(await viditelneBloky(page)).toEqual(['week-block-table']);
 
     // Odchod na inú kartu a návrat začína zase na prehľade.
-    await page.locator('#nav-spotrebice').click();
+    await page.locator('#nav-terazky').click();
     await page.locator('#nav-7dni').click();
     await expect(page.locator('#week-day-head')).toBeHidden();
     expect(errors).toEqual([]);
@@ -373,7 +373,7 @@ test('bez dát: appka neukáže chybu, iba stav "dáta nedostupné"', async ({ p
 test('.hidden skryje každý prvok v stránke, nič ju neprebíja', async ({ page }) => {
     const errors = await openApp(page);
     // Karty sa vykresľujú až po otvorení, aby test videl aj ich obsah.
-    for (const nav of ['#nav-predpoved', '#nav-7dni', '#nav-zdielat', '#nav-spotrebice']) await page.locator(nav).click();
+    for (const nav of ['#nav-predpoved', '#nav-7dni', '#nav-zdielat', '#nav-terazky']) await page.locator(nav).click();
 
     const broken = await page.evaluate(() => {
         const out = [];
@@ -396,7 +396,7 @@ test('.hidden skryje každý prvok v stránke, nič ju neprebíja', async ({ pag
 
 test('prístupnosť: žiadne závažné nálezy axe na žiadnej karte', async ({ page }) => {
     await openApp(page);
-    for (const panel of ['spotrebice', 'predpoved', '7dni', 'zdielat']) {
+    for (const panel of ['terazky', 'predpoved', '7dni', 'zdielat']) {
         await page.locator(`#nav-${panel}`).click();
         const results = await new AxeBuilder({ page }).analyze();
         const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
@@ -413,7 +413,7 @@ test('prístupnosť: žiadne závažné nálezy axe na žiadnej karte', async ({
 test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     const errors = await openApp(page);
-    await expect(page.locator('#panel-spotrebice')).toBeVisible();
+    await expect(page.locator('#panel-terazky')).toBeVisible();
     await expect(page.locator('#panel-predpoved')).toBeVisible();
     // Karta Predpoveď tu nemá vlastnú položku v navigácii - je vidno rovno vedľa Spotrebičov.
     await expect(page.locator('#nav-predpoved')).toBeHidden();
@@ -453,7 +453,7 @@ test('desktop: appka sa zmestí na obrazovku bez scrollovania', async ({ page })
     const errors = await openApp(page);
 
     for (const [nav, panel] of [
-        ['#nav-spotrebice', '#panel-spotrebice'],
+        ['#nav-terazky', '#panel-terazky'],
         ['#nav-7dni', '#panel-7dni'],
         ['#nav-zdielat', '#panel-zdielat'],
     ]) {
@@ -512,10 +512,10 @@ test('široká obrazovka: prepnutie na 7 dní skryje kartu Spotrebiče', async (
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
     await expect(page.locator('#panel-7dni')).toBeVisible();
-    await expect(page.locator('#panel-spotrebice')).toBeHidden();
+    await expect(page.locator('#panel-terazky')).toBeHidden();
     await expect(page.locator('#panel-predpoved')).toBeHidden();
     await page.locator('#nav-zdielat').click();
-    await expect(page.locator('#panel-spotrebice')).toBeHidden();
+    await expect(page.locator('#panel-terazky')).toBeHidden();
     expect(errors).toEqual([]);
 });
 
@@ -611,7 +611,7 @@ test.describe('listovanie kariet prstom', () => {
 
     test('ťah do strán prepína karty v poradí navigácie, na kraji sa zastaví', async ({ page }) => {
         const errors = await openApp(page);
-        await ocakavajKartu(page, 'spotrebice');
+        await ocakavajKartu(page, 'terazky');
 
         // Doľava sa ide dopredu v poradí navigácie, doprava späť.
         await swipe(page, '#dial-hero', { dx: -120 });
@@ -621,15 +621,15 @@ test.describe('listovanie kariet prstom', () => {
         await swipe(page, '#week-sub', { dx: 120 });
         await ocakavajKartu(page, 'predpoved');
         await swipe(page, '#forecast-sub', { dx: 120 });
-        await ocakavajKartu(page, 'spotrebice');
+        await ocakavajKartu(page, 'terazky');
 
         // Pred prvou kartou už nič nie je - listovanie sa nezacyklí.
         await swipe(page, '#dial-hero', { dx: 120 });
-        await ocakavajKartu(page, 'spotrebice');
+        await ocakavajKartu(page, 'terazky');
 
         // Šikmý ťah je posúvanie po stránke, nie listovanie.
         await swipe(page, '#dial-hero', { dx: -120, dy: 120 });
-        await ocakavajKartu(page, 'spotrebice');
+        await ocakavajKartu(page, 'terazky');
         expect(errors).toEqual([]);
     });
 
@@ -639,9 +639,9 @@ test.describe('listovanie kariet prstom', () => {
         // Swipe pole pod ciferníkom je vnútorný pás, ktorý sa má stále kam posunúť (pred prvou
         // a za poslednou stránkou má klony), takže gesto patrí jemu a karta ostáva.
         await swipe(page, '#verdict-pager', { dx: -120 });
-        await ocakavajKartu(page, 'spotrebice');
+        await ocakavajKartu(page, 'terazky');
         await swipe(page, '#verdict-pager', { dx: 120 });
-        await ocakavajKartu(page, 'spotrebice');
+        await ocakavajKartu(page, 'terazky');
         expect(errors).toEqual([]);
     });
 
@@ -696,12 +696,12 @@ test.describe('listovanie kariet prstom', () => {
         // Pás dňa je na mobile veľká plocha, listovať sa cez ňu dá. Klik naň ale nastavuje
         // náhľad iného času - po geste ho preto appka potlačí, aj keď gesto narazí na kraj.
         await swipe(page, '#daystrip-wrap', { dx: 120 });
-        await ocakavajKartu(page, 'spotrebice');
+        await ocakavajKartu(page, 'terazky');
         await expect(page.locator('#preview-banner')).toBeHidden();
 
         await swipe(page, '#daystrip-wrap', { dx: -120 });
         await ocakavajKartu(page, 'predpoved');
-        await page.locator('#nav-spotrebice').click();
+        await page.locator('#nav-terazky').click();
         await expect(page.locator('#preview-banner')).toBeHidden();
 
         // Obyčajné ťuknutie na pás náhľad nastaví ako doteraz.
