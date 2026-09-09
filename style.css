@@ -383,8 +383,8 @@ b {
         box-shadow: 0 0 0 7px rgba(var(--amber-rgb), 0);
     }
 }
-.panel-spotrebice.preview-dim .dial-hero,
-.panel-spotrebice.preview-dim .verdict {
+.panel-terazky.preview-dim .dial-hero,
+.panel-terazky.preview-dim .verdict {
     opacity: 0.55;
     transition: opacity 0.15s;
 }
@@ -398,10 +398,10 @@ b {
    (viď @media nižšie), takže narastenú medzeru si vždy odrieka len pás dňa, nikdy
    nescrolluje appka ako celok. */
 @media (max-width: 1023px) {
-    .panel-spotrebice:has(#preview-banner:not(.hidden)) .verdict {
+    .panel-terazky:has(#preview-banner:not(.hidden)) .verdict {
         margin-bottom: calc(var(--sp-6) + 16px);
     }
-    .panel-spotrebice:has(#preview-banner:not(.hidden)) .footline {
+    .panel-terazky:has(#preview-banner:not(.hidden)) .footline {
         margin-top: 8px;
     }
 }
@@ -890,7 +890,7 @@ b {
 /* Mobil a tablet, karta Terazky: tvrdá garancia bez scrollovania - nielen "spravidla sa
    zmestí", ale appka sa na túto kartu správa ako obrazovka, nie dokument (rovnaký princíp
    ako .panel na desktope nižšie). :has() zapne režim len vtedy, keď #page má
-   data-panel="spotrebice" (nastavuje ho renderPanels vo web/render/index.js) - iné karty
+   data-panel="terazky" (nastavuje ho renderPanels vo web/render/index.js) - iné karty
    (Dnes-Zajtra, 7 dní, Zdieľať) zostávajú bežne scrollovateľné, nič na nich sa nemení.
 
    Telo obrazovky je stĺpec s pevnou výškou 100dvh (nie 100vh - to na mobile nepočíta
@@ -912,17 +912,17 @@ b {
    margin-top + padding-bottom rezervované pre úchytku), takže výšku grafu sleduje
    automaticky nech je akákoľvek. */
 @media (max-width: 1023px) {
-    body:has(#page[data-panel='spotrebice']) {
+    body:has(#page[data-panel='terazky']) {
         height: 100dvh;
         overflow: hidden;
         display: flex;
         flex-direction: column;
     }
-    body:has(#page[data-panel='spotrebice']) .appbar {
+    body:has(#page[data-panel='terazky']) .appbar {
         flex: 0 0 auto;
         position: static;
     }
-    body:has(#page[data-panel='spotrebice']) .page {
+    body:has(#page[data-panel='terazky']) .page {
         /* width:100% - .page je teraz flex-item stĺpca (flex-direction:column na body vyššie)
            a margin:0 auto (viď .page vyššie) sa v tomto kontexte správa inak než v bežnom
            dokumentovom toku: bez explicitnej šírky by auto-margin prebil align-items:stretch
@@ -935,17 +935,17 @@ b {
         flex-direction: column;
         padding-bottom: var(--nav-h);
     }
-    body:has(#page[data-panel='spotrebice']) #panel-spotrebice {
+    body:has(#page[data-panel='terazky']) #panel-terazky {
         flex: 1 1 auto;
         min-height: 0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
     }
-    body:has(#page[data-panel='spotrebice']) .col-a {
+    body:has(#page[data-panel='terazky']) .col-a {
         flex: 0 0 auto;
     }
-    body:has(#page[data-panel='spotrebice']) .col-b {
+    body:has(#page[data-panel='terazky']) .col-b {
         flex: 1 1 auto;
         /* 80px, nie 0 - skutočné dno .footline (~23px) + .daystrip-wrap (58px, viď jeho
            min-height nižšie), aby sa pás dňa nezmestil "na papieri" (bez overflow:hidden
@@ -954,10 +954,10 @@ b {
         display: flex;
         flex-direction: column;
     }
-    body:has(#page[data-panel='spotrebice']) .footline {
+    body:has(#page[data-panel='terazky']) .footline {
         flex: 0 0 auto;
     }
-    body:has(#page[data-panel='spotrebice']) .daystrip-wrap {
+    body:has(#page[data-panel='terazky']) .daystrip-wrap {
         flex: 1 1 auto;
         /* 58px, nie 0: .strip-ticks (13px + margin-top 6px) a padding-bottom (18px,
            rezervovaný pre úchytku .strip-marker-handle) neustupujú, len .daystrip nad nimi
@@ -967,16 +967,16 @@ b {
         display: flex;
         flex-direction: column;
     }
-    body:has(#page[data-panel='spotrebice']) .daystrip {
+    body:has(#page[data-panel='terazky']) .daystrip {
         flex: 1 1 auto;
         min-height: 20px;
         height: auto;
     }
-    body:has(#page[data-panel='spotrebice']) .strip-ticks {
+    body:has(#page[data-panel='terazky']) .strip-ticks {
         flex: 0 0 auto;
     }
-    body:has(#page[data-panel='spotrebice']) .strip-marker,
-    body:has(#page[data-panel='spotrebice']) .strip-now-ghost {
+    body:has(#page[data-panel='terazky']) .strip-marker,
+    body:has(#page[data-panel='terazky']) .strip-now-ghost {
         height: auto;
         bottom: 37px;
     }
@@ -1001,11 +1001,11 @@ b {
    obrazovkách (napr. mobil na šírku) - odtiaľ nadol už garancia bez scrollovania stojí
    len na .page { overflow: hidden } vyššie, nie na tom, že sa všetko vizuálne zmestí. */
 @media (max-width: 1023px) {
-    body:has(#page[data-panel='spotrebice']) .dial-svg {
+    body:has(#page[data-panel='terazky']) .dial-svg {
         width: clamp(120px, calc(100dvh - 450px), 240px);
         height: clamp(120px, calc(100dvh - 450px), 240px);
     }
-    body:has(#page[data-panel='spotrebice']) .dial-num .val {
+    body:has(#page[data-panel='terazky']) .dial-num .val {
         font-size: clamp(22px, calc(0.18 * (100dvh - 450px)), var(--fs-num));
     }
 }
@@ -1719,7 +1719,7 @@ b {
     .nav-item-predpoved {
         display: none;
     }
-    .page[data-panel='spotrebice'],
+    .page[data-panel='terazky'],
     .page[data-panel='predpoved'] {
         display: grid;
         /* minmax(0, 1fr), nie holé 1fr - inak by stĺpec preberal šírku podľa obsahu
@@ -1728,16 +1728,16 @@ b {
         gap: var(--sp-6);
         align-items: start;
     }
-    /* Zámerne trieda, nie #panel-spotrebice: pravidlo s ID by prebilo utilitu .hidden
+    /* Zámerne trieda, nie #panel-terazky: pravidlo s ID by prebilo utilitu .hidden
        a karta by ostala viditeľná aj po prepnutí na inú kartu. */
-    .panel-spotrebice {
+    .panel-terazky {
         display: grid;
         /* minmax(0, 1fr) z rovnakého dôvodu ako pri .page vyššie - holé 1fr by nechalo
            stĺpec pretiecť podľa najširšieho obsahu (napr. graf Priebeh dňa). */
         grid-template-columns: minmax(0, 1fr);
         gap: var(--sp-4);
     }
-    /* sp-6, nie menej: spolu s medzerou mriežky (gap na .panel-spotrebice vyššie) musí
+    /* sp-6, nie menej: spolu s medzerou mriežky (gap na .panel-terazky vyššie) musí
        táto medzera pojať banner s náhľadom času (#preview-banner, position:absolute,
        visí nad pásom dňa) bez toho, aby ho orezala - viď komentár pri .preview-banner. */
     .verdict {
@@ -1786,7 +1786,7 @@ b {
         padding-bottom: var(--sp-3);
     }
     /* Karty sa naťahujú na výšku stránky, nie na výšku svojho obsahu. */
-    .page[data-panel='spotrebice'],
+    .page[data-panel='terazky'],
     .page[data-panel='predpoved'] {
         align-items: stretch;
     }

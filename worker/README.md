@@ -22,8 +22,9 @@ takže pri chýbajúcich dátach netreba hádať medzi výpadkom zdroja a zlým 
 { "status": { "pv": { "ok": false, "at": "…", "error": "KIOSK_URL secret nie je nastavený" }, "forecast": { "ok": true, "at": "…" } } }
 ```
 
-Hlavičky: CORS pre všetkých, `cache-control: max-age=60` a `x-data-stale`, keď je predpoveď
-staršia než tri hodiny. Iné cesty vracajú 404, iné metódy 405.
+Hlavičky: CORS pre všetkých, `cache-control: max-age=60` a `x-data-stale` s hodnotou `1`,
+keď je predpoveď staršia než tri hodiny, inak `0` – hlavička je tam vždy. Iné cesty vracajú
+404, iné metódy 405, `OPTIONS` dostane 204.
 
 ### `GET /status`
 
@@ -97,6 +98,7 @@ cd worker && npx wrangler deploy --dry-run --outdir dist   # zbalí sa aj shared
 npx wrangler dev --test-scheduled        # potom: curl "http://localhost:8787/__scheduled?cron=*/5+*+*+*+*"
 ```
 
-Zdravý Worker vráti `pv.updatedAt` mladšie než pätnásť minút a `forecast.updatedAt`
-mladšie než dve hodiny. Keď jeden zdroj vypadne, cron nechá v KV predchádzajúcu hodnotu
-a appka podľa `updatedAt` ukáže, že dáta sú zastarané.
+Zdravý Worker vráti `pv.updatedAt` mladšie než dvadsať minút a `forecast.updatedAt`
+mladšie než tri hodiny – sú to tie isté hranice, podľa ktorých počíta `ok` aj `GET /status`
+(`STALE_PV_MS` a `STALE_FORECAST_MS` v `shared/config.js`). Keď jeden zdroj vypadne, cron
+nechá v KV predchádzajúcu hodnotu a appka podľa `updatedAt` ukáže, že dáta sú zastarané.

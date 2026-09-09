@@ -12,6 +12,14 @@ Cloudflare Worker.
 
 Karty sú pomenované tak, ako ich vidno v spodnej navigácii.
 
+|                Terazky                 |                  Dnes-Zajtra                   |               7 dní               |
+| :------------------------------------: | :--------------------------------------------: | :-------------------------------: |
+| ![Karta Terazky](docs/img/terazky.png) | ![Karta Dnes-Zajtra](docs/img/dnes-zajtra.png) | ![Karta 7 dní](docs/img/7dni.png) |
+
+Snímky sú z testovacích dát a pevného času (13:00), nie zo živej elektrárne – čísla na nich
+sú syntetické. Prekresliť ich vie `npm run screenshots`. Karta Zdieľať na obrázku nie je,
+jej QR kód kreslí knižnica z CDN.
+
 - **Terazky** – aktuálny výkon na ciferníku a pod ním kolotoč odporúčaní: tarifné okno so
   stavom slnka, jednovetné odporúčanie („Najlepší čas dňa — zapni všetko“), stav piatich
   spotrebičov, predpoveď dňa a prípadne čas, kedy bude lepšie. Listuje sa potiahnutím do

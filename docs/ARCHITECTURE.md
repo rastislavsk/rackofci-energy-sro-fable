@@ -37,11 +37,15 @@ aktuálneho času. Všetko, čo potrebuje, dostane parametrom.
 | `chart-model.js` | Geometria grafov ako čisté dáta: body, mriežky, tooltipy, súhrny.                                       |
 | `hero-model.js`  | Model hlavnej karty pre daný čas – rovnaký pre „teraz“ aj pre náhľad.                                   |
 | `schema.js`      | Kontrakt dát medzi Workerom a appkou.                                                                   |
+| `format.js`      | Formátovanie času a čísel pre slovenské UI.                                                             |
+| `http.js`        | Retry pre sieťové volania Workera; jeden prechodný výpadok nezhodí celý beh.                            |
 
 **`web/` – prehliadač.** `state.js` drží jediný stavový objekt; `setState` zlúči zmenu a
 zavolá prekreslenie práve raz, rovnaká hodnota nespustí nič. `render/index.js` je jediné
 miesto, ktoré kreslí, a kreslí len viditeľné karty. `interactions.js` obsahuje všetky
-poslucháče a každý končí volaním `setState`. `svg.js` skladá SVG z modelu a nič nepočíta.
+poslucháče a každý končí volaním `setState` – jedinou výnimkou sú tooltipy, ktoré nie sú
+súčasťou stavu a zapisujú sa priamo. `dom.js` drží všetky odkazy do DOM, takže render
+funkcie nikdy nevolajú `querySelector` samy. `svg.js` skladá SVG z modelu a nič nepočíta.
 `memo.js` drží tri pomôcky, vďaka ktorým render zapisuje do DOM len to, čo sa naozaj
 zmenilo (viď „Nezapisuj, čo sa nezmenilo“ nižšie). `swipe.js` prekladá ťahanie prstom na
 susednú kartu – rozhodne len, čo je na rade, a zmenu urobí `setState` ako pri kliku na
@@ -73,7 +77,7 @@ plátno presne na kartu. Rozmer teda prichádza tou istou cestou ako každý in�
   zapíšeš to isté, čo tam už je. Účet nepríde hneď – príde, keď si appka najbližšie vypýta
   rozmery, lebo vtedy musí prehliadač dopočítať layout. Pri ťahaní bežca po páse dňa tak
   jeden zbytočný zápis zdražel každý ďalší pohyb prsta. `memo.js` si preto pamätá, čo sám
-  naposledy zapísal, a pás dňa, chipy spotrebičov, klony pageru aj celá karta Predpoveď sa
+  naposledy zapísal, a pás dňa, chipy spotrebičov, klony pageru aj celá karta Dnes-Zajtra sa
   prekresľujú len pri zmene vlastných vstupov. Namerané: 1,675 → 0,675 ms na pohyb na
   mobilnej šírke, 2,817 → 0,892 ms na desktope.
 - **Plátno grafu sa rovná karte.** Grafy sa nekreslia na pevné plátno, ktoré potom CSS
@@ -105,9 +109,11 @@ Rozhoduje o tom jediné pole v stave (`weekDetail`), prepínajú sa len triedy `
 žiadny presun prvkov v DOM. Poradie na detaile robí jedno pravidlo `order` v CSS, lebo
 mapa výroby je v HTML prvá, ale na detaile má ísť posledná.
 
-Od 1024 px je detail vypnutý: tam je na celú kartu miesto naraz a klik na deň ho, ako
-doteraz, len vyberie vo všetkých grafoch. Preto je podmienka `!state.wide` v `renderSedemdni`
-a pravidlá detailu žijú v `@media (max-width: 1023px)`.
+Od 768 px je detail vypnutý: tam je na celú kartu miesto naraz a klik na deň ho, ako
+doteraz, len vyberie vo všetkých grafoch. Rozhoduje o tom podmienka `!state.wide`
+v `renderSedemdni`, a `wide` je `(min-width: 768px)` – nie desktopových 1024 px. Pravidlá
+poradia blokov žijú v `@media (max-width: 1023px)`, ale to je iná hranica a iná vec:
+riadia `order`, nie to, či detail vôbec existuje.
 
 Z tabuľky zmizol stĺpec „Oblačnosť“ – ten istý údaj hovoril aj stĺpec „Obloha“ a tabuľka
 sa kvôli nemu musela na telefóne posúvať do strán, takže šípku do detailu na konci riadku
@@ -118,7 +124,7 @@ nebolo vidno.
 Od 1024 px sa stránka správa ako obrazovka, nie ako dokument: `body` nescrolluje a karta
 vyplní výšku okna. Grafy sa tak natiahnu na veľkom monitore a stlačia na nízkom notebooku.
 
-Meranie pred tou zmenou ukázalo, že problém bol užší, než sa zdalo: karty Spotrebiče
+Meranie pred tou zmenou ukázalo, že problém bol užší, než sa zdalo: karty Terazky
 a Zdieľať sa zmestili už predtým (na 1920 × 1080 im ostávalo 347 px prázdneho miesta,
 lebo mali pevnú výšku), pretekala len karta 7 dní, a to o 97 až 409 px podľa výšky okna.
 
