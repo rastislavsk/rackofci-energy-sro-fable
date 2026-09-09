@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Kedy zapínať spotrebiče: živý výkon fotovoltiky, predpoveď výroby a odporúčania podľa tarify VT/NT.",
+  "description": "Kedy zap\u00edna\u0165 spotrebi\u010de: \u017eiv\u00fd v\u00fdkon fotovoltiky, predpove\u010f v\u00fdroby a odpor\u00fa\u010dania pod\u013ea tarify VT/NT.",
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -13,6 +13,7 @@
     "test": "TZ=Europe/Bratislava node --test --experimental-test-coverage --test-coverage-include='shared/**' --test-coverage-include='web/state.js' --test-coverage-lines=90 test/*.test.js worker/test/*.test.js",
     "test:e2e": "playwright test",
     "fixtures": "node test/fixtures/generate.js",
+    "screenshots": "node test/screenshots/generate.js",
     "serve": "http-server -p 8080 -c-1 .",
     "check": "npm run lint && npm run format:check && npm run typecheck && npm test"
   },
