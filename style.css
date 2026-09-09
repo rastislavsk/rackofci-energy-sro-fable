@@ -50,7 +50,12 @@
 
     --dur: 0.35s;
     --page-max: 480px;
-    --nav-h: 72px;
+    /* Miesto, ktoré si stránka rezervuje pod obsahom pre fixnú spodnú navigáciu (platí len
+       do 1023px, na desktope má .page vlastný padding-bottom). Nie je to presná výška pása
+       (tá je 51.5px, viď .nav-item nižšie) - rozdiel je zámerná rezerva. Keď sa mení výška
+       pása, mení sa aj toto číslo o rovnaký počet pixelov, aby medzera medzi obsahom
+       a pásom ostala rovnaká. */
+    --nav-h: 59px;
 }
 
 /* ---- Základ ---------------------------------------------------------------- */
@@ -218,7 +223,11 @@ b {
     flex-direction: column;
     align-items: center;
     gap: 5px;
-    padding: 12px 0 10px;
+    /* Výška pása na mobile a tablete stojí len na tomto paddingu: obsah položky (ikona 22px
+       + gap 5px + popiska 14.5px = 41.5px) a 1px horný okraj pása sa nemenia. Pôvodných
+       12/10px dávalo pás vysoký 64.5px, terajších 5/4px dáva 51.5px, teda o 20 % menej.
+       Desktop (od 1024px) má vlastný padding a tento riadok naň nedosiahne. */
+    padding: 5px 0 4px;
     color: var(--ink-35);
     position: relative;
     transition: color var(--dur);
@@ -978,7 +987,8 @@ b {
 
    450px v calc() je zmeraný súčet všetkého okolo ciferníka, s rezervou: hlavička (~68px)
    + horný padding stránky (--sp-5, 22px) + spodný padding stránky pre fixnú navigáciu
-   (--nav-h, 72px) + "chrome" karty .col-a okolo samotného kruhu (medzera pod ciferníkom +
+   (--nav-h, 59px - bolo 72px, kým sa spodná navigácia nezmenšila; 450px ostáva, je to teraz
+   len o 13px väčšia rezerva) + "chrome" karty .col-a okolo samotného kruhu (medzera pod ciferníkom +
    karta .verdict + jej margin-bottom, ~185px pri jednoriadkovom odznaku tarify, no ten na
    úzkych obrazovkách (do cca 370px) vie zalomiť na dva riadky a pridať ~20px - odznak
    nemá, na rozdiel od nadpisov v .verdict, font-size v cqw, viď PR popis) + dno pása dňa,
