@@ -154,4 +154,7 @@ export const SWIPE = {
     minDistPx: 60, // koľko musí prst prejsť vodorovne
     maxOffAxisRatio: 0.6, // zvislý posun smie byť najviac takýto podiel vodorovného
     maxDurationMs: 600, // pomalšie ťahanie už nie je gesto, ale posúvanie po stránke
+    // Nad grafom je vodorovný ťah zároveň prezeraním krivky (tooltip ide za prstom), takže
+    // tam kartu prepne len rýchle švihnutie. Pokojné sledovanie krivky je pomalšie.
+    flickMs: 300,
 };

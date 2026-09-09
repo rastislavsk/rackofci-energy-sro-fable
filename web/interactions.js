@@ -148,6 +148,12 @@ function initTapTooltipClosing() {
     document.addEventListener('click', closeOthers);
 }
 
+/** Zavrie tooltipy všetkých grafov naraz. Potrebuje to listovanie prstom: gesto sa začína
+ * nad grafom, takže closeOthers vyššie ho za "mimo grafu" nepovažuje. */
+function hideChartTooltips() {
+    tapTooltips.forEach(({ hide }) => hide());
+}
+
 /** Spoločná obsluha kurzora aj prsta nad grafom. @param {HTMLElement} wrap @param {HTMLElement} tooltip @param {(clientX: number, clientY: number) => void} handle */
 function bindPointer(wrap, tooltip, handle) {
     const hide = () => tooltip.classList.remove('visible');
@@ -322,7 +328,7 @@ function initTicks(store, mq) {
 export function initInteractions(store, dom, mq) {
     initViewportZoomRealign();
     initNavigation(store, dom);
-    initSwipe(store, dom);
+    initSwipe(store, dom, hideChartTooltips);
     initTimePreview(store, dom);
     initVerdictPager(store, dom);
     initTapTooltipClosing();
