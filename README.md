@@ -37,7 +37,8 @@ vedľa Terazky.
 
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v
 poradí spodnej navigácie – aj ponad grafy a tabuľku 7 dní. Nad grafom kartu prepne rýchle
-švihnutie; pomalé ťahanie po krivke ostáva prezeraním s tooltipom. Ťahanie si pre seba
+švihnutie a tooltip sa pri ňom vôbec neukáže; pomalé ťahanie po krivke ostáva prezeraním
+s tooltipom ako doteraz. Ťahanie si pre seba
 nechávajú len veci, ktoré sa samy posúvajú do strán: kolotoč odporúčaní na karte Terazky
 a na úzkych displejoch tabuľka 7 dní, kým má kam ísť. Bežec na páse dňa sa ťahá ako
 predtým.

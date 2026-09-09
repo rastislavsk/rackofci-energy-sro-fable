@@ -661,6 +661,38 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
+    test('pri švihnutí ponad graf tooltip ani neprebliskne, ťuknutie ho ukáže', async ({ page }) => {
+        const errors = await openApp(page);
+        await page.locator('#nav-predpoved').click();
+
+        // Kontrola na konci gesta nestačí - tooltip po prepnutí karty appka aj tak zatvára.
+        // Preto sa sleduje trieda na tooltipe počas celého gesta.
+        const sledujTooltip = () =>
+            page.evaluate(() => {
+                const el = /** @type {HTMLElement} */ (document.getElementById('forecast-tooltip'));
+                window.tooltipBolVidno = el.classList.contains('visible');
+                new MutationObserver(() => {
+                    if (el.classList.contains('visible')) window.tooltipBolVidno = true;
+                }).observe(el, { attributes: true, attributeFilter: ['class'] });
+            });
+        const boloVidno = () => page.evaluate(() => window.tooltipBolVidno);
+
+        await sledujTooltip();
+        await swipe(page, '#forecast-chart-wrap', { dx: -120 });
+        await ocakavajKartu(page, '7dni');
+        expect(await boloVidno(), 'tooltip preblikol počas švihnutia').toBe(false);
+
+        // Ťuknutie na graf ho naopak ukázať musí - inak by sa hodnota nedala prečítať.
+        // Aj tu sa pozerá na sledovanú triedu, nie na stav po chvíli: tooltip sa sám zatvára
+        // po TOOLTIP_HOLD_MS a na zaťaženom stroji by sa kontrola trafila až za ten čas.
+        await page.locator('#nav-predpoved').click();
+        await sledujTooltip();
+        await swipe(page, '#forecast-chart-wrap', { dx: 0 });
+        expect(await boloVidno(), 'ťuknutie na graf neukázalo tooltip').toBe(true);
+        await ocakavajKartu(page, 'predpoved');
+        expect(errors).toEqual([]);
+    });
+
     test('ťah ponad tabuľku 7 dní prepne kartu a neotvorí detail dňa', async ({ page }) => {
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
