@@ -45,7 +45,9 @@ poslucháče a každý končí volaním `setState`. `svg.js` skladá SVG z model
 `memo.js` drží tri pomôcky, vďaka ktorým render zapisuje do DOM len to, čo sa naozaj
 zmenilo (viď „Nezapisuj, čo sa nezmenilo“ nižšie). `swipe.js` prekladá ťahanie prstom na
 susednú kartu – rozhodne len, čo je na rade, a zmenu urobí `setState` ako pri kliku na
-navigáciu.
+navigáciu. Čo si ťahanie nechá pre seba, nie je zoznam výnimiek, ale pravidlo: keď sa
+najbližší vnútorný pás pod prstom ešte má kam posunúť tým smerom, patrí gesto jemu.
+Menovaný je jediný prvok – úchytka bežca na páse dňa, ktorá sa ťahá a neposúva.
 
 Medzi vstupmi stavu je aj `chartSizes` – skutočné rozmery plátien grafov v pixeloch.
 Napĺňa ich `ResizeObserver` v `interactions.js` a render z nich cez `fillDims` postaví
