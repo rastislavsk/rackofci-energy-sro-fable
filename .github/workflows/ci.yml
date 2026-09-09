@@ -26,7 +26,14 @@ jobs:
         working-directory: worker
         run: npm ci && npx wrangler deploy --dry-run --outdir dist
       - name: Playwright browsers
-        run: npx playwright install --with-deps chromium
+        # --with-deps spúšťa apt-get update, a ten skončí chybou, keď je pokazený ktorýkoľvek
+        # zdroj balíkov - aj taký, z ktorého tento build nič nepotrebuje. Google Chrome repo
+        # z obrazu runnera už raz servírovalo Packages.gz s nesediacim hashom a zhodilo tým
+        # CI na každom PR. Chromium si sťahuje Playwright sám, systémové knižnice sú
+        # v Ubuntu zdrojoch, takže tento zdroj môže ísť preč.
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.*
+          npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v7
         if: failure()

@@ -1,23 +1,31 @@
 # Račkofci Energy s.r.o.
 
-Mobilná webová appka pre domácnosť s fotovoltikou v Dvoranoch nad Nitrou. Na jednej
-obrazovke odpovedá na otázku „môžem teraz zapnúť práčku?“ a k tomu ukazuje živý výkon
-panelov, predpoveď výroby na dnes a zajtra a prehľad na sedem dní.
+Webová appka pre domácnosť s fotovoltikou v Dvoranoch nad Nitrou. Na jednej obrazovke
+odpovedá na otázku „môžem teraz zapnúť práčku?“ a k tomu ukazuje živý výkon panelov,
+predpoveď výroby na dnes a zajtra a prehľad na sedem dní. Robená je pre telefón, na
+tablete a desktope má vlastné rozloženie.
 
 Appka je statická stránka bez build kroku. Beží na GitHub Pages, dáta jej dodáva
 Cloudflare Worker.
 
 ## Čo appka ukazuje
 
-- **Spotrebiče** – aktuálny výkon na ciferníku, jednoveté odporúčanie („Najlepší čas dňa
-  — zapni všetko“), stav piatich spotrebičov a pás dňa s farebnými tarifnými pásmami.
-  Potiahnutím bežca alebo klikom na pás si pozrieš, ako to bude vyzerať v inom čase.
-- **Predpoveď** – hodinová krivka výroby na dnes alebo zajtra, oblačnosť a skutočná
-  nameraná výroba nad ňou.
+Karty sú pomenované tak, ako ich vidno v spodnej navigácii.
+
+- **Terazky** – aktuálny výkon na ciferníku a pod ním kolotoč odporúčaní: tarifné okno so
+  stavom slnka, jednovetné odporúčanie („Najlepší čas dňa — zapni všetko“), stav piatich
+  spotrebičov, predpoveď dňa a prípadne čas, kedy bude lepšie. Listuje sa potiahnutím do
+  strán alebo klikom na bodky. Dole je pás dňa s farebnými tarifnými pásmami; potiahnutím
+  bežca alebo klikom na pás si pozrieš, ako to bude vyzerať v inom čase.
+- **Dnes-Zajtra** – hodinová krivka výroby na dnes alebo zajtra, oblačnosť a skutočná
+  nameraná výroba nad ňou, k tomu špička dňa a odhad výroby.
 - **7 dní** – prehľad dní v tabuľke a súhrn za dnes, zajtra a celý týždeň. Klik na deň
   otvorí jeho detail: dennú výrobu, priebeh výroby a mapu výroby hodina × deň so
   zvýrazneným dňom. Na širokej obrazovke je vidno všetko naraz.
-- **Zdieľať** – QR kód a odkaz na appku.
+- **Zdieľať** – QR kód, odkaz na appku a tlačidlo na poslanie cez WhatsApp.
+
+Na desktope (od 1024 px) nemá Dnes-Zajtra vlastnú položku v navigácii – je vidno rovno
+vedľa Terazky.
 
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v
 poradí spodnej navigácie – aj ponad grafy a tabuľku 7 dní. Nad grafom kartu prepne rýchle
