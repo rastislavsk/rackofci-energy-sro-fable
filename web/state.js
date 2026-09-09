@@ -1,6 +1,8 @@
 // Jediný stav appky a jediné miesto, odkiaľ sa spúšťa prekreslenie.
 // setState zlúči zmenu a zavolá odberateľov práve raz; rovnaké hodnoty nič nespustia.
 
+import { PANELS } from './dom.js';
+
 /**
  * @typedef {import('../shared/config.js').Season} Season
  * @typedef {'spotrebice' | 'predpoved' | '7dni' | 'zdielat'} Panel
@@ -77,3 +79,18 @@ export function createStore(initial) {
 }
 
 /** @typedef {ReturnType<typeof createStore<AppState>>} Store */
+
+/**
+ * Susedná karta v poradí navigácie, alebo null na kraji - listovanie sa nezacyklí.
+ * Na desktope Predpoveď nie je samostatná destinácia (splýva so Spotrebičmi, viď
+ * effectivePanel vo web/render/index.js), takže v poradí nie je.
+ * @param {Panel} panel karta, ktorá je práve vidno (effectivePanel, nie holý stav)
+ * @param {boolean} desktop
+ * @param {1 | -1} dir 1 = ďalšia, -1 = predchádzajúca
+ * @returns {Panel | null}
+ */
+export function nextPanel(panel, desktop, dir) {
+    const order = PANELS.filter((p) => !(desktop && p === 'predpoved'));
+    const i = order.indexOf(panel);
+    return i < 0 ? null : (order[i + dir] ?? null);
+}

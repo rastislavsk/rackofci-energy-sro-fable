@@ -6,6 +6,7 @@ import { PAGER_SETTLE_MS, REFRESH, TOOLTIP_HOLD_MS } from '../shared/config.js';
 import { loadData } from './data.js';
 import { forecastModel } from './render/predpoved.js';
 import { weekCurveModel } from './render/sedemdni.js';
+import { initSwipe } from './swipe.js';
 
 /** @typedef {import('./state.js').Store} Store */
 /** @typedef {import('./dom.js').Dom} Dom */
@@ -321,6 +322,7 @@ function initTicks(store, mq) {
 export function initInteractions(store, dom, mq) {
     initViewportZoomRealign();
     initNavigation(store, dom);
+    initSwipe(store, dom);
     initTimePreview(store, dom);
     initVerdictPager(store, dom);
     initTapTooltipClosing();

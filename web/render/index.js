@@ -10,7 +10,7 @@ import { renderZdielat } from './zdielat.js';
 /** Na desktope Predpoveď nemá vlastnú navigáciu (viď .nav-item-predpoved v style.css) a
  * splynie so Spotrebičmi - aj keby stav ostal na 'predpoved' zo šírky, kde má nav vlastnú
  * položku. @param {import('../state.js').AppState} state */
-function effectivePanel(state) {
+export function effectivePanel(state) {
     return state.desktop && state.panel === 'predpoved' ? 'spotrebice' : state.panel;
 }
 

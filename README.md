@@ -19,6 +19,10 @@ Cloudflare Worker.
   zvýrazneným dňom. Na širokej obrazovke je vidno všetko naraz.
 - **Zdieľať** – QR kód a odkaz na appku.
 
+Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v
+poradí spodnej navigácie. Tam, kde ťahanie už niečo znamená (kolotoč odporúčaní, grafy,
+tabuľka 7 dní), ostáva pôvodné správanie.
+
 ## Ako to funguje
 
 ```

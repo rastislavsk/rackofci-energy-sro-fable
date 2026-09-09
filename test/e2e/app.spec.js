@@ -579,3 +579,109 @@ test('7 dní - správa "Najsilnejší deň": na desktope pod tabuľkou v tej ist
     expect(mobile.msgTop).toBeGreaterThanOrEqual(mobile.tableBottom - 1);
     expect(errors).toEqual([]);
 });
+
+/** Potiahnutie prstom naprieč prvkom. Dotyk ide cez CDP, teda ako naozajstný prst - test tak
+ * vidí aj to, čo po geste urobí prehliadač sám (kompatibilný klik tam, kde prst skončil).
+ * @param {import('@playwright/test').Page} page @param {string} sel prvok, ponad ktorý sa ťahá
+ * @param {{ dx: number, dy?: number }} gesto posun prsta v pixeloch */
+async function swipe(page, sel, { dx, dy = 0 }) {
+    const box = await page.locator(sel).boundingBox();
+    if (!box) throw new Error(`Prvok ${sel} nie je vidno`);
+    const x = box.x + box.width / 2 - dx / 2;
+    const y = box.y + box.height / 2 - dy / 2;
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    for (const t of [0.5, 1])
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + dx * t, y: y + dy * t }] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await cdp.detach();
+}
+
+/** @param {import('@playwright/test').Page} page @param {string} panel */
+async function ocakavajKartu(page, panel) {
+    await expect(page.locator(`#panel-${panel}`)).toBeVisible();
+    await expect(page.locator(`#nav-${panel}`)).toHaveAttribute('aria-current', 'page');
+}
+
+test.describe('listovanie kariet prstom', () => {
+    test.use({ hasTouch: true });
+
+    test('ťah do strán prepína karty v poradí navigácie, na kraji sa zastaví', async ({ page }) => {
+        const errors = await openApp(page);
+        await ocakavajKartu(page, 'spotrebice');
+
+        // Doľava sa ide dopredu v poradí navigácie, doprava späť.
+        await swipe(page, '#dial-hero', { dx: -120 });
+        await ocakavajKartu(page, 'predpoved');
+        await swipe(page, '#forecast-sub', { dx: -120 });
+        await ocakavajKartu(page, '7dni');
+        await swipe(page, '#week-sub', { dx: 120 });
+        await ocakavajKartu(page, 'predpoved');
+        await swipe(page, '#forecast-sub', { dx: 120 });
+        await ocakavajKartu(page, 'spotrebice');
+
+        // Pred prvou kartou už nič nie je - listovanie sa nezacyklí.
+        await swipe(page, '#dial-hero', { dx: 120 });
+        await ocakavajKartu(page, 'spotrebice');
+
+        // Šikmý ťah je posúvanie po stránke, nie listovanie.
+        await swipe(page, '#dial-hero', { dx: -120, dy: 120 });
+        await ocakavajKartu(page, 'spotrebice');
+        expect(errors).toEqual([]);
+    });
+
+    test('gesto tam, kde ťahanie už niečo znamená, kartu neprepne', async ({ page }) => {
+        const errors = await openApp(page);
+
+        // Kolotoč odporúčaní si ťahanie do strán rieši sám (scroll-snap).
+        await swipe(page, '#verdict-pager', { dx: -120 });
+        await ocakavajKartu(page, 'spotrebice');
+
+        // Graf pod prstom ukazuje tooltip, nie susednú kartu.
+        await page.locator('#nav-predpoved').click();
+        await swipe(page, '#forecast-chart-wrap', { dx: -120 });
+        await ocakavajKartu(page, 'predpoved');
+        expect(errors).toEqual([]);
+    });
+
+    test('ťah ponad pás dňa prepne kartu a nenastaví náhľad iného času', async ({ page }) => {
+        const errors = await openApp(page);
+
+        // Pás dňa je na mobile veľká plocha, listovať sa cez ňu dá. Klik naň ale nastavuje
+        // náhľad iného času - po geste ho preto appka potlačí, aj keď gesto narazí na kraj.
+        await swipe(page, '#daystrip-wrap', { dx: 120 });
+        await ocakavajKartu(page, 'spotrebice');
+        await expect(page.locator('#preview-banner')).toBeHidden();
+
+        await swipe(page, '#daystrip-wrap', { dx: -120 });
+        await ocakavajKartu(page, 'predpoved');
+        await page.locator('#nav-spotrebice').click();
+        await expect(page.locator('#preview-banner')).toBeHidden();
+
+        // Obyčajné ťuknutie na pás náhľad nastaví ako doteraz.
+        await page.locator('#daystrip-wrap').click({ position: { x: 40, y: 20 } });
+        await expect(page.locator('#preview-banner')).toBeVisible();
+        expect(errors).toEqual([]);
+    });
+
+    test('v detaile dňa vedie ťah doprava späť na prehľad, doľava na ďalšiu kartu', async ({ page }) => {
+        const errors = await openApp(page);
+        await page.locator('#nav-7dni').click();
+        await page.locator('#week-tbody tr[data-day-index="3"]').click();
+        await expect(page.locator('#week-day-head')).toBeVisible();
+
+        // Detail dňa je podobrazovka karty - doprava sa z neho ide späť na prehľad dní,
+        // nie rovno na predchádzajúcu kartu.
+        await swipe(page, '#week-day-head', { dx: 120 });
+        await expect(page.locator('#week-day-head')).toBeHidden();
+        await ocakavajKartu(page, '7dni');
+
+        // Doľava sa z detailu ide na ďalšiu kartu, detail sa pritom zavrie.
+        await page.locator('#week-tbody tr[data-day-index="3"]').click();
+        await swipe(page, '#week-day-head', { dx: -120 });
+        await ocakavajKartu(page, 'zdielat');
+        await page.locator('#nav-7dni').click();
+        await expect(page.locator('#week-day-head')).toBeHidden();
+        expect(errors).toEqual([]);
+    });
+});

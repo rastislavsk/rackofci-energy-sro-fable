@@ -43,7 +43,9 @@ zavolá prekreslenie práve raz, rovnaká hodnota nespustí nič. `render/index.
 miesto, ktoré kreslí, a kreslí len viditeľné karty. `interactions.js` obsahuje všetky
 poslucháče a každý končí volaním `setState`. `svg.js` skladá SVG z modelu a nič nepočíta.
 `memo.js` drží tri pomôcky, vďaka ktorým render zapisuje do DOM len to, čo sa naozaj
-zmenilo (viď „Nezapisuj, čo sa nezmenilo“ nižšie).
+zmenilo (viď „Nezapisuj, čo sa nezmenilo“ nižšie). `swipe.js` prekladá ťahanie prstom na
+susednú kartu – rozhodne len, čo je na rade, a zmenu urobí `setState` ako pri kliku na
+navigáciu.
 
 Medzi vstupmi stavu je aj `chartSizes` – skutočné rozmery plátien grafov v pixeloch.
 Napĺňa ich `ResizeObserver` v `interactions.js` a render z nich cez `fillDims` postaví
