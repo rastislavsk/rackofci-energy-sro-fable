@@ -2,7 +2,7 @@
 // nikto tu nekreslí do DOM okrem tooltipov, ktoré nie sú súčasťou stavu.
 
 import { chartTooltipModel, STRIP } from '../shared/chart-model.js';
-import { PAGER_SETTLE_MS, REFRESH, TOOLTIP_HOLD_MS } from '../shared/config.js';
+import { PAGER_SETTLE_MS, REFRESH, SWIPE, TOOLTIP_HOLD_MS } from '../shared/config.js';
 import { loadData } from './data.js';
 import { forecastModel } from './render/predpoved.js';
 import { weekCurveModel } from './render/sedemdni.js';
@@ -154,15 +154,64 @@ function hideChartTooltips() {
     tapTooltips.forEach(({ hide }) => hide());
 }
 
+/** Najpomalšie gesto, ktoré ešte môže byť švihnutím na susednú kartu (viď web/swipe.js):
+ * prejsť minDistPx za flickMs. Kto ide pomalšie, prezerá si krivku. Odvodené, nie nová
+ * konštanta - hranica sa tak nemôže rozísť s tým, čo za švihnutie považuje swipe.js. */
+const MIN_FLICK_SPEED = SWIPE.minDistPx / SWIPE.flickMs;
+
+/**
+ * Prst nad grafom. Kým môže gesto skončiť prepnutím karty, tooltip sa neukáže - inak by pri
+ * každom prelistovaní ponad graf preblikol a hneď zmizol. Ukázať a vziať späť sa nedá,
+ * rozhodnúť treba skôr, než je koniec gesta známy, tak rozhoduje rýchlosť: prst pomalší než
+ * najpomalšie možné švihnutie si krivku prezerá. Po uplynutí okna švihnutia sa karta prepnúť
+ * nemôže, takže tam už tooltip patrí vždy.
+ *
+ * Ťuknutie (prst sa nikam nepohol) neposiela touchmove, preto sa ukáže až pri zdvihnutí -
+ * na pohľad je to to isté, len o pár desiatok milisekúnd neskôr.
+ * @param {HTMLElement} wrap @param {(clientX: number, clientY: number) => void} handle @param {() => void} hide
+ */
+function bindTouch(wrap, handle, hide) {
+    /** @type {{ x: number, y: number, t: number } | null} */
+    let start = null;
+    let shown = false;
+    const vzdialenost = (/** @type {Touch} */ t) => Math.hypot(t.clientX - (start?.x ?? 0), t.clientY - (start?.y ?? 0));
+
+    wrap.addEventListener(
+        'touchstart',
+        (e) => {
+            start = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: e.timeStamp };
+            shown = false;
+        },
+        { passive: true },
+    );
+    wrap.addEventListener(
+        'touchmove',
+        (e) => {
+            if (!start) return;
+            const cas = e.timeStamp - start.t;
+            if (cas <= SWIPE.flickMs && vzdialenost(e.touches[0]) / (cas || 1) >= MIN_FLICK_SPEED) return;
+            shown = true;
+            handle(e.touches[0].clientX, e.touches[0].clientY);
+        },
+        { passive: true },
+    );
+    wrap.addEventListener('touchend', (e) => {
+        const bolStart = start;
+        start = null;
+        // Ťuknutie ukáže tooltip až tu; švihnutie ho neukáže vôbec (kartu prepne swipe.js).
+        if (!shown && bolStart && e.changedTouches.length === 1 && vzdialenost(e.changedTouches[0]) < SWIPE.minDistPx)
+            handle(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        setTimeout(hide, TOOLTIP_HOLD_MS);
+    });
+}
+
 /** Spoločná obsluha kurzora aj prsta nad grafom. @param {HTMLElement} wrap @param {HTMLElement} tooltip @param {(clientX: number, clientY: number) => void} handle */
 function bindPointer(wrap, tooltip, handle) {
     const hide = () => tooltip.classList.remove('visible');
     tapTooltips.push({ wrap, hide });
     wrap.addEventListener('mousemove', (e) => handle(e.clientX, e.clientY));
     wrap.addEventListener('mouseleave', hide);
-    wrap.addEventListener('touchstart', (e) => handle(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-    wrap.addEventListener('touchmove', (e) => handle(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-    wrap.addEventListener('touchend', () => setTimeout(hide, TOOLTIP_HOLD_MS));
+    bindTouch(wrap, handle, hide);
 }
 
 /** Tooltip je vodorovne vystredený na `pos.left` (CSS transform: translateX(-50%)). Bez orezania
