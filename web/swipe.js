@@ -62,7 +62,12 @@ export function initSwipe(store, dom) {
             // pás dňa by tak nastavil náhľad iného času. preventDefault na touchend ten klik
             // zruší. Je tu pred rozhodnutím o karte zámerne: aj ťah, ktorý narazil na kraj
             // poradia a nikam nevedie, je gesto, nie ťuknutie.
-            e.preventDefault();
+            //
+            // Podmienka cancelable nie je opatrnosť navyše: keď si prehliadač gesto vyhodnotí
+            // ako posúvanie stránky, pošle touchend s cancelable=false a zrušiť sa už nedá.
+            // Klik v tom prípade nepošle ani tak (posúvanie si ho ruší samo), no volanie
+            // preventDefault by len napísalo chybu do konzoly.
+            if (e.cancelable) e.preventDefault();
             const patch = targetFor(store.get(), dx);
             if (patch) store.setState(patch);
         },
