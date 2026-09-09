@@ -147,3 +147,11 @@ export const PAGER_SETTLE_MS = 90;
 // Dáta staršie než toto sú "zastarané" a appka to ukáže.
 export const STALE_PV_MS = 20 * 60 * 1000;
 export const STALE_FORECAST_MS = 3 * 60 * 60 * 1000;
+
+// Prepínanie kariet potiahnutím prsta (web/swipe.js). Prah je kompromis: dosť veľký, aby
+// gesto nespustil ťuk roztrasenou rukou, dosť malý, aby stačil pohodlný pohyb palca.
+export const SWIPE = {
+    minDistPx: 60, // koľko musí prst prejsť vodorovne
+    maxOffAxisRatio: 0.6, // zvislý posun smie byť najviac takýto podiel vodorovného
+    maxDurationMs: 600, // pomalšie ťahanie už nie je gesto, ale posúvanie po stránke
+};
