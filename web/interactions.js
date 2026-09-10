@@ -2,7 +2,7 @@
 // nikto tu nekreslí do DOM okrem tooltipov, ktoré nie sú súčasťou stavu.
 
 import { chartTooltipModel, STRIP } from '../shared/chart-model.js';
-import { PAGER_SETTLE_MS, REFRESH, SWIPE, TOOLTIP_HOLD_MS } from '../shared/config.js';
+import { PAGER_SETTLE_MS, REFRESH, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS } from '../shared/config.js';
 import { loadData } from './data.js';
 import { forecastModel } from './render/predpoved.js';
 import { weekCurveModel } from './render/sedemdni.js';
@@ -207,7 +207,22 @@ function bindTouch(wrap, handle, hide) {
 
 /** Spoločná obsluha kurzora aj prsta nad grafom. @param {HTMLElement} wrap @param {HTMLElement} tooltip @param {(clientX: number, clientY: number) => void} handle */
 function bindPointer(wrap, tooltip, handle) {
-    const hide = () => tooltip.classList.remove('visible');
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
+    let uprac;
+    // Skrytý tooltip ostáva v layoute - mizne len cez `opacity`. Jeho súradnice sú pixely
+    // vypočítané pre vtedajší rozmer grafu, takže po otočení displeja (graf sa zúži zo 654
+    // na 324 px) by trčal ďaleko za jeho okraj a rozšíril by layout viewport - stránka by sa
+    // potom kreslila širšia než displej. Preto ich po zmiznutí zahodíme; s odstupom, nech
+    // tooltip pri miznutí nepodskočí.
+    const hide = () => {
+        tooltip.classList.remove('visible');
+        clearTimeout(uprac);
+        uprac = setTimeout(() => {
+            if (tooltip.classList.contains('visible')) return;
+            tooltip.style.left = '';
+            tooltip.style.top = '';
+        }, TOOLTIP_FADE_MS);
+    };
     tapTooltips.push({ wrap, hide });
     wrap.addEventListener('mousemove', (e) => handle(e.clientX, e.clientY));
     wrap.addEventListener('mouseleave', hide);
