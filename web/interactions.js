@@ -4,8 +4,10 @@
 import { chartTooltipModel, STRIP } from '../shared/chart-model.js';
 import { PAGER_SETTLE_MS, REFRESH, SWIPE, TOOLTIP_HOLD_MS } from '../shared/config.js';
 import { loadData } from './data.js';
+import { effectivePanel } from './render/index.js';
 import { forecastModel } from './render/predpoved.js';
 import { weekCurveModel } from './render/sedemdni.js';
+import { panelChange } from './state.js';
 import { initSwipe } from './swipe.js';
 
 /** @typedef {import('./state.js').Store} Store */
@@ -20,10 +22,12 @@ function initNavigation(store, dom) {
         // #page (nastavuje ho renderPanels pre CSS), takže by ho našiel klik kdekoľvek v stránke
         // a zavrel detail dňa - kartu by to prepínalo na tú istú, na ktorej používateľ stojí.
         const panelBtn = target.closest('button[data-panel]');
-        // Prepnutie karty vždy začína na prehľade dní - detail dňa je vec jedného pozretia,
-        // nie stav, do ktorého by sa appka mala vrátiť o hodinu neskôr.
-        if (panelBtn instanceof HTMLElement && panelBtn.dataset.panel)
-            store.setState({ panel: /** @type {Panel} */ (panelBtn.dataset.panel), weekDetail: false });
+        // panelChange dopočíta aj smer prechodu (a zavrie detail dňa), takže sa karta prisunie
+        // z tej istej strany ako pri ťahaní prstom.
+        if (panelBtn instanceof HTMLElement && panelBtn.dataset.panel) {
+            const state = store.get();
+            store.setState(panelChange(effectivePanel(state), /** @type {Panel} */ (panelBtn.dataset.panel), state.desktop));
+        }
         const dayBtn = target.closest('[data-day]');
         if (dayBtn instanceof HTMLElement) store.setState({ forecastDay: dayBtn.dataset.day === 'tomorrow' ? 'tomorrow' : 'today' });
         // Deň sa dá vybrať v tabuľke, v prepínači dní aj priamo v grafoch. Klik v tabuľke

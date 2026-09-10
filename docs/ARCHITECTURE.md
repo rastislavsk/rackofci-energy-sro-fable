@@ -53,6 +53,13 @@ navigáciu. Čo si ťahanie nechá pre seba, nie je zoznam výnimiek, ale pravid
 najbližší vnútorný pás pod prstom ešte má kam posunúť tým smerom, patrí gesto jemu.
 Menovaný je jediný prvok – úchytka bežca na páse dňa, ktorá sa ťahá a neposúva.
 
+Prechod medzi kartami je iba CSS: `panelChange` v `state.js` dopočíta k novej karte aj smer
+(`panelDir`), `renderPanels` ho vyloží na `#page[data-dir]` a zvyšok je animácia `panel-in-*`
+v `style.css`. Spúšťa sa sama tým, že karta prejde z `display: none` do zobrazenia, takže ju
+nič nereštartuje a JS o nej nevie. Posun je malý (24 px) a `.page` má `overflow-x: clip`,
+aby posunutá karta nešla poscrollovať do strany; stráži to e2e test, ktorý meria pretečenie
+počas celého prechodu, nie až po ňom.
+
 Medzi vstupmi stavu je aj `chartSizes` – skutočné rozmery plátien grafov v pixeloch.
 Napĺňa ich `ResizeObserver` v `interactions.js` a render z nich cez `fillDims` postaví
 plátno presne na kartu. Rozmer teda prichádza tou istou cestou ako každý iný vstup

@@ -268,6 +268,38 @@ b {
     max-width: var(--page-max);
     margin: 0 auto;
     padding: var(--sp-5) 20px calc(var(--nav-h) + 40px);
+    /* Kvôli prechodu medzi kartami (panel-in-* nižšie): posunutá karta na okamih presiahne
+       stránku do strany a bez orezania by sa dala vodorovne poscrollovať. Zámerne "clip",
+       nie "hidden": hidden by zo stránky urobil scrollovací kontajner aj zvislo a to by
+       rozbilo garancie o výške karty Terazky (viď @media nižšie). Clip len oreže. */
+    overflow-x: clip;
+}
+
+/* Prechod medzi kartami. Nová karta príde posunutá o kúsok v smere, ktorým sa listovalo,
+   a za 200 ms dojde na miesto a vyjasní sa. Posun je zámerne malý - karta tak nikdy
+   neodíde z obrazovky a prechod nemá čo rozhádzať.
+
+   Smer nesie #page[data-dir], nastavuje ho renderPanels vo web/render/index.js zo stavu
+   (panelDir). Reštartovať animáciu netreba: karta prechádza z display:none do zobrazenia
+   a tým sa animácia spustí sama. Útlm pohybu ju vypína globálne, viď @media na začiatku
+   súboru. Pravidlo zámerne nesiaha na display, takže utilitu .hidden nemá ako prebiť. */
+@keyframes panel-in-next {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+}
+@keyframes panel-in-prev {
+    from {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+}
+.page[data-dir='next'] .panel:not(.hidden) {
+    animation: panel-in-next 200ms ease-out;
+}
+.page[data-dir='prev'] .panel:not(.hidden) {
+    animation: panel-in-prev 200ms ease-out;
 }
 .section-head {
     margin-bottom: var(--sp-4);
