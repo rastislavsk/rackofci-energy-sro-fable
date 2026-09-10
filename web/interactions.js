@@ -297,16 +297,27 @@ function initDeviceChips(dom) {
  * niekedy vráti na zoom 1x, ale vizuálny viewport ostane posunutý od layout viewportu -
  * známa nezhoda v mobilných prehliadačoch, prejaví sa orezaným obsahom pri okraji displeja.
  * `window.scrollX` tento posun nevidí (appka nemá vodorovný scroll), signálom je
- * `visualViewport.offsetLeft/offsetTop`. Po ustálení gesta preto posun skontrolujeme a opravíme. */
+ * `visualViewport.offsetLeft/offsetTop`. Po ustálení gesta preto posun skontrolujeme a opravíme.
+ *
+ * `resize` na visualViewport ale nastane aj pri skutočnom otočení displeja, nie len pri zoome -
+ * vtedy sa okno naozaj zmenšilo/zväčšilo a `offsetLeft/offsetTop` s `window.scrollX/scrollY`
+ * môžu byť počas prechodu vzájomne nekonzistentné (z inej orientácie). Korekciu preto robíme
+ * len vtedy, keď sa skutočný rozmer okna medzičasom nezmenil - inak by mohla stránku posunúť
+ * zle namiesto toho, aby ju opravila. */
 function initViewportZoomRealign() {
     const vv = window.visualViewport;
     if (!vv) return;
     /** @type {ReturnType<typeof setTimeout> | undefined} */
     let settleTimer;
+    let lastWidth = window.innerWidth;
+    let lastHeight = window.innerHeight;
     const checkAlignment = () => {
         clearTimeout(settleTimer);
         settleTimer = setTimeout(() => {
-            if (vv.scale <= 1.001 && (vv.offsetLeft !== 0 || vv.offsetTop !== 0))
+            const resized = window.innerWidth !== lastWidth || window.innerHeight !== lastHeight;
+            lastWidth = window.innerWidth;
+            lastHeight = window.innerHeight;
+            if (!resized && vv.scale <= 1.001 && (vv.offsetLeft !== 0 || vv.offsetTop !== 0))
                 window.scrollTo(window.scrollX + vv.offsetLeft, window.scrollY + vv.offsetTop);
         }, 150);
     };
