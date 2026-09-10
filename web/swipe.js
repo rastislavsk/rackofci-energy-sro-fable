@@ -3,7 +3,7 @@
 
 import { SWIPE } from '../shared/config.js';
 import { effectivePanel } from './render/index.js';
-import { nextPanel } from './state.js';
+import { nextPanel, panelChange } from './state.js';
 
 /** @typedef {import('./state.js').Store} Store */
 /** @typedef {import('./dom.js').Dom} Dom */
@@ -51,8 +51,9 @@ function targetFor(state, dx) {
     // V detaile dňa je ťah doprava to isté ako tlačidlo Späť. Na širokej obrazovke detail
     // neexistuje (viď renderSedemdni), tam sa ťahom rovno prepína karta.
     if (state.panel === '7dni' && state.weekDetail && !state.wide && dx > 0) return { weekDetail: false };
-    const panel = nextPanel(effectivePanel(state), state.desktop, dx < 0 ? 1 : -1);
-    return panel ? { panel, weekDetail: false } : null;
+    const from = effectivePanel(state);
+    const panel = nextPanel(from, state.desktop, dx < 0 ? 1 : -1);
+    return panel ? panelChange(from, panel, state.desktop) : null;
 }
 
 /** @param {Store} store @param {Dom} dom @param {() => void} hideTooltips zavrie tooltipy grafov */

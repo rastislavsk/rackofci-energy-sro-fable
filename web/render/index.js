@@ -24,6 +24,8 @@ export function isForecastVisible(state) {
 function renderPanels(state, dom) {
     const panel = effectivePanel(state);
     dom.page.dataset.panel = panel;
+    // Smer posledného prechodu; z neho si CSS vyberie, z ktorej strany kartu prisunie.
+    dom.page.dataset.dir = state.panelDir > 0 ? 'next' : 'prev';
     for (const p of PANELS) {
         const visible = p === panel || (p === 'predpoved' && isForecastVisible(state));
         dom.panels[p].classList.toggle('hidden', !visible);

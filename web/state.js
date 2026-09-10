@@ -10,6 +10,7 @@ import { PANELS } from './dom.js';
  *   now: Date,
  *   season: Season,
  *   panel: Panel,
+ *   panelDir: 1 | -1,
  *   pv: import('../shared/kiosk.js').PvData | null,
  *   forecast: import('../shared/solar.js').Forecast | null,
  *   source: 'worker' | 'legacy' | null,
@@ -32,6 +33,9 @@ export function initialState(now, season, layout) {
         now,
         season,
         panel: 'terazky',
+        // Smer posledného prechodu medzi kartami: 1 dopredu v poradí navigácie, -1 späť.
+        // Od neho závisí, z ktorej strany sa nová karta prisunie (viď panel-in-* v style.css).
+        panelDir: 1,
         pv: null,
         forecast: null,
         source: null,
@@ -90,7 +94,25 @@ export function createStore(initial) {
  * @returns {Panel | null}
  */
 export function nextPanel(panel, desktop, dir) {
-    const order = PANELS.filter((p) => !(desktop && p === 'predpoved'));
+    const order = panelOrder(desktop);
     const i = order.indexOf(panel);
     return i < 0 ? null : (order[i + dir] ?? null);
+}
+
+/** Poradie kariet v navigácii. @param {boolean} desktop */
+function panelOrder(desktop) {
+    return PANELS.filter((p) => !(desktop && p === 'predpoved'));
+}
+
+/**
+ * Zmena karty aj so smerom, ktorým sa má nová karta prisunúť. Smer sa berie z poradia
+ * v navigácii, nie z toho, či sa ťahalo alebo klikalo - prechod tak vyzerá rovnako pri
+ * oboch. Detail dňa sa pritom zatvára: je to vec jedného pozretia, nie stav, do ktorého
+ * by sa appka mala vrátiť o hodinu neskôr.
+ * @param {Panel} from karta, ktorá je práve vidno (effectivePanel, nie holý stav)
+ * @param {Panel} to @param {boolean} desktop
+ */
+export function panelChange(from, to, desktop) {
+    const order = panelOrder(desktop);
+    return { panel: to, panelDir: /** @type {1 | -1} */ (order.indexOf(to) < order.indexOf(from) ? -1 : 1), weekDetail: false };
 }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createStore, initialState, nextPanel } from '../web/state.js';
+import { createStore, initialState, nextPanel, panelChange } from '../web/state.js';
 
 test('setState zlúči zmenu a zavolá odberateľa presne raz', () => {
     const store = createStore(initialState(new Date('2026-09-05T11:00:00Z'), 'summer', { wide: false, desktop: false }));
@@ -41,4 +41,13 @@ test('poradie kariet na desktope preskočí Predpoveď, tá tam splýva so Spotr
     // Stav môže na 'predpoved' ostať po rozšírení okna; swipe.js sem posiela effectivePanel,
     // takže samotná 'predpoved' na desktope je mimo poradia a nikam nevedie.
     assert.equal(nextPanel('predpoved', true, 1), null);
+});
+
+test('smer prechodu ide podľa poradia v navigácii, nie podľa toho, ako sa prepínalo', () => {
+    assert.deepEqual(panelChange('terazky', '7dni', false), { panel: '7dni', panelDir: 1, weekDetail: false });
+    assert.deepEqual(panelChange('zdielat', 'predpoved', false), { panel: 'predpoved', panelDir: -1, weekDetail: false });
+    // Na desktope je Predpoveď mimo poradia, takže krok z nej sa počíta ako dopredu.
+    assert.equal(panelChange('terazky', 'zdielat', true).panelDir, 1);
+    assert.equal(panelChange('zdielat', 'terazky', true).panelDir, -1);
+    assert.equal(panelChange('predpoved', 'terazky', true).panelDir, 1);
 });

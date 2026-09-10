@@ -394,16 +394,31 @@ test('.hidden skryje každý prvok v stránke, nič ju neprebíja', async ({ pag
     expect(errors).toEqual([]);
 });
 
+/** Počká, kým dobehne prisunutie novej karty. Axe musí posudzovať ustálenú kartu: uprostred
+ * prechodu je ešte priehľadná a hlásilo by to nedostatočný kontrast textu.
+ * @param {import('@playwright/test').Page} page */
+const pockajNaPrechod = (page) =>
+    page.evaluate(() =>
+        Promise.all(
+            document
+                .getAnimations()
+                .filter((a) => 'animationName' in a && String(a.animationName).startsWith('panel-in'))
+                .map((a) => a.finished),
+        ).then(() => undefined),
+    );
+
 test('prístupnosť: žiadne závažné nálezy axe na žiadnej karte', async ({ page }) => {
     await openApp(page);
     for (const panel of ['terazky', 'predpoved', '7dni', 'zdielat']) {
         await page.locator(`#nav-${panel}`).click();
+        await pockajNaPrechod(page);
         const results = await new AxeBuilder({ page }).analyze();
         const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
         expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
     }
     // Detail dňa je vlastná obrazovka s vlastným ovládaním (šípka späť), preto sa kontroluje zvlášť.
     await page.locator('#nav-7dni').click();
+    await pockajNaPrechod(page);
     await page.locator('#week-tbody tr[data-day-index="5"]').click();
     const detail = await new AxeBuilder({ page }).analyze();
     const vazne = detail.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
@@ -667,6 +682,42 @@ async function ocakavajKartu(page, panel) {
     await expect(page.locator(`#panel-${panel}`)).toBeVisible();
     await expect(page.locator(`#nav-${panel}`)).toHaveAttribute('aria-current', 'page');
 }
+
+test('prechod medzi kartami: smer podľa poradia a nič nepretečie do strán', async ({ page }) => {
+    const errors = await openApp(page);
+
+    // Smer prechodu si CSS berie z #page[data-dir]; karta sa podľa neho prisunie zľava alebo sprava.
+    const smerAAnimacia = () =>
+        page.evaluate(() => ({
+            dir: document.getElementById('page')?.dataset.dir,
+            animacia: getComputedStyle(/** @type {Element} */ (document.querySelector('.panel:not(.hidden)'))).animationName,
+        }));
+
+    await page.locator('#nav-7dni').click();
+    expect(await smerAAnimacia()).toEqual({ dir: 'next', animacia: 'panel-in-next' });
+    await page.locator('#nav-predpoved').click();
+    expect(await smerAAnimacia()).toEqual({ dir: 'prev', animacia: 'panel-in-prev' });
+
+    // Posunutá karta na okamih presiahne stránku do strany. Meria sa to počas celého prechodu,
+    // nie až po ňom: vodorovný scroll, ktorý sa objaví na 200 ms, je aj tak chyba.
+    const sledujPretecenie = page.evaluate(
+        () =>
+            new Promise((resolve) => {
+                let max = 0;
+                const zaciatok = performance.now();
+                const krok = () => {
+                    const el = document.documentElement;
+                    max = Math.max(max, el.scrollWidth - el.clientWidth);
+                    if (performance.now() - zaciatok < 500) requestAnimationFrame(krok);
+                    else resolve(max);
+                };
+                requestAnimationFrame(krok);
+            }),
+    );
+    await page.locator('#nav-zdielat').click();
+    expect(await sledujPretecenie, 'stránku sa dalo počas prechodu poscrollovať do strán').toBe(0);
+    expect(errors).toEqual([]);
+});
 
 test.describe('listovanie kariet prstom', () => {
     test.use({ hasTouch: true });
