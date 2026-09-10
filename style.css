@@ -894,10 +894,16 @@ b {
    (Dnes-Zajtra, 7 dní, Zdieľať) zostávajú bežne scrollovateľné, nič na nich sa nemení.
 
    Telo obrazovky je stĺpec s pevnou výškou 100dvh (nie 100vh - to na mobile nepočíta
-   s mizajúcou/objavujúcou sa adresovou lištou, dvh áno) a overflow:hidden, takže scroll
-   nie je čo ani len skúsiť. Hlavička si necháva svoju prirodzenú výšku (flex: 0 0 auto),
-   .page dostane všetko, čo zvyšné (flex: 1 1 auto; min-height: 0 - bez neho by flex-item
-   nešiel zmenšiť pod výšku svojho obsahu). Spodná navigácia ostáva position:fixed ako
+   s mizajúcou/objavujúcou sa adresovou lištou, dvh áno). Scroll nie je čo skúsiť, lebo
+   všetko pretečené odstrihne .page (overflow: hidden nižšie) - a práve preto ho telo samo
+   mať nesmie: overflow na <body> sa prenáša na výrez okna, prehliadač potom potiahnutie
+   nadol neberie ako pretiahnutie stránky a neponúkne obnovu ťahom (pull to refresh).
+   Ostatné karty ju majú, karta Terazky ju takto celý čas strácala. Stráži to e2e test
+   "mobil: ťahom nadol sa dá obnoviť každá karta".
+
+   Hlavička si necháva svoju prirodzenú výšku (flex: 0 0 auto), .page dostane všetko, čo
+   zvyšné (flex: 1 1 auto; min-height: 0 - bez neho by flex-item nešiel zmenšiť pod výšku
+   svojho obsahu). Spodná navigácia ostáva position:fixed ako
    predtým (nie je v tomto stĺpci, žije v .appbar) - .page preto potrebuje len o kúsok
    menšie padding-bottom než v bežnom (scrollovateľnom) režime, viď --nav-h nižšie.
 
@@ -914,7 +920,6 @@ b {
 @media (max-width: 1023px) {
     body:has(#page[data-panel='terazky']) {
         height: 100dvh;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
     }

@@ -507,6 +507,28 @@ test('mobil: karta Terazky sa vždy zmestí na obrazovku bez scrollovania', asyn
     }
 });
 
+/**
+ * Obnovu ťahom nadol (pull to refresh) robí prehliadač sám: ponúkne ju, keď je stránka na
+ * vrchu a dá sa potiahnuť nadol. Stačí jedno overflow: hidden na <body> - prenáša sa na
+ * výrez okna - a gesto ticho zmizne. Presne to sa stalo karte Terazky, ktorá si telo
+ * zamykala kvôli garancii bez scrollovania (viď test vyššie). Garanciu drží .page, telo
+ * musí ostať voľné, inak karta stratí obnovu, ktorú ostatné karty majú.
+ */
+test('mobil: ťahom nadol sa dá obnoviť každá karta', async ({ page }) => {
+    const errors = await openApp(page);
+    for (const panel of ['terazky', 'predpoved', '7dni', 'zdielat']) {
+        await page.locator(`#nav-${panel}`).click();
+        await expect(page.locator(`#panel-${panel}`)).toBeVisible();
+        const zamknute = await page.evaluate(() =>
+            [document.documentElement, document.body]
+                .map((el) => `${el.tagName.toLowerCase()}: ${getComputedStyle(el).overflowY}`)
+                .filter((s) => s.endsWith('hidden') || s.endsWith('clip')),
+        );
+        expect(zamknute, `karta ${panel}: telo stránky je zamknuté, prehliadač neponúkne obnovu ťahom`).toEqual([]);
+    }
+    expect(errors).toEqual([]);
+});
+
 test('široká obrazovka: prepnutie na 7 dní skryje kartu Spotrebiče', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     const errors = await openApp(page);
