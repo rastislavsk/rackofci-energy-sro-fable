@@ -3,7 +3,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { usePct, visibleHours } from '../../shared/chart-model.js';
-import { LEGACY_SOURCES, WORKER_URL } from '../../shared/config.js';
+import { LEGACY_SOURCES, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
 import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
 import { useTier } from '../../web/render/sedemdni.js';
@@ -677,6 +677,16 @@ async function swipe(page, sel, { dx, dy = 0, ms = 0 }) {
     await cdp.detach();
 }
 
+/** Ťuknutie prstom: krátke podržanie a mikropohyb, ako pri skutočnej ruke. @param {import('@playwright/test').Page} page @param {number} x @param {number} y */
+async function tuknutie(page, x, y) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    await page.waitForTimeout(SWIPE.flickMs + 50);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + 2, y }] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await cdp.detach();
+}
+
 /** @param {import('@playwright/test').Page} page @param {string} panel */
 async function ocakavajKartu(page, panel) {
     await expect(page.locator(`#panel-${panel}`)).toBeVisible();
@@ -873,6 +883,40 @@ test.describe('listovanie kariet prstom', () => {
         await ocakavajKartu(page, 'zdielat');
         await page.locator('#nav-7dni').click();
         await expect(page.locator('#week-day-head')).toBeHidden();
+        expect(errors).toEqual([]);
+    });
+});
+
+/**
+ * Nič v stránke nesmie pretiecť do strán. Mobilné prehliadače na to reagujú tak, že rozšíria
+ * layout viewport - appka sa potom kreslí širšia než displej a dá sa zoomovať "von" pod 100 %.
+ * Chytilo nás to už trikrát: tabuľka 7 dní bez `min-width: 0`, tooltip pri okraji grafu bez
+ * orezania, a naposledy tooltip, ktorý si po otočení displeja niesol pixelové súradnice zo
+ * širokej obrazovky. Preto to stráži test celej triedy chýb, nie jednej príčiny.
+ */
+test.describe('otočenie displeja', () => {
+    test.use({ hasTouch: true });
+
+    test('po otočení na výšku stránka nepretečie do strán', async ({ page }) => {
+        await page.setViewportSize({ width: 844, height: 390 });
+        const errors = await openApp(page);
+        await page.locator('#nav-predpoved').click();
+        const wrap = page.locator('#forecast-chart-wrap');
+        await wrap.scrollIntoViewIfNeeded();
+        const graf = await wrap.boundingBox();
+        if (!graf) throw new Error('graf predpovede nie je vidno');
+
+        // Ťuknutie čo najbližšie k pravému okraju grafu - tam má tooltip najväčšie súradnice.
+        await tuknutie(page, Math.min(graf.x + graf.width - 3, 842), Math.min(Math.max(graf.y + graf.height / 2, 2), 388));
+        await expect(page.locator('#forecast-tooltip')).toHaveClass(/visible/);
+        await page.waitForTimeout(TOOLTIP_HOLD_MS + TOOLTIP_FADE_MS + 100);
+
+        await page.setViewportSize({ width: 390, height: 844 });
+        await expect
+            .poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), {
+                message: 'po otočení na výšku stránka trčí do strán',
+            })
+            .toBeLessThanOrEqual(0);
         expect(errors).toEqual([]);
     });
 });

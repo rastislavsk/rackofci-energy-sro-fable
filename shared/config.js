@@ -141,6 +141,10 @@ export const REFRESH = {
 // Ako dlho ostáva tooltip po ťuknutí zobrazený (ms).
 export const TOOLTIP_HOLD_MS = 1600;
 
+// Kedy je tooltip po skrytí naozaj neviditeľný. Musí byť aspoň taký dlhý ako prechod
+// `opacity` na `.chart-tooltip` v style.css - až potom sa dajú zahodiť jeho súradnice.
+export const TOOLTIP_FADE_MS = 200;
+
 // Ako dlho po poslednom posune sa listovanie považuje za ustálené (ms).
 export const PAGER_SETTLE_MS = 90;
 
