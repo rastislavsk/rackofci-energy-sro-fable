@@ -479,14 +479,15 @@ test('desktop: appka sa zmestí na obrazovku bez scrollovania', async ({ page })
 });
 
 /**
- * Na mobile a tablete (do 1023px) sa karta Terazky správa ako obrazovka, nie dokument
- * (rovnaký princíp ako desktop vyššie): ciferník ustupuje podľa výšky okna (clamp s dvh),
- * aby pod ním vždy ostalo miesto na pás dňa. Testuje sa naprieč bežnými výškami mobilov,
- * od veľkého telefónu (844px) po malý (667px, iPhone SE) - všade musí byť vidno naraz
- * ciferník, odporúčanie aj celý pás dňa (vrátane časovej osi 00-24), bez scrollovania a
- * bez toho, aby čokoľvek zapadlo pod spodnú navigáciu.
+ * Na mobile a tablete (do 1023px) a od 620px výšky sa karta Terazky správa ako obrazovka,
+ * nie dokument (rovnaký princíp ako desktop vyššie): ciferník ustupuje podľa výšky okna
+ * (clamp s dvh), aby pod ním vždy ostalo miesto na pás dňa. Testuje sa naprieč bežnými
+ * výškami mobilov, od veľkého telefónu (844px) po malý (667px, iPhone SE) až po spodnú
+ * hranicu režimu (620px) - všade musí byť vidno naraz ciferník, odporúčanie aj celý pás
+ * dňa (vrátane časovej osi 00-24), bez scrollovania a bez toho, aby čokoľvek zapadlo pod
+ * spodnú navigáciu. Čo sa deje pod 620px, hovorí test hneď za týmto.
  */
-test('mobil: karta Terazky sa vždy zmestí na obrazovku bez scrollovania', async ({ page }) => {
+test('mobil: karta Terazky sa od 620px výšky zmestí na obrazovku bez scrollovania', async ({ page }) => {
     for (const height of [844, 740, 667, 620]) {
         await page.setViewportSize({ width: 390, height });
         const errors = await openApp(page);
@@ -503,6 +504,45 @@ test('mobil: karta Terazky sa vždy zmestí na obrazovku bez scrollovania', asyn
         await expect(page.locator('.dial-svg'), `výška ${height}px`).toBeVisible();
         await expect(page.locator('#verdict-dots'), `výška ${height}px`).toBeVisible();
         await expect(page.locator('.strip-ticks'), `výška ${height}px`).toBeVisible();
+        expect(errors).toEqual([]);
+    }
+});
+
+/**
+ * Pod 620px výšky sa režim obrazovky nezapne a karta je bežný dokument. Je to zámer:
+ * v režime obrazovky sa pretečený obsah odstrihne (.page { overflow: hidden }), a odstrihnúť
+ * časovú os pása dňa je horšie než dovoliť scroll. Podmienka je na výšku, nie na
+ * orientáciu, preto sa skúša aj nízka výška na výšku (390x520), aj telefón na šírku
+ * (740x360). Po doscrollovaní nadol musí byť celý pás dňa nad spodnou navigáciou - teda
+ * dostupný, nie odstrihnutý ani zakrytý.
+ */
+test('mobil: pod 620px výšky sa karta Terazky odomkne a dá sa doscrollovať', async ({ page }) => {
+    for (const { width, height } of [
+        { width: 390, height: 520 },
+        { width: 740, height: 360 },
+    ]) {
+        await page.setViewportSize({ width, height });
+        const errors = await openApp(page);
+        const rozmer = `${width}x${height}`;
+
+        const zamknute = await page.evaluate(() =>
+            ['body', '.page', '#panel-terazky']
+                .map((sel) => `${sel}: ${getComputedStyle(document.querySelector(sel)).overflowY}`)
+                .filter((s) => s.endsWith('hidden') || s.endsWith('clip')),
+        );
+        expect(zamknute, `${rozmer}: karta ostala zamknutá, obsah sa odstrihne namiesto scrollovania`).toEqual([]);
+
+        await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+        const geometria = await page.evaluate(() => ({
+            pasDnaSpodok: document.querySelector('.col-b').getBoundingClientRect().bottom,
+            navVrch: document.querySelector('.bottomnav').getBoundingClientRect().top,
+        }));
+        expect(geometria.pasDnaSpodok, `${rozmer}: pás dňa sa ani po doscrollovaní nedostane nad spodnú navigáciu`).toBeLessThanOrEqual(
+            geometria.navVrch,
+        );
+
+        await expect(page.locator('.dial-svg'), rozmer).toBeVisible();
+        await expect(page.locator('.strip-ticks'), rozmer).toBeVisible();
         expect(errors).toEqual([]);
     }
 });
