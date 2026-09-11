@@ -38,7 +38,8 @@ vedľa Terazky.
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v
 poradí spodnej navigácie – aj ponad grafy a tabuľku 7 dní. Nad grafom kartu prepne rýchle
 švihnutie a tooltip sa pri ňom vôbec neukáže; pomalé ťahanie po krivke ostáva prezeraním
-s tooltipom ako doteraz. Nová karta sa pritom prisunie z tej strany, ktorou si listoval –
+s tooltipom ako doteraz. Zvislý ťah je posúvanie stránky – aj keď prst začne na grafe – a
+tooltip sa pri ňom neukáže tiež. Nová karta sa pritom prisunie z tej strany, ktorou si listoval –
 rovnako pri ťahaní aj pri kliku na navigáciu. Kto má v systéme zapnutý útlm pohybu, dostane
 prepnutie bez animácie. Ťahanie si pre seba
 nechávajú len veci, ktoré sa samy posúvajú do strán: kolotoč odporúčaní na karte Terazky

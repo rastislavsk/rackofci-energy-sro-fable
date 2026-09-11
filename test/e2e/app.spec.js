@@ -687,6 +687,25 @@ async function tuknutie(page, x, y) {
     await cdp.detach();
 }
 
+/** Preblikol tooltip niekedy počas gesta? Stav po geste nestačí: appka tooltip po prepnutí
+ * karty aj tak zatvára a sám sa zatvára po TOOLTIP_HOLD_MS, takže kontrola „potom" by
+ * preblikutie nikdy nechytila. Preto sa trieda sleduje cez MutationObserver od začiatku gesta.
+ * @param {import('@playwright/test').Page} page @param {string} id */
+async function sledujTooltip(page, id) {
+    await page.evaluate((id) => {
+        const el = /** @type {HTMLElement} */ (document.getElementById(id));
+        window.tooltipBolVidno = el.classList.contains('visible');
+        new MutationObserver(() => {
+            if (el.classList.contains('visible')) window.tooltipBolVidno = true;
+        }).observe(el, { attributes: true, attributeFilter: ['class'] });
+    }, id);
+}
+
+/** @param {import('@playwright/test').Page} page */
+function boloVidno(page) {
+    return page.evaluate(() => window.tooltipBolVidno);
+}
+
 /** @param {import('@playwright/test').Page} page @param {string} panel */
 async function ocakavajKartu(page, panel) {
     await expect(page.locator(`#panel-${panel}`)).toBeVisible();
@@ -845,30 +864,40 @@ test.describe('listovanie kariet prstom', () => {
         const errors = await openApp(page);
         await page.locator('#nav-predpoved').click();
 
-        // Kontrola na konci gesta nestačí - tooltip po prepnutí karty appka aj tak zatvára.
-        // Preto sa sleduje trieda na tooltipe počas celého gesta.
-        const sledujTooltip = () =>
-            page.evaluate(() => {
-                const el = /** @type {HTMLElement} */ (document.getElementById('forecast-tooltip'));
-                window.tooltipBolVidno = el.classList.contains('visible');
-                new MutationObserver(() => {
-                    if (el.classList.contains('visible')) window.tooltipBolVidno = true;
-                }).observe(el, { attributes: true, attributeFilter: ['class'] });
-            });
-        const boloVidno = () => page.evaluate(() => window.tooltipBolVidno);
-
-        await sledujTooltip();
+        await sledujTooltip(page, 'forecast-tooltip');
         await swipe(page, '#forecast-chart-wrap', { dx: -120 });
         await ocakavajKartu(page, '7dni');
-        expect(await boloVidno(), 'tooltip preblikol počas švihnutia').toBe(false);
+        expect(await boloVidno(page), 'tooltip preblikol počas švihnutia').toBe(false);
 
         // Ťuknutie na graf ho naopak ukázať musí - inak by sa hodnota nedala prečítať.
         // Aj tu sa pozerá na sledovanú triedu, nie na stav po chvíli: tooltip sa sám zatvára
         // po TOOLTIP_HOLD_MS a na zaťaženom stroji by sa kontrola trafila až za ten čas.
         await page.locator('#nav-predpoved').click();
-        await sledujTooltip();
+        await sledujTooltip(page, 'forecast-tooltip');
         await swipe(page, '#forecast-chart-wrap', { dx: 0 });
-        expect(await boloVidno(), 'ťuknutie na graf neukázalo tooltip').toBe(true);
+        expect(await boloVidno(page), 'ťuknutie na graf neukázalo tooltip').toBe(true);
+        await ocakavajKartu(page, 'predpoved');
+        expect(errors).toEqual([]);
+    });
+
+    /** Krivka ide po vodorovnej osi, takže zvislý ťah nie je prezeranie grafu, ale posúvanie
+     * stránky - a to patrí prehliadaču (`.chart-wrap { touch-action: pan-y }`). Test drží obe
+     * polovice: že sa stránka cez graf naozaj posunie, aj že pritom tooltip ani nepreblikne. */
+    test('zvislý ťah cez graf posúva stránku a tooltip neukáže', async ({ page }) => {
+        // Nižší displej (375x667, veľkosť menšieho telefónu): na tom, z ktorého sú ostatné
+        // testy, sa každá karta zmestí celá a scrollovať nie je kam.
+        await page.setViewportSize({ width: 375, height: 667 });
+        const errors = await openApp(page);
+        await page.locator('#nav-predpoved').click();
+        expect(
+            await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
+            'karta sa celá zmestí na displej, nie je kam scrollovať - test by nič nemeral',
+        ).toBeGreaterThan(0);
+
+        await sledujTooltip(page, 'forecast-tooltip');
+        await swipe(page, '#forecast-chart-wrap', { dx: 0, dy: -120, ms: 400 });
+        expect(await boloVidno(page), 'tooltip preblikol pri posúvaní stránky').toBe(false);
+        expect(await page.evaluate(() => window.scrollY), 'stránka sa cez graf neposunula').toBeGreaterThan(0);
         await ocakavajKartu(page, 'predpoved');
         expect(errors).toEqual([]);
     });
