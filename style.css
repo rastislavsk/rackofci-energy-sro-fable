@@ -1259,9 +1259,12 @@ b {
     font-size: var(--fs-xs);
     color: var(--ink-45);
 }
+/* pan-y, nie none: zvislé posúvanie stránky patrí prehliadaču, aj keď prst začne na grafe -
+   inak sa cez graf nedá scrollovať vôbec. Vodorovnú zložku si necháva JS (listovanie kariet
+   vo web/swipe.js, tooltip vo web/interactions.js), rovnako ako pri páse dňa vyššie. */
 .chart-wrap {
     position: relative;
-    touch-action: none;
+    touch-action: pan-y;
 }
 .chart-wrap svg {
     width: 100%;

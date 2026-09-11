@@ -171,6 +171,11 @@ const MIN_FLICK_SPEED = SWIPE.minDistPx / SWIPE.flickMs;
  * najpomalšie možné švihnutie si krivku prezerá. Po uplynutí okna švihnutia sa karta prepnúť
  * nemôže, takže tam už tooltip patrí vždy.
  *
+ * To isté platí pre zvislý ťah, len tam nerozhoduje rýchlosť, ale smer: krivka ide po
+ * vodorovnej osi (čas), takže kto ide viac hore-dole než do strán, posúva stránku a tooltip
+ * by mu len preblikol. Smer sa počíta z celého gesta a rozhoduje sa nanovo pri každom pohybe,
+ * takže ťah, ktorý sa zlomí do strany, tooltip ukáže.
+ *
  * Ťuknutie (prst sa nikam nepohol) neposiela touchmove, preto sa ukáže až pri zdvihnutí -
  * na pohľad je to to isté, len o pár desiatok milisekúnd neskôr.
  * @param {HTMLElement} wrap @param {(clientX: number, clientY: number) => void} handle @param {() => void} hide
@@ -194,7 +199,8 @@ function bindTouch(wrap, handle, hide) {
         (e) => {
             if (!start) return;
             const cas = e.timeStamp - start.t;
-            if (cas <= SWIPE.flickMs && vzdialenost(e.touches[0]) / (cas || 1) >= MIN_FLICK_SPEED) return;
+            const zvislo = Math.abs(e.touches[0].clientY - start.y) > Math.abs(e.touches[0].clientX - start.x);
+            if (zvislo || (cas <= SWIPE.flickMs && vzdialenost(e.touches[0]) / (cas || 1) >= MIN_FLICK_SPEED)) return;
             shown = true;
             handle(e.touches[0].clientX, e.touches[0].clientY);
         },
@@ -313,7 +319,7 @@ function initDeviceChips(dom) {
     });
 }
 
-/** Po pinch-zoome (najmä okolo grafov, kde majú .chart-wrap touch-action:none) sa stránka
+/** Po pinch-zoome (najmä okolo grafov, kde .chart-wrap nenecháva prehliadaču celé gesto) sa stránka
  * niekedy vráti na zoom 1x, ale vizuálny viewport ostane posunutý od layout viewportu -
  * známa nezhoda v mobilných prehliadačoch, prejaví sa orezaným obsahom pri okraji displeja.
  * `window.scrollX` tento posun nevidí (appka nemá vodorovný scroll), signálom je
