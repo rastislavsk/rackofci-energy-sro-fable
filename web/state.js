@@ -25,6 +25,7 @@ import { PANELS } from './dom.js';
  *   desktop: boolean,
  *   chartSizes: Record<string, { w: number, h: number }>,
  * }} AppState
+ * @typedef {{ panel: Panel, weekDetail: boolean }} NavStep krok navigácie pre tlačidlo Späť
  */
 
 /** @param {Date} now @param {Season} season @param {{ wide: boolean, desktop: boolean }} layout @returns {AppState} */
@@ -115,4 +116,45 @@ function panelOrder(desktop) {
 export function panelChange(from, to, desktop) {
     const order = panelOrder(desktop);
     return { panel: to, panelDir: /** @type {1 | -1} */ (order.indexOf(to) < order.indexOf(from) ? -1 : 1), weekDetail: false };
+}
+
+/**
+ * Krok navigácie, na ktorý sa dá vrátiť tlačidlom Späť: karta a či je otvorený detail dňa.
+ * Zvyšok stavu (vybraný deň, stránka verdiktu, náhľad času) je nastavenie vnútri karty,
+ * nie miesto v appke - tam sa Späť nevracia, rovnako ako v iných appkách.
+ * @param {AppState} state @returns {NavStep}
+ */
+export function navStep(state) {
+    return { panel: state.panel, weekDetail: state.weekDetail };
+}
+
+/** @param {NavStep} a @param {NavStep} b */
+export function sameNavStep(a, b) {
+    return a.panel === b.panel && a.weekDetail === b.weekDetail;
+}
+
+/**
+ * Návrat na skorší krok navigácie (tlačidlo Späť). Od panelChange sa líši jediným:
+ * detail dňa nezatvára, ale nastavuje na to, čo v tom kroku bolo - Späť má obnoviť,
+ * čo používateľ videl, nie to upratať.
+ * @param {Panel} from karta, ktorá je práve vidno (effectivePanel, nie holý stav)
+ * @param {NavStep} step @param {boolean} desktop
+ */
+export function navChange(from, step, desktop) {
+    return { ...panelChange(from, step.panel, desktop), weekDetail: step.weekDetail };
+}
+
+/**
+ * Krok navigácie z položky histórie. Cudzie položky (iná stránka v tej istej karte
+ * prehliadača, staršia verzia appky) vracajú null a Späť sa pri nich správa ako
+ * predtým - odíde zo stránky.
+ * @param {unknown} raw @returns {NavStep | null}
+ */
+export function navStepFrom(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const step = /** @type {{ step?: unknown }} */ (raw).step;
+    if (!step || typeof step !== 'object') return null;
+    const { panel, weekDetail } = /** @type {{ panel?: unknown, weekDetail?: unknown }} */ (step);
+    if (typeof weekDetail !== 'boolean' || !PANELS.some((p) => p === panel)) return null;
+    return { panel: /** @type {Panel} */ (panel), weekDetail };
 }

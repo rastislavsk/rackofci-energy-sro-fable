@@ -45,6 +45,15 @@ nechávajú len veci, ktoré sa samy posúvajú do strán: kolotoč odporúčan�
 a na úzkych displejoch tabuľka 7 dní, kým má kam ísť. Bežec na páse dňa sa ťahá ako
 predtým.
 
+Systémové tlačidlo Späť na telefóne a tablete (a šípka v prehliadači) vracia o krok späť
+v appke: najprv zavrie detail dňa, potom sa vracia po kartách v opačnom poradí, než si
+nimi prešiel. Dopredu vedie tá istá cesta naspäť. Výber vnútri karty – vybraný deň,
+prepínač Dnes/Zajtra, stránka kolotoča – krok navigácie nie je, na ten sa Späť nevracia.
+Keď sa kroky minú, ďalšie Späť z appky odíde; v nainštalovanej appke (PWA) to znamená jej
+zatvorenie. Zatvorenie sa nikde nevynucuje dvojitým stlačením – to je zvyk natívnych
+androidových appiek, nie webu, a stránka sa sama zavrieť ani nevie. Adresa sa pritom
+nemení, takže odkaz na appku ostáva jeden.
+
 ## Ako to funguje
 
 ```

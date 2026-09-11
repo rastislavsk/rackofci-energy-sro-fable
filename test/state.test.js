@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createStore, initialState, nextPanel, panelChange } from '../web/state.js';
+import { createStore, initialState, navChange, navStep, navStepFrom, nextPanel, panelChange, sameNavStep } from '../web/state.js';
 
 test('setState zlúči zmenu a zavolá odberateľa presne raz', () => {
     const store = createStore(initialState(new Date('2026-09-05T11:00:00Z'), 'summer', { wide: false, desktop: false }));
@@ -50,4 +50,35 @@ test('smer prechodu ide podľa poradia v navigácii, nie podľa toho, ako sa pre
     assert.equal(panelChange('terazky', 'zdielat', true).panelDir, 1);
     assert.equal(panelChange('zdielat', 'terazky', true).panelDir, -1);
     assert.equal(panelChange('predpoved', 'terazky', true).panelDir, 1);
+});
+
+test('krok navigácie pre tlačidlo Späť je karta a detail dňa, nič iné', () => {
+    const state = initialState(new Date(), 'summer', { wide: false, desktop: false });
+    assert.deepEqual(navStep(state), { panel: 'terazky', weekDetail: false });
+    // Vybraný deň ani stránka verdiktu nie sú miesto v appke - Späť sa na ne nevracia.
+    assert.ok(sameNavStep(navStep(state), navStep({ ...state, weekSelDay: 4, verdictPage: 2 })));
+    assert.ok(!sameNavStep(navStep(state), navStep({ ...state, panel: '7dni' })));
+    assert.ok(!sameNavStep(navStep(state), navStep({ ...state, weekDetail: true })));
+});
+
+test('Späť obnoví kartu aj detail dňa, smer prechodu ide podľa poradia', () => {
+    assert.deepEqual(navChange('zdielat', { panel: '7dni', weekDetail: true }, false), {
+        panel: '7dni',
+        panelDir: -1,
+        weekDetail: true,
+    });
+    // Na rozdiel od panelChange sa detail dňa nezatvára, ale nastavuje na to, čo v kroku bolo.
+    assert.deepEqual(navChange('terazky', { panel: '7dni', weekDetail: false }, false), {
+        panel: '7dni',
+        panelDir: 1,
+        weekDetail: false,
+    });
+});
+
+test('položka histórie sa číta len ak naozaj nesie krok navigácie', () => {
+    assert.deepEqual(navStepFrom({ step: { panel: '7dni', weekDetail: true } }), { panel: '7dni', weekDetail: true });
+    assert.equal(navStepFrom(null), null, 'cudzia položka bez stavu');
+    assert.equal(navStepFrom({ scrollTop: 10 }), null, 'položka od niekoho iného');
+    assert.equal(navStepFrom({ step: { panel: 'neznama', weekDetail: false } }), null, 'karta, ktorá už neexistuje');
+    assert.equal(navStepFrom({ step: { panel: '7dni' } }), null, 'neúplný krok');
 });

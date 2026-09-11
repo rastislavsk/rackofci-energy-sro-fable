@@ -729,6 +729,63 @@ test('prechod medzi kartami: smer podľa poradia a nič nepretečie do strán', 
     expect(errors).toEqual([]);
 });
 
+/**
+ * Tlačidlo Späť na telefóne a tablete (a šípka v prehliadači) je jediná vec, ktorá sa
+ * v appke dá „vrátiť": kroky navigácie - prepnutie karty a otvorenie detailu dňa.
+ * Adresa sa pritom nemení, položky histórie nesú len krok navigácie.
+ */
+test('tlačidlo Späť vracia o krok v appke, dopredu ide zase tam', async ({ page }) => {
+    const errors = await openApp(page);
+    const adresa = page.url();
+
+    await page.locator('#nav-predpoved').click();
+    await page.locator('#nav-7dni').click();
+    await page.locator('#week-tbody tr[data-day-index="5"]').click();
+    await expect(page.locator('#week-day-head')).toBeVisible();
+    expect(page.url(), 'appka nemení adresu, odkaz na ňu ostáva jeden').toBe(adresa);
+
+    // Späť najprv zavrie detail dňa, potom sa vracia po kartách - v opačnom poradí, než sa šlo.
+    await page.goBack();
+    await expect(page.locator('#week-day-head')).toBeHidden();
+    await ocakavajKartu(page, '7dni');
+    await page.goBack();
+    await ocakavajKartu(page, 'predpoved');
+    await page.goBack();
+    await ocakavajKartu(page, 'terazky');
+
+    // Dopredu vedie tá istá cesta naspäť, vrátane otvoreného detailu dňa.
+    await page.goForward();
+    await ocakavajKartu(page, 'predpoved');
+    await page.goForward();
+    await ocakavajKartu(page, '7dni');
+    await page.goForward();
+    await expect(page.locator('#week-day-head')).toBeVisible();
+    expect(errors).toEqual([]);
+});
+
+/** Krokom navigácie je karta a detail dňa, nič iné. Prepínač Dnes/Zajtra, výber dňa či
+ * listovanie odporúčaní sa deje vnútri karty, takže Späť ich nepočíta - inak by sa z appky
+ * nedalo odísť. */
+test('Späť nepočíta výber vnútri karty, po vyčerpaní krokov opustí appku', async ({ page }) => {
+    const errors = await openApp(page);
+    const zaciatok = await page.evaluate(() => history.length);
+
+    await page.locator('#nav-predpoved').click();
+    await page.locator('#day-btn-tomorrow').click();
+    await page.locator('#day-btn-today').click();
+    await expect(page.locator('#day-btn-today')).toHaveAttribute('aria-selected', 'true');
+    expect(await page.evaluate(() => history.length), 'do histórie pribudlo len prepnutie karty').toBe(zaciatok + 1);
+
+    // Jediný krok späť je teda návrat na prvú kartu; ďalší už z appky odchádza (v nainštalovanej
+    // appke je odchod z prvej karty jej zatvorením - zavrieť sa sama nevie a ani nemá).
+    await page.goBack();
+    await ocakavajKartu(page, 'terazky');
+    expect(await page.evaluate(() => history.state), 'na prvej karte už appka v histórii nič nedrží').toEqual({
+        step: { panel: 'terazky', weekDetail: false },
+    });
+    expect(errors).toEqual([]);
+});
+
 test.describe('listovanie kariet prstom', () => {
     test.use({ hasTouch: true });
 
