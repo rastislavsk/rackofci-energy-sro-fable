@@ -4,6 +4,7 @@
 import { chartTooltipModel, STRIP } from '../shared/chart-model.js';
 import { PAGER_SETTLE_MS, REFRESH, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS } from '../shared/config.js';
 import { loadData } from './data.js';
+import { initHistory } from './history.js';
 import { effectivePanel } from './render/index.js';
 import { forecastModel } from './render/predpoved.js';
 import { weekCurveModel } from './render/sedemdni.js';
@@ -401,6 +402,7 @@ function initTicks(store, mq) {
 export function initInteractions(store, dom, mq) {
     initViewportZoomRealign();
     initNavigation(store, dom);
+    initHistory(store);
     initSwipe(store, dom, hideChartTooltips);
     initTimePreview(store, dom);
     initVerdictPager(store, dom);

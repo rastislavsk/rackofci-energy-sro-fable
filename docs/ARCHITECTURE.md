@@ -52,6 +52,10 @@ susednú kartu – rozhodne len, čo je na rade, a zmenu urobí `setState` ako p
 navigáciu. Čo si ťahanie nechá pre seba, nie je zoznam výnimiek, ale pravidlo: keď sa
 najbližší vnútorný pás pod prstom ešte má kam posunúť tým smerom, patrí gesto jemu.
 Menovaný je jediný prvok – úchytka bežca na páse dňa, ktorá sa ťahá a neposúva.
+`history.js` prekladá tlačidlo Späť na krok späť v appke: každý krok navigácie (karta,
+detail dňa) pridá `pushState` položku do histórie prehliadača a `popstate` ju vráti tou
+istou cestou ako klik – jediným `setState`. Adresa sa pritom nemení; položka histórie je
+len značka s krokom navigácie, takže odkaz na appku ostáva jeden.
 
 Prechod medzi kartami je iba CSS: `panelChange` v `state.js` dopočíta k novej karte aj smer
 (`panelDir`), `renderPanels` ho vyloží na `#page[data-dir]` a zvyšok je animácia `panel-in-*`
