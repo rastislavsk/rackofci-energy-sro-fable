@@ -1,8 +1,9 @@
 // Všetky poslucháče udalostí. Každý končí volaním setState alebo lokálnou zmenou tooltipu;
 // nikto tu nekreslí do DOM okrem tooltipov, ktoré nie sú súčasťou stavu.
 
-import { chartTooltipModel, STRIP } from '../shared/chart-model.js';
-import { PAGER_SETTLE_MS, REFRESH, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS } from '../shared/config.js';
+import { chartTooltipModel, minutesFromAngle, ringGap } from '../shared/chart-model.js';
+import { MINUTES_PER_DAY, PAGER_SETTLE_MS, PREVIEW, REFRESH, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS } from '../shared/config.js';
+import { minutesOfDay } from '../shared/hero-model.js';
 import { loadData } from './data.js';
 import { initHistory } from './history.js';
 import { effectivePanel } from './render/index.js';
@@ -53,32 +54,58 @@ function initNavigation(store, dom) {
     dom.weekDayBack.addEventListener('click', () => store.setState({ weekDetail: false }));
 }
 
-/** @param {Dom} dom @param {number} clientX */
-function minutesFromClientX(dom, clientX) {
-    const rect = dom.daystrip.getBoundingClientRect();
-    const relX = Math.max(0, Math.min(rect.width, clientX - rect.left));
-    return Math.round((relX / (rect.width || 1)) * STRIP.w) % STRIP.w;
+/** Uhol bodu voči stredu ciferníka -> minúta dňa. @param {Dom} dom @param {number} clientX @param {number} clientY */
+function minutesFromPoint(dom, clientX, clientY) {
+    const box = dom.dialWrap.getBoundingClientRect();
+    return minutesFromAngle(clientX - (box.left + box.width / 2), clientY - (box.top + box.height / 2));
 }
 
-/** Ťahanie bežca a klik na pás dňa = náhľad iného času. @param {Store} store @param {Dom} dom */
+/**
+ * Náhľad iného času: jazdec na dennom prstenci. Ťahať sa dá len samotný jazdec, nie celý
+ * ciferník - ten reaguje na ťuknutie. Klik a ťah sa tak nebijú a ťah do strán ponad ciferník
+ * naďalej prepína kartu (jazdec je v swipe.js menovanou výnimkou).
+ *
+ * Dotiahnutie jazdca na značku "teraz" náhľad zruší. Je to skratka, nie náhrada tlačidla:
+ * hlavnou cestou späť ostáva "Teraz" pod číslom.
+ * @param {Store} store @param {Dom} dom
+ */
 function initTimePreview(store, dom) {
-    const handle = dom.stripMarkerHandle;
-    handle.addEventListener('pointerdown', (e) => {
+    const grip = dom.dialGrip;
+    const move = (/** @type {PointerEvent} */ e) => {
+        const minutes = minutesFromPoint(dom, e.clientX, e.clientY);
+        const nowMinutes = minutesOfDay(store.get().now);
+        store.setState({ previewMinutes: ringGap(minutes, nowMinutes) <= PREVIEW.snapToNowMin ? null : minutes });
+    };
+    grip.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        handle.setPointerCapture(e.pointerId);
-        store.setState({ previewMinutes: minutesFromClientX(dom, e.clientX), isDragging: true });
+        grip.setPointerCapture(e.pointerId);
+        store.setState({ isDragging: true });
     });
-    handle.addEventListener('pointermove', (e) => {
-        if (store.get().isDragging) store.setState({ previewMinutes: minutesFromClientX(dom, e.clientX) });
+    grip.addEventListener('pointermove', (e) => {
+        if (store.get().isDragging) move(e);
     });
     const end = () => {
         if (store.get().isDragging) store.setState({ isDragging: false });
     };
-    handle.addEventListener('pointerup', end);
-    handle.addEventListener('pointercancel', end);
-    dom.daystripWrap.addEventListener('click', (e) => {
-        if (/** @type {HTMLElement} */ (e.target).closest('.strip-marker-handle')) return;
-        store.setState({ previewMinutes: minutesFromClientX(dom, e.clientX), isDragging: false });
+    grip.addEventListener('pointerup', end);
+    grip.addEventListener('pointercancel', end);
+    // Bez šípok by sa náhľad času z klávesnice ovládať nedal - jazdec je jediná cesta k nemu.
+    grip.addEventListener('keydown', (e) => {
+        const step =
+            e.key === 'ArrowLeft' || e.key === 'ArrowDown'
+                ? -PREVIEW.keyStepMin
+                : e.key === 'ArrowRight' || e.key === 'ArrowUp'
+                  ? PREVIEW.keyStepMin
+                  : 0;
+        if (!step) return;
+        e.preventDefault();
+        const from = store.get().previewMinutes ?? minutesOfDay(store.get().now);
+        store.setState({ previewMinutes: (((from + step) % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY });
+    });
+    dom.dialWrap.addEventListener('click', (e) => {
+        const target = /** @type {HTMLElement} */ (e.target);
+        if (target.closest('#dial-grip, #preview-reset')) return;
+        store.setState({ previewMinutes: minutesFromPoint(dom, e.clientX, e.clientY), isDragging: false });
     });
 }
 

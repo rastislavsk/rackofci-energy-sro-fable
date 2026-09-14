@@ -1,7 +1,16 @@
 // Tarifné okná, sezóna a farebné "tiery" - všetko, čo odvodzuje stav siete a spotrebičov
 // z času dňa a výkonu FV. Čisté funkcie bez DOM.
 
-import { AUTO_MIN_PV_KW, AUTO_NIGHT_WINDOW, DEVICES, POWER_HIGH_KW, POWER_LOW_KW, SUMMER_MONTHS, TARIFF_WINDOWS } from './config.js';
+import {
+    AUTO_MIN_PV_KW,
+    AUTO_NIGHT_WINDOW,
+    DEVICES,
+    MINUTES_PER_DAY,
+    POWER_HIGH_KW,
+    POWER_LOW_KW,
+    SUMMER_MONTHS,
+    TARIFF_WINDOWS,
+} from './config.js';
 import { timeStrToMinutes } from './format.js';
 
 /** @typedef {import('./config.js').Season} Season */
@@ -48,10 +57,10 @@ export function deviceWindow(season) {
 export function stripSegments(season) {
     const segments = [];
     let cursor = 0;
-    while (cursor < 1440) {
+    while (cursor < MINUTES_PER_DAY) {
         const win = windowAt(cursor, season);
-        const end = win ? timeStrToMinutes(win.end) : 1440;
-        const stop = end <= cursor ? 1440 : Math.min(end, 1440);
+        const end = win ? timeStrToMinutes(win.end) : MINUTES_PER_DAY;
+        const stop = end <= cursor ? MINUTES_PER_DAY : Math.min(end, MINUTES_PER_DAY);
         segments.push({ startMin: cursor, min: stop - cursor, cls: win ? win.status : 'amber' });
         cursor = stop;
     }

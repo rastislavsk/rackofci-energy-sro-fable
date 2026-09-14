@@ -23,8 +23,9 @@ jej QR kód kreslí knižnica z CDN.
 - **Terazky** – aktuálny výkon na ciferníku a pod ním kolotoč odporúčaní: tarifné okno so
   stavom slnka, jednovetné odporúčanie („Najlepší čas dňa — zapni všetko“), stav piatich
   spotrebičov, predpoveď dňa a prípadne čas, kedy bude lepšie. Listuje sa potiahnutím do
-  strán alebo klikom na bodky. Dole je pás dňa s farebnými tarifnými pásmami; potiahnutím
-  bežca alebo klikom na pás si pozrieš, ako to bude vyzerať v inom čase.
+  strán alebo klikom na bodky. Ciferník sa číta aj ako 24-hodinový: vonkajší prstenec je
+  deň s farebnými tarifnými pásmami, biela bodka na ňom je „teraz“. Potiahnutím jazdca po
+  prstenci alebo ťuknutím naň si pozrieš, ako to bude vyzerať v inom čase.
 - **Dnes-Zajtra** – hodinová krivka výroby na dnes alebo zajtra, oblačnosť a skutočná
   nameraná výroba nad ňou, k tomu špička dňa a odhad výroby.
 - **7 dní** – prehľad dní v tabuľke a súhrn za dnes, zajtra a celý týždeň. Klik na deň

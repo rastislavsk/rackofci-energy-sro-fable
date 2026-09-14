@@ -53,8 +53,8 @@ s dotykovým displejom sú bežné. Z toho istého dôvodu nie je v `style.css` 
 `:hover` – na dotyku by ostávalo visieť po ťuknutí.
 
 V CSS to isté hovorí `touch-action`. `none` znamená, že prehliadač nad prvkom nesmie nič, ani
-posunúť stránku – patrí len úchytkám na ťahanie (bežec na páse dňa). Plochy, cez ktoré človek
-scrolluje popri ceste, majú `pan-y` (`.chart-wrap`, `.daystrip-wrap`): zvislé posúvanie si necháva
+posunúť stránku – patrí len úchytkám na ťahanie (jazdec na dennom prstenci ciferníka). Plochy,
+cez ktoré človek scrolluje popri ceste, majú `pan-y` (`.chart-wrap`): zvislé posúvanie si necháva
 prehliadač, vodorovné gesto JS. Kde `touch-action` nie je, rozhoduje prehliadač o oboch smeroch –
 to je pre bežný obsah správne, dopisovať ho netreba.
 

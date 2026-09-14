@@ -1,7 +1,7 @@
 // Geometria grafov ako čisté dáta: body v súradniciach viewBoxu, mriežky, tooltipy.
 // Kreslenie (SVG reťazce) je vo web/svg.js; tu nie je nič, čo by potrebovalo DOM.
 
-import { INSTALLED_PV_KW } from './config.js';
+import { MINUTES_PER_DAY } from './config.js';
 import { formatGridKw, hourLabel, hourFloatToTimeStr, weekDateLabel, weekDayShort } from './format.js';
 import { stripSegments } from './tariff.js';
 
@@ -166,13 +166,54 @@ export function chartTooltipModel(model, relX) {
     };
 }
 
-// ---- Pás dňa (Priebeh dňa na karte Spotrebiče) -------------------------------------
-export const STRIP = { w: 1440, h: 60, baseY: 54, topY: 6, sampleMin: 15 };
+// ---- Denný prstenec (ciferník na karte Spotrebiče) --------------------------------
+// Ciferník sa číta ako 24-hodinový: 00:00 hore, deň v smere hodinových ručičiek.
+// Vonkajší prstenec je deň s tarifnými pásmami, vnútorný oblúk aktuálny výkon.
+export const RING = { viewBox: 240, rDay: 106, dayWidth: 8, rPower: 78, powerWidth: 14 };
 
-/** Výkon -> výška v páse, pevná mierka 0 až inštalovaný výkon. @param {number} kw */
-export function kwToStripY(kw) {
-    const frac = Number.isFinite(kw) ? Math.max(0, Math.min(1, kw / INSTALLED_PV_KW)) : 0;
-    return STRIP.baseY - frac * (STRIP.baseY - STRIP.topY);
+/** Bod na kružnici pre minútu dňa, v jednotkách viewBoxu. @param {number} r @param {number} minutes */
+export function ringPoint(r, minutes) {
+    const rad = ((minutes / MINUTES_PER_DAY) * 2 - 0.5) * Math.PI;
+    const c = RING.viewBox / 2;
+    return { x: c + r * Math.cos(rad), y: c + r * Math.sin(rad) };
+}
+
+/** Poloha na dennom prstenci v percentách jeho obalu - obal je štvorec, takže sa mierka
+ * vyrieši sama a appka nemusí poznať, aký veľký ciferník práve je. @param {number} minutes */
+export function ringPercent(minutes) {
+    const p = ringPoint(RING.rDay, minutes);
+    return { left: (p.x / RING.viewBox) * 100, top: (p.y / RING.viewBox) * 100 };
+}
+
+/** Uhol jazdca od stredu ciferníka -> minúta dňa. Opak ringPoint; polnoc nie je stena,
+ * záporný uhol sa obtočí. @param {number} dx @param {number} dy vzdialenosť od stredu */
+export function minutesFromAngle(dx, dy) {
+    const deg = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+    return Math.round(((deg < 0 ? deg + 360 : deg) / 360) * MINUTES_PER_DAY) % MINUTES_PER_DAY;
+}
+
+/** Vzdialenosť dvoch minút po obvode - cez polnoc je to bližšie než rozdiel čísel.
+ * @param {number} a @param {number} b */
+export function ringGap(a, b) {
+    const d = Math.abs(a - b) % MINUTES_PER_DAY;
+    return Math.min(d, MINUTES_PER_DAY - d);
+}
+
+/**
+ * Tarifné pásma dňa ako oblúky vonkajšieho prstenca. Krajné body a príznak dlhého oblúka
+ * sú čísla, samotné "d" skladá web/svg.js.
+ * @param {import('./config.js').Season} season
+ */
+export function dayRingModel(season) {
+    return stripSegments(season).map((s) => {
+        const to = s.startMin + s.min;
+        return {
+            cls: s.cls,
+            start: ringPoint(RING.rDay, s.startMin),
+            end: ringPoint(RING.rDay, to === MINUTES_PER_DAY ? to - 0.01 : to),
+            large: s.min > MINUTES_PER_DAY / 2 ? 1 : 0,
+        };
+    });
 }
 
 /**
@@ -194,53 +235,6 @@ export function dayKwAt(minutes, realCurve, hourlyToday, nowMinutes) {
     if (boundary !== null && minutes <= boundary) return interpolate(/** @type {any} */ (realCurve), minutes / 60, 'kw');
     if (!hourlyToday || !hourlyToday.length) return NaN;
     return interpolate(hourlyToday, minutes / 60, 'kw');
-}
-
-/** Interpolácia Y krivky pásu v danej minúte. @param {Pt[]} points @param {number} x */
-export function stripCurveY(points, x) {
-    return interpolate(points, x, 'y', 'x');
-}
-
-/**
- * Model pásu dňa: farebné pásma tarify + krivka výroby (namerané plnou, predpoveď
- * prerušovanou). Bez predpovede sa kreslí dekoratívna krivka s vrcholom v zelenom okne.
- * @param {{ season: import('./config.js').Season, hourlyToday?: HourPoint[] | null,
- *   realCurve?: Array<{hour: number, kw: number}> | null, nowMinutes: number }} input
- */
-export function dayStripModel({ season, hourlyToday, realCurve, nowMinutes }) {
-    const bands = stripSegments(season).map((s) => ({ x: s.startMin, width: s.min, cls: s.cls }));
-    const hasData = !!(hourlyToday && hourlyToday.length);
-
-    /** @type {Pt[]} */ let points;
-    if (hasData) {
-        points = [];
-        for (let m = 0; m <= STRIP.w; m += STRIP.sampleMin)
-            points.push({ x: m, y: kwToStripY(dayKwAt(m, realCurve, hourlyToday, nowMinutes)) });
-    } else {
-        const green = bands.find((b) => b.cls === 'green');
-        points = green
-            ? [
-                  { x: 0, y: STRIP.baseY },
-                  { x: green.x, y: 40 },
-                  { x: green.x + green.width / 2, y: 8 },
-                  { x: green.x + green.width, y: 40 },
-                  { x: STRIP.w, y: STRIP.baseY },
-              ]
-            : [
-                  { x: 0, y: STRIP.baseY },
-                  { x: STRIP.w, y: STRIP.baseY },
-              ];
-    }
-
-    const boundary = hasData ? realCurveBoundary(realCurve, nowMinutes) || 0 : null;
-    let past = points;
-    /** @type {Pt[] | null} */ let future = null;
-    if (boundary !== null) {
-        const joint = { x: boundary, y: stripCurveY(points, boundary) };
-        past = points.filter((p) => p.x < boundary).concat([joint]);
-        future = [joint].concat(points.filter((p) => p.x > boundary));
-    }
-    return { bands, points, boundary, hasData, past, future };
 }
 
 // ---- Karta 7 dní -----------------------------------------------------------------
