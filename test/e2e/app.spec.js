@@ -677,6 +677,24 @@ async function swipe(page, sel, { dx, dy = 0, ms = 0 }) {
     await cdp.detach();
 }
 
+/** Ťahanie prstom od stredu prvku, nie ponad neho: gesto musí začať presne na ňom. Bežec na
+ * páse dňa je široký 34 px, takže `swipe` (ten začína o pol ťahu skôr) by sa naň netrafil.
+ * @param {import('@playwright/test').Page} page @param {string} sel @param {{ dx: number, ms?: number }} opts */
+async function tahajOdStredu(page, sel, { dx, ms = 300 }) {
+    const box = await page.locator(sel).boundingBox();
+    if (!box) throw new Error(`Prvok ${sel} nie je vidno`);
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    for (const t of [0.34, 0.67, 1]) {
+        await page.waitForTimeout(ms / 3);
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + dx * t, y }] });
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await cdp.detach();
+}
+
 /** Ťuknutie prstom: krátke podržanie a mikropohyb, ako pri skutočnej ruke. @param {import('@playwright/test').Page} page @param {number} x @param {number} y */
 async function tuknutie(page, x, y) {
     const cdp = await page.context().newCDPSession(page);
@@ -988,6 +1006,25 @@ test.describe('listovanie kariet prstom', () => {
         // Obyčajné ťuknutie na pás náhľad nastaví ako doteraz.
         await page.locator('#daystrip-wrap').click({ position: { x: 40, y: 20 } });
         await expect(page.locator('#preview-banner')).toBeVisible();
+        expect(errors).toEqual([]);
+    });
+
+    /** Bežec je jediná výnimka z pravidla o ťahaní: gesto, ktoré by inde prelistovalo kartu,
+     * na ňom posúva náhľad času (výnimka DRAG_HANDLE vo `swipe.js`). Preto sa ťahá doľava
+     * a dosť ďaleko - kratší ťah než SWIPE.minDistPx by za listovanie neprešiel ani bez tej
+     * výnimky a test by nekontroloval nič. */
+    test('ťahanie bežca prstom posúva náhľad času a kartu neprepne', async ({ page }) => {
+        const errors = await openApp(page);
+        const strip = await page.locator('#daystrip').boundingBox();
+        const bezec = await page.locator('#strip-marker-handle').boundingBox();
+        if (!strip || !bezec) throw new Error('pás dňa alebo bežec nie je vidno');
+
+        const dx = strip.x + strip.width * 0.1 - (bezec.x + bezec.width / 2);
+        expect(Math.abs(dx), 'ťah je kratší než hranica listovania, test by nič nekontroloval').toBeGreaterThan(SWIPE.minDistPx);
+        await tahajOdStredu(page, '#strip-marker-handle', { dx });
+        // Desatina šírky pásu je zhruba 02:24; presná minúta závisí od zaokrúhlenia pixelov.
+        await expect(page.locator('#preview-time-label')).toHaveText(/^Náhľad · 0[123]:\d{2}$/);
+        await ocakavajKartu(page, 'terazky');
         expect(errors).toEqual([]);
     });
 
