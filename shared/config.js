@@ -27,6 +27,9 @@ export const PLANT = {
     albedo: 0.2,
 };
 
+/** Minút v dni. Ciferník ich rozloží po obvode, tarifné okná ich delia na pásma. */
+export const MINUTES_PER_DAY = 1440;
+
 /** Inštalovaný výkon v kWp odvodený zo zostavy (24 × 435 Wp = 10,44 kWp, zaokrúhlené na desatinu). */
 export const INSTALLED_PV_KW = Math.round((PLANT.strings.reduce((sum, s) => sum + s.panels, 0) * PLANT.panelWp) / 100) / 10;
 
@@ -151,6 +154,16 @@ export const PAGER_SETTLE_MS = 90;
 // Dáta staršie než toto sú "zastarané" a appka to ukáže.
 export const STALE_PV_MS = 20 * 60 * 1000;
 export const STALE_FORECAST_MS = 3 * 60 * 60 * 1000;
+
+// Náhľad iného času jazdcom na dennom prstenci (web/interactions.js).
+export const PREVIEW = {
+    // Ako blízko musí jazdec prísť k značke "teraz", aby sa naň prichytil a náhľad sa zrušil.
+    // 25 minút je na ciferníku ~6 stupňov - dosť na to, aby sa to podarilo palcom, a málo na
+    // to, aby sa človek nevedel pozrieť na čas tesne pred aktuálnym.
+    snapToNowMin: 25,
+    // O koľko posunie náhľad jedno ťuknutie šípkou na klávesnici.
+    keyStepMin: 15,
+};
 
 // Prepínanie kariet potiahnutím prsta (web/swipe.js). Prah je kompromis: dosť veľký, aby
 // gesto nespustil ťuk roztrasenou rukou, dosť malý, aby stačil pohodlný pohyb palca.

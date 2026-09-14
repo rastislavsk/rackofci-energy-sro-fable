@@ -1,7 +1,7 @@
 // Skladanie SVG reťazcov z modelov (shared/chart-model.js). Žiadne výpočty, iba zápis.
 // Farby idú cez CSS triedy (style.css), nie cez atribúty.
 
-import { smoothPath, STRIP } from '../shared/chart-model.js';
+import { RING, smoothPath } from '../shared/chart-model.js';
 import { escapeHtml } from '../shared/format.js';
 
 /** @typedef {NonNullable<ReturnType<typeof import('../shared/chart-model.js').forecastChartModel>>} ChartModel */
@@ -35,15 +35,16 @@ export function forecastChartSvg(m) {
     return out;
 }
 
-/** Pás dňa: tarifné pásma, plocha pod krivkou, namerané plnou a predpoveď prerušovanou. @param {ReturnType<typeof import('../shared/chart-model.js').dayStripModel>} m */
-export function dayStripSvg(m) {
-    const bands = m.bands.map((b) => `<rect class="band ${b.cls}" x="${b.x}" y="0" width="${b.width}" height="${STRIP.h}"/>`).join('');
-    const area = `<path class="strip-area" d="${smoothPath(m.points)} L ${STRIP.w} ${STRIP.h} L 0 ${STRIP.h} Z"/>`;
-    let strokes = `<path class="strip-line" d="${smoothPath(m.past)}"/>`;
-    if (m.future) strokes += `<path class="strip-line future" d="${smoothPath(m.future)}"/>`;
-    return `<svg viewBox="0 0 ${STRIP.w} ${STRIP.h}" preserveAspectRatio="none" aria-hidden="true">
-        <defs><linearGradient id="strip-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" class="strip-stop-a"/><stop offset="100%" class="strip-stop-b"/></linearGradient></defs>
-        ${bands}${area}${strokes}</svg>`;
+/** Denný prstenec ciferníka: tarifné pásma dňa ako oblúky po obvode.
+ * @param {ReturnType<typeof import('../shared/chart-model.js').dayRingModel>} m */
+export function dayRingSvg(m) {
+    const r = RING.rDay;
+    return m
+        .map(
+            (a) =>
+                `<path class="day-band ${a.cls}" d="M ${n(a.start.x)} ${n(a.start.y)} A ${r} ${r} 0 ${a.large} 1 ${n(a.end.x)} ${n(a.end.y)}"/>`,
+        )
+        .join('');
 }
 
 /** @param {{ title: string, text: string } | null} tip */

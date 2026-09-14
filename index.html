@@ -73,22 +73,56 @@
         <main class="page" id="page">
             <!-- PANEL: SPOTREBIČE -->
             <section id="panel-terazky" class="panel panel-terazky" aria-labelledby="verdict-headline">
-                <div class="col-a">
-                    <div class="dial-hero card" id="dial-hero">
-                        <div class="dial-wrap">
-                            <svg class="dial-svg" viewBox="0 0 220 220" aria-hidden="true">
-                                <circle class="dial-track" cx="110" cy="110" r="92" />
-                                <circle id="dial-ring" class="dial-ring" cx="110" cy="110" r="92" transform="rotate(-90 110 110)" />
-                            </svg>
-                            <div class="dial-num">
-                                <span class="val" id="pv-power">–</span>
-                                <span class="unit" id="pv-power-unit">kW teraz</span>
-                            </div>
+                <div class="dial-hero card" id="dial-hero">
+                    <!-- Ciferník sa číta ako 24-hodinový: 00:00 hore, deň v smere hodinových ručičiek.
+                         Vonkajší prstenec je deň s tarifnými pásmami (dopĺňa ho JS, viď dayRingSvg),
+                         vnútorný oblúk aktuálny výkon. Pás dňa pod kartou zanikol - jeho úlohu
+                         (nastaviť náhľad iného času) prevzal jazdec na dennom prstenci. -->
+                    <div class="dial-wrap" id="dial-wrap">
+                        <svg class="dial-svg" viewBox="0 0 240 240" aria-hidden="true">
+                            <g id="day-ring"></g>
+                            <text class="dial-hour" x="120" y="14">0</text>
+                            <text class="dial-hour" x="226" y="120">6</text>
+                            <text class="dial-hour" x="120" y="226">12</text>
+                            <text class="dial-hour" x="14" y="120">18</text>
+                            <circle class="dial-track" cx="120" cy="120" r="78" />
+                            <circle id="dial-ring" class="dial-ring" cx="120" cy="120" r="78" transform="rotate(-90 120 120)" />
+                        </svg>
+                        <div class="dial-num">
+                            <span class="when" id="dial-when">--:--</span>
+                            <span class="val" id="pv-power">–</span>
+                            <span class="unit" id="pv-power-unit">kW teraz</span>
+                            <button class="preview-reset hidden" id="preview-reset" type="button">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M9 14l-4-4 4-4" />
+                                    <path d="M5 10h9a5 5 0 015 5v1" />
+                                </svg>
+                                Teraz
+                            </button>
+                        </div>
+                        <!-- Vrstva nad ciferníkom: značka "teraz" a jazdec. Obal je štvorec zhodný
+                             s ciferníkom, takže sa obe polohujú v percentách bez ohľadu na to,
+                             aký veľký ciferník práve je (viď ringPercent). -->
+                        <div class="dial-layer">
+                            <span class="dial-now" id="dial-now"></span>
+                            <button
+                                class="dial-grip hidden"
+                                id="dial-grip"
+                                type="button"
+                                role="slider"
+                                aria-valuemin="0"
+                                aria-valuemax="1439"
+                                aria-valuenow="0"
+                                aria-label="Čas náhľadu"
+                            >
+                                <span class="grip-collar"><i></i><i></i><i></i></span>
+                            </button>
                         </div>
                     </div>
+                </div>
 
-                    <div class="verdict card" id="verdict">
-                        <!-- Päť stránok na listovanie do strán: tarifa a slnko je defaultne prvá,
+                <div class="verdict card" id="verdict">
+                    <!-- Päť stránok na listovanie do strán: tarifa a slnko je defaultne prvá,
                              za ňou čo robiť teraz, spotrebiče a predpoveď dňa - tie sú tam vždy;
                              "kedy bude lepšie" je posledná a len keď ju model pozná. Odznak s tarifou
                              žije už len tu, na žiadnej šírke sa neduplikuje nad ciferníkom - uvoľnené
@@ -98,108 +132,52 @@
                              Pred prvou a za poslednou reálnou stránkou je neviditeľný klon poslednej/
                              prvej (obsah dopĺňa JS, viď syncPagerClones v terazky.js) - vďaka nim
                              listovanie pôsobí ako kolotoč (initVerdictPager v interactions.js). -->
-                        <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán" tabindex="0">
-                            <div class="pager-page" id="verdict-page-clone-start" aria-hidden="true"></div>
-                            <div class="pager-page pager-page-eyebrow" id="verdict-page-eyebrow">
-                                <span class="badge" id="verdict-eyebrow-page">—</span>
-                            </div>
-                            <div class="pager-page" id="verdict-page-now">
-                                <h1 id="verdict-headline">Načítavam…</h1>
-                                <p class="body" id="verdict-body"></p>
-                            </div>
-                            <div class="pager-page pager-page-devices" id="verdict-page-devices">
-                                <div class="go-row" id="verdict-go-row"></div>
-                                <div class="go-legend">
-                                    <span><i class="sw green"></i>najlepší čas</span>
-                                    <span><i class="sw amber"></i>ok, ale drahšie</span>
-                                    <span><i class="sw red"></i>radšej počkaj</span>
-                                </div>
-                            </div>
-                            <div class="pager-page pager-page-forecast" id="verdict-page-forecast">
-                                <h3 id="verdict-forecast-title"></h3>
-                                <p class="body" id="verdict-forecast-body"></p>
-                            </div>
-                            <div class="pager-page pager-page-wait hidden" id="verdict-page-wait">
-                                <div class="wait-chip" id="verdict-wait-chip">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                        <circle cx="12" cy="12" r="9" />
-                                        <path d="M12 7v5l3 3" />
-                                    </svg>
-                                    <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
-                                </div>
-                            </div>
-                            <div class="pager-page" id="verdict-page-clone-end" aria-hidden="true"></div>
+                    <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán" tabindex="0">
+                        <div class="pager-page" id="verdict-page-clone-start" aria-hidden="true"></div>
+                        <div class="pager-page pager-page-eyebrow" id="verdict-page-eyebrow">
+                            <span class="badge" id="verdict-eyebrow-page">—</span>
                         </div>
-                        <div class="pager-dots" id="verdict-dots">
-                            <button class="pager-dot active" type="button" data-verdict-page="0" aria-label="Tarifa a slnko"></button>
-                            <button class="pager-dot" type="button" data-verdict-page="1" aria-label="Čo robiť teraz"></button>
-                            <button class="pager-dot" type="button" data-verdict-page="2" aria-label="Spotrebiče"></button>
-                            <button class="pager-dot" type="button" data-verdict-page="3" aria-label="Predpoveď dňa"></button>
-                            <button
-                                class="pager-dot hidden"
-                                type="button"
-                                data-verdict-page="4"
-                                id="verdict-dot-wait"
-                                aria-label="Kedy bude lepšie"
-                            ></button>
+                        <div class="pager-page" id="verdict-page-now">
+                            <h1 id="verdict-headline">Načítavam…</h1>
+                            <p class="body" id="verdict-body"></p>
                         </div>
-                        <div class="chip-tooltip" id="verdict-chip-tooltip" aria-hidden="true"></div>
+                        <div class="pager-page pager-page-devices" id="verdict-page-devices">
+                            <div class="go-row" id="verdict-go-row"></div>
+                            <div class="go-legend">
+                                <span><i class="sw green"></i>najlepší čas</span>
+                                <span><i class="sw amber"></i>ok, ale drahšie</span>
+                                <span><i class="sw red"></i>radšej počkaj</span>
+                            </div>
+                        </div>
+                        <div class="pager-page pager-page-forecast" id="verdict-page-forecast">
+                            <h3 id="verdict-forecast-title"></h3>
+                            <p class="body" id="verdict-forecast-body"></p>
+                        </div>
+                        <div class="pager-page pager-page-wait hidden" id="verdict-page-wait">
+                            <div class="wait-chip" id="verdict-wait-chip">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 7v5l3 3" />
+                                </svg>
+                                <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
+                            </div>
+                        </div>
+                        <div class="pager-page" id="verdict-page-clone-end" aria-hidden="true"></div>
                     </div>
-                </div>
-
-                <div class="col-b">
-                    <!-- Visí nad legendou pása dňa (position:absolute, viď .preview-banner v
-                         style.css) namiesto toho, aby stála vo vlastnom riadku nad ciferníkom -
-                         medzera pod kartou "Čo robiť teraz" na ňu má miesto vždy, takže sa
-                         zobrazením nič neposunie. -->
-                    <div class="preview-banner hidden" id="preview-banner">
-                        <div class="preview-pill" id="preview-pill">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 7v5l3 3" />
-                            </svg>
-                            <span id="preview-time-label">Náhľad · --:--</span>
-                        </div>
-                        <button class="preview-reset" id="preview-reset" type="button">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M9 14l-4-4 4-4" />
-                                <path d="M5 10h9a5 5 0 015 5v1" />
-                            </svg>
-                            Teraz
-                        </button>
+                    <div class="pager-dots" id="verdict-dots">
+                        <button class="pager-dot active" type="button" data-verdict-page="0" aria-label="Tarifa a slnko"></button>
+                        <button class="pager-dot" type="button" data-verdict-page="1" aria-label="Čo robiť teraz"></button>
+                        <button class="pager-dot" type="button" data-verdict-page="2" aria-label="Spotrebiče"></button>
+                        <button class="pager-dot" type="button" data-verdict-page="3" aria-label="Predpoveď dňa"></button>
+                        <button
+                            class="pager-dot hidden"
+                            type="button"
+                            data-verdict-page="4"
+                            id="verdict-dot-wait"
+                            aria-label="Kedy bude lepšie"
+                        ></button>
                     </div>
-                    <div class="footline">
-                        <span class="strip-head">
-                            <span class="chart-label">Priebeh dňa</span>
-                            <span class="chart-legend hidden" id="strip-legend">
-                                <span class="hidden" id="strip-legend-real"><i class="leg-line-real"></i>namerané</span>
-                                <span><i class="leg-dash-green"></i>predpoveď</span>
-                            </span>
-                        </span>
-                        <span class="season-indicator" id="season-indicator">Leto</span>
-                    </div>
-                    <div class="daystrip-wrap" id="daystrip-wrap">
-                        <div class="daystrip" id="daystrip"></div>
-                        <div class="strip-now-ghost hidden" id="strip-now-ghost">
-                            <span class="strip-now-ghost-dot"></span>
-                            <span class="strip-now-ghost-label">teraz</span>
-                        </div>
-                        <div class="strip-marker" id="strip-now-marker">
-                            <span class="strip-marker-dot"></span>
-                            <div class="drag-tooltip hidden" id="drag-tooltip">--:--</div>
-                            <button
-                                class="strip-marker-handle"
-                                id="strip-marker-handle"
-                                type="button"
-                                aria-label="Potiahnutím zobrazíš iný čas dňa"
-                            >
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3" /></svg>
-                            </button>
-                        </div>
-                        <div class="strip-ticks" aria-hidden="true">
-                            <span>00</span><span>06</span><span>12</span><span>18</span><span>24</span>
-                        </div>
-                    </div>
+                    <div class="chip-tooltip" id="verdict-chip-tooltip" aria-hidden="true"></div>
                 </div>
             </section>
 

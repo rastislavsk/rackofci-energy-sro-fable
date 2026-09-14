@@ -1,5 +1,7 @@
 // Formátovanie času a čísel pre slovenské UI. Čisté funkcie bez DOM.
 
+import { MINUTES_PER_DAY } from './config.js';
+
 const WEEK_DAYS_SHORT = ['Ne', 'Po', 'Ut', 'St', 'Št', 'Pi', 'So'];
 const WEEK_DAYS_LONG = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
 
@@ -10,7 +12,7 @@ export function pad2(n) {
 
 /** Minúty dňa -> "HH:MM", s ošetrením pretečenia cez polnoc. @param {number} minutes */
 export function minutesToTimeStr(minutes) {
-    const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
+    const m = ((Math.round(minutes) % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
     return `${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`;
 }
 

@@ -1,14 +1,15 @@
-// Karta Spotrebiče: ciferník, verdikt, spotrebiče a pás dňa. Čistý zápis modelu do DOM.
+// Karta Spotrebiče: ciferník s denným prstencom, verdikt a spotrebiče. Čistý zápis modelu do DOM.
 
-import { dayStripModel, stripCurveY, STRIP, visibleHours } from '../../shared/chart-model.js';
-import { escapeHtml, fmt1 } from '../../shared/format.js';
+import { MINUTES_PER_DAY } from '../../shared/config.js';
+import { dayRingModel, RING, ringPercent, visibleHours } from '../../shared/chart-model.js';
+import { escapeHtml, fmt1, minutesToTimeStr } from '../../shared/format.js';
 import { heroModel, minutesOfDay } from '../../shared/hero-model.js';
 import { EMPTY_MESSAGES, forecastDayMessage } from '../../shared/messages.js';
 import { DEVICE_ICONS } from '../icons.js';
-import { changedKeys, sameKeys, writeHtml } from '../memo.js';
-import { dayStripSvg } from '../svg.js';
+import { changedKeys, writeHtml } from '../memo.js';
+import { dayRingSvg } from '../svg.js';
 
-const DIAL_CIRCUMFERENCE = 2 * Math.PI * 92;
+const DIAL_CIRCUMFERENCE = 2 * Math.PI * RING.rPower;
 
 /** @param {import('../../shared/config.js').Tier | null} tier */
 export const tierVar = (tier) => (tier ? `var(--${tier})` : 'var(--ink-20)');
@@ -92,63 +93,52 @@ function renderHero(state, m, dom) {
     syncPagerClones(dom);
 }
 
-/** Marker na krivke: X podľa minúty, výška bodky podľa krivky. @param {HTMLElement} el @param {number} minutes @param {{x: number, y: number}[]} points */
-function positionMarker(el, minutes, points) {
-    el.style.left = `${(minutes / STRIP.w) * 100}%`;
-    const dot = el.querySelector('.strip-marker-dot, .strip-now-ghost-dot');
-    if (dot instanceof HTMLElement) dot.style.top = `${(stripCurveY(points, minutes) / STRIP.h) * 100}%`;
+/** Poloha na dennom prstenci. Obal je štvorec zhodný s ciferníkom, takže percentá platia
+ * pri akejkoľvek jeho veľkosti. @param {HTMLElement} el @param {number} minutes */
+function placeOnRing(el, minutes) {
+    const { left, top } = ringPercent(minutes);
+    el.style.left = `${left}%`;
+    el.style.top = `${top}%`;
 }
 
-/** Pás dňa závisí len na sezóne, dátach a aktuálnej minúte. Pri ťahaní bežca sa nemení ani
- * jedno z toho - mení sa iba poloha bežca - preto sa model aj SVG počítajú znovu len vtedy,
- * keď sa naozaj zmenil vstup. Zbytočný zápis by ušpinil layout a účet zaň zaplatí až ďalší
- * krok gesta, keď si appka pýta rozmery pásu.
- * @type {{ keys: unknown[], model: ReturnType<typeof dayStripModel> } | null} */
-let stripCache = null;
-
-/** @param {import('../state.js').AppState} state @param {number} nowMinutes */
-function stripModel(state, nowMinutes) {
-    const keys = [state.season, state.forecast, state.pv, nowMinutes];
-    if (stripCache && sameKeys(stripCache.keys, keys)) return { model: stripCache.model, rebuilt: false };
-    const model = dayStripModel({
-        season: state.season,
-        hourlyToday: state.forecast ? state.forecast.hourlyToday : null,
-        realCurve: state.pv ? state.pv.realCurveToday : null,
-        nowMinutes,
-    });
-    stripCache = { keys, model };
-    return { model, rebuilt: true };
+/** Denný prstenec závisí len na sezóne, takže sa prekresľuje iba pri jej zmene - o to sa
+ * stará writeHtml sám. Druhá stráž navyše tu byť nesmie: memo.js si pamätá podľa názvu,
+ * takže dve stráže s rovnakým názvom by si pamäť prepisovali a prstenec by sa prekresľoval
+ * pri každom pohybe prsta po jazdci.
+ * @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
+function renderDayRing(state, dom) {
+    writeHtml(dom.dayRing, dayRingSvg(dayRingModel(state.season)), 'day-ring');
 }
 
-/** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} hero @param {import('../dom.js').Dom} dom */
-function renderStrip(state, hero, dom) {
+/** Jazdec a značka "teraz" na dennom prstenci. Jazdec je vidno len počas náhľadu; značka
+ * "teraz" stále, aby bolo aj v pokoji vidieť, kde v dni sa appka nachádza.
+ * @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} hero @param {import('../dom.js').Dom} dom */
+function renderRingMarks(state, hero, dom) {
     const nowMinutes = minutesOfDay(state.now);
-    const { model, rebuilt } = stripModel(state, nowMinutes);
-    if (rebuilt) dom.daystrip.innerHTML = dayStripSvg(model);
-    dom.stripLegend.classList.toggle('hidden', !model.hasData);
-    dom.stripLegendReal.classList.toggle('hidden', !model.boundary);
-    dom.seasonIndicator.textContent = state.season === 'summer' ? 'Leto' : 'Zima';
-
-    positionMarker(dom.stripNowMarker, hero.preview ? hero.minutes : nowMinutes, model.points);
-    dom.stripNowGhost.classList.toggle('hidden', !hero.preview);
-    if (hero.preview) positionMarker(dom.stripNowGhost, nowMinutes, model.points);
+    placeOnRing(dom.dialNow, nowMinutes);
+    dom.dialGrip.classList.toggle('hidden', !hero.preview);
+    if (!hero.preview) return;
+    placeOnRing(dom.dialGrip, hero.minutes);
+    // Otočenie o uhol času: dlhá os objímky tak leží po obvode prstenca.
+    dom.dialGrip.style.transform = `translate(-50%, -50%) rotate(${(hero.minutes / MINUTES_PER_DAY) * 360}deg)`;
+    dom.dialGrip.setAttribute('aria-valuenow', String(hero.minutes));
+    dom.dialGrip.setAttribute('aria-valuetext', `Náhľad ${minutesToTimeStr(hero.minutes)}`);
 }
 
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} hero @param {import('../dom.js').Dom} dom */
 function renderPreviewUi(state, hero, dom) {
-    const pinned = hero.preview && !state.isDragging;
-    dom.panels.terazky.classList.toggle('preview-dim', state.isDragging);
-    dom.previewBanner.classList.toggle('hidden', !pinned);
-    dom.previewTimeLabel.textContent = hero.previewLabel || 'Náhľad · --:--';
-    dom.previewPill.style.setProperty('--preview-accent', tierVar(hero.accent));
-    dom.dragTooltip.classList.toggle('hidden', !state.isDragging);
-    dom.dragTooltip.textContent = hero.preview ? (hero.previewLabel || '').replace('Náhľad · ', '') : '--:--';
+    dom.dialWhen.textContent = minutesToTimeStr(hero.minutes);
+    dom.dialWhen.classList.toggle('preview', hero.preview);
+    dom.previewReset.classList.toggle('hidden', !hero.preview);
+    // Počas ťahania nesmie oblúk výkonu dobiehať prst s oneskorením - prechod ide bokom.
+    dom.panels.terazky.classList.toggle('dragging', state.isDragging);
 }
 
 /** @param {import('../state.js').AppState} state @param {import('../dom.js').Dom} dom */
 export function renderTerazky(state, dom) {
     const hero = heroModel(state);
     renderHero(state, hero, dom);
-    renderStrip(state, hero, dom);
+    renderDayRing(state, dom);
+    renderRingMarks(state, hero, dom);
     renderPreviewUi(state, hero, dom);
 }

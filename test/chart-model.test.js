@@ -1,19 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { INSTALLED_PV_KW } from '../shared/config.js';
+import { MINUTES_PER_DAY } from '../shared/config.js';
 import {
     chartDims,
     chartTooltipModel,
     fillDims,
     dayKwAt,
-    dayStripModel,
+    dayRingModel,
     forecastChartModel,
     interpolate,
     kwGridStep,
-    kwToStripY,
+    minutesFromAngle,
     realProductionSoFar,
+    RING,
+    ringGap,
+    ringPercent,
+    ringPoint,
     smoothPath,
-    STRIP,
     usePct,
     WEEK_HOURS,
     weekBarsModel,
@@ -85,23 +88,42 @@ test('chartTooltipModel: ľavý okraj = 06:00, pravý = 21:00, strop len ak body
     assert.ok(tip.clearKw !== null && tip.yFrac > 0 && tip.yFrac < 1);
 });
 
-test('pás dňa: mierka 0..inštalovaný výkon, hranica meranie/predpoveď, pásma pokryjú deň', () => {
-    assert.equal(kwToStripY(0), STRIP.baseY);
-    assert.equal(kwToStripY(INSTALLED_PV_KW), STRIP.topY);
-    assert.equal(kwToStripY(NaN), STRIP.baseY);
+test('denný prstenec: 00:00 hore, pásma obídu celý deň, uhol a minúta sú navzájom opačné', () => {
+    const c = RING.viewBox / 2;
+    const top = ringPoint(RING.rDay, 0);
+    assert.ok(Math.abs(top.x - c) < 1e-9 && top.y < c, '00:00 je hore');
+    const noon = ringPoint(RING.rDay, MINUTES_PER_DAY / 2);
+    assert.ok(Math.abs(noon.x - c) < 1e-9 && noon.y > c, 'poludnie je dole');
+    const six = ringPoint(RING.rDay, MINUTES_PER_DAY / 4);
+    assert.ok(six.x > c && Math.abs(six.y - c) < 1e-9, '06:00 je vpravo - deň ide v smere ručičiek');
+
+    // minutesFromAngle je opak ringPoint: čo jeden vyrobí, druhý prečíta späť.
+    for (const m of [0, 95, 370, 786, 1000, 1435]) {
+        const p = ringPoint(RING.rDay, m);
+        assert.equal(minutesFromAngle(p.x - c, p.y - c), m, `minúta ${m} tam a späť`);
+    }
+
+    const mid = ringPercent(MINUTES_PER_DAY / 2);
+    assert.ok(Math.abs(mid.left - 50) < 1e-9 && mid.top > 50, 'percentá sedia s bodom');
+
+    // Polnoc nie je stena: 23:50 a 00:10 sú od seba 20 minút, nie 1420.
+    assert.equal(ringGap(1430, 10), 20);
+    assert.equal(ringGap(600, 700), 100);
+
+    const bands = dayRingModel('summer');
+    assert.ok(bands.length > 1 && bands.every((b) => ['green', 'amber', 'red'].includes(b.cls)));
+    assert.ok(
+        bands.every((b) => b.large === 0),
+        'žiadne letné okno nie je dlhšie než pol dňa',
+    );
+    // Posledné pásmo končí tesne pred polnocou, nie na nej - oblúk s totožnými koncami
+    // by sa nevykreslil vôbec.
+    const last = bands[bands.length - 1];
+    assert.ok(Math.abs(last.end.x - c) > 1e-6 || last.end.y > c, 'posledný oblúk nekončí presne hore');
+
     const nowMinutes = 13 * 60;
     assert.ok(Number.isNaN(dayKwAt(600, null, null, nowMinutes)));
     assert.ok(dayKwAt(600, pv.realCurveToday, forecast.hourlyToday, nowMinutes) > 0);
-    const model = dayStripModel({ season: 'summer', hourlyToday: forecast.hourlyToday, realCurve: pv.realCurveToday, nowMinutes });
-    assert.equal(
-        model.bands.reduce((s, b) => s + b.width, 0),
-        1440,
-    );
-    assert.ok(model.hasData && model.boundary === nowMinutes, 'kiosk končí 13:00 = teraz');
-    assert.ok(model.future && model.future[0].x === nowMinutes);
-    assert.equal(model.points.length, 1440 / STRIP.sampleMin + 1);
-    const empty = dayStripModel({ season: 'winter', hourlyToday: null, realCurve: null, nowMinutes });
-    assert.ok(!empty.hasData && empty.boundary === null && empty.future === null && empty.points.length === 5);
 });
 
 test('weekHeatModel: 7 riadkov × 17 hodín, popisky a výber dňa', () => {

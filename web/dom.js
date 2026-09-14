@@ -28,9 +28,6 @@ function headerDom() {
 
 function terazkyDom() {
     return {
-        previewBanner: byId('preview-banner'),
-        previewPill: byId('preview-pill'),
-        previewTimeLabel: byId('preview-time-label'),
         previewReset: byId('preview-reset'),
         verdictPageEyebrow: byId('verdict-page-eyebrow'),
         verdictEyebrowPage: byId('verdict-eyebrow-page'),
@@ -52,15 +49,11 @@ function terazkyDom() {
         verdictDotWait: byId('verdict-dot-wait'),
         verdictChipTooltip: byId('verdict-chip-tooltip'),
         verdictWaitTime: byId('verdict-wait-time'),
-        stripLegend: byId('strip-legend'),
-        stripLegendReal: byId('strip-legend-real'),
-        seasonIndicator: byId('season-indicator'),
-        daystripWrap: byId('daystrip-wrap'),
-        daystrip: byId('daystrip'),
-        stripNowGhost: byId('strip-now-ghost'),
-        stripNowMarker: byId('strip-now-marker'),
-        dragTooltip: byId('drag-tooltip'),
-        stripMarkerHandle: byId('strip-marker-handle'),
+        dialWrap: byId('dial-wrap'),
+        dayRing: byId('day-ring'),
+        dialWhen: byId('dial-when'),
+        dialNow: byId('dial-now'),
+        dialGrip: byId('dial-grip'),
     };
 }
 

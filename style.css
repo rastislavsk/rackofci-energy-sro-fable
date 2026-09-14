@@ -50,6 +50,9 @@
 
     --dur: 0.35s;
     --page-max: 480px;
+    /* Najväčší rozumný priemer ciferníka. Nad touto hranicou už kruh nerastie, aj keď je
+       miesta viac - na tablete by inak zabral celú kartu. */
+    --dial-max: 360px;
     /* Miesto, ktoré si stránka rezervuje pod obsahom pre fixnú spodnú navigáciu (platí len
        do 1023px, na desktope má .page vlastný padding-bottom). Nie je to presná výška pása
        (tá je 51.5px, viď .nav-item nižšie) - rozdiel je zámerná rezerva. Keď sa mení výška
@@ -341,41 +344,28 @@ b {
 }
 
 /* ---- Spotrebiče: náhľad času -----------------------------------------------
-   Visí nad legendou pása dňa (position:absolute, ukotvená na .col-b), nie vo
-   vlastnom riadku nad ciferníkom - medzera pod kartou .verdict (jej margin-bottom)
-   je vždy dosť veľká, aby sa doň zmestila, takže zobrazenie ani skrytie banneru
-   nič v layoute neposunie. */
-.col-b {
-    position: relative;
-}
-.preview-banner {
-    position: absolute;
-    bottom: 100%;
-    left: 0;
-    right: 0;
-    display: flex;
+   Bublina s časom nad pásom dňa zanikla spolu s pásom. Čas je teraz vnútri ciferníka
+   nad hodnotou (.dial-num .when) a návrat na "teraz" je tlačidlo pod jednotkou. Ani
+   jedno nestojí mimo kruhu, takže zobrazenie náhľadu nič v layoute neposunie. */
+.preview-reset {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: var(--sp-2);
-    margin-bottom: 0;
-    padding-bottom: var(--sp-3);
-}
-.preview-pill {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 14px;
+    gap: 5px;
+    margin-top: var(--sp-2);
+    padding: 5px 12px;
     border-radius: var(--radius-pill);
-    border: 1px dashed color-mix(in srgb, var(--preview-accent, var(--amber)) 50%, transparent);
-    background: color-mix(in srgb, var(--preview-accent, var(--amber)) 10%, transparent);
+    border: 1px solid var(--ink-20);
+    background: var(--ink-05);
+    color: var(--ink-70);
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: var(--fs-xs);
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--preview-accent, var(--amber));
+    cursor: pointer;
+    /* Vnútro ciferníka inak kliky neberie (viď .dial-num), tomuto ich treba vrátiť. */
+    pointer-events: auto;
 }
-.preview-pill svg,
 .preview-reset svg,
 .wait-chip svg {
     width: 13px;
@@ -386,56 +376,6 @@ b {
     stroke-linecap: round;
     stroke-linejoin: round;
     flex-shrink: 0;
-}
-.preview-reset {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 7px 12px;
-    border-radius: var(--radius-pill);
-    background: var(--preview-accent, var(--amber));
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--bg);
-    /* Nepretržitý pulz, kým je tlačidlo vidno - v tichom rozhraní inak ľahko zapadne
-       medzi ostatné jantárové prvky karty. */
-    animation: preview-reset-pulse 1.6s ease-in-out infinite;
-}
-/* box-shadow, nie transform: scale - meniace sa rozmery by v e2e testoch (aj Playwright
-   actionability checku) robili tlačidlo trvalo "nestabilné" pre klik. */
-@keyframes preview-reset-pulse {
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(var(--amber-rgb), 0.45);
-    }
-    50% {
-        box-shadow: 0 0 0 7px rgba(var(--amber-rgb), 0);
-    }
-}
-.panel-terazky.preview-dim .dial-hero,
-.panel-terazky.preview-dim .verdict {
-    opacity: 0.55;
-    transition: opacity 0.15s;
-}
-/* Na mobile a tablete banner visel hneď nad pásom dňa (bottom:100%, viď .preview-banner
-   vyššie) - dotýkal sa nadpisu "Priebeh dňa" a zhora zasahoval do bodiek pageru. Kým je
-   banner vidno (:has() nižšie), medzera pod .verdict aj nad .footline o kúsok narastie,
-   presne o toľko, aby banner vyšiel na stred medzi bodky a nadpis (premerané cez
-   Playwright, viď PR popis). Mimo mobil/tablet sa banner do pôvodnej, tesnejšej medzery
-   zmestí bez prekrývania (viď komentár pri .preview-banner), tam sa nič nemení.
-   Bezpečné pre garanciu bez scrollovania z predošlého PR: .col-b má vlastný min-height
-   (viď @media nižšie), takže narastenú medzeru si vždy odrieka len pás dňa, nikdy
-   nescrolluje appka ako celok. */
-@media (max-width: 1023px) {
-    .panel-terazky:has(#preview-banner:not(.hidden)) .verdict {
-        margin-bottom: calc(var(--sp-6) + 16px);
-    }
-    .panel-terazky:has(#preview-banner:not(.hidden)) .footline {
-        margin-top: 8px;
-    }
 }
 
 /* ---- Spotrebiče: ciferník --------------------------------------------------- */
@@ -462,17 +402,48 @@ b {
         background-color var(--dur),
         border-color var(--dur);
 }
+/* Obal je štvorec presne veľký ako ciferník - značka "teraz" aj jazdec sa v ňom
+   polohujú v percentách (viď ringPercent), takže o jeho veľkosti nemusia vedieť.
+   container-type: size z neho zároveň robí kontajner pre cqmin nižšie: číslo v strede
+   sa tak odvíja od ciferníka, nie od okna, a nemusí ho naháňať pri každom breakpointe. */
 .dial-wrap {
     position: relative;
-    display: flex;
-    justify-content: center;
-    margin: 18px 0 var(--sp-1);
+    width: min(100%, var(--dial-max));
+    aspect-ratio: 1;
+    margin: 18px auto var(--sp-1);
+    container-type: size;
 }
 /* Odznak s tarifou nikde nad ciferníkom nie je (žije len v pageri karty .verdict) -
-   ciferník tak môže byť na každej šírke rovnako veľký. */
+   ciferník tak môže byť na každej šírke rovnako veľký. Strop 280px drží jazdec: pri
+   6. a 18. hodine trčí do strán a vo vnútri karty musí ostať aj na úzkom displeji. */
 .dial-svg {
-    width: 240px;
-    height: 240px;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+/* Vonkajší prstenec: deň s tarifnými pásmami. Kreslí ho dayRingSvg. */
+.day-band {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: butt;
+    opacity: 0.55;
+}
+.day-band.green {
+    stroke: var(--green);
+}
+.day-band.amber {
+    stroke: var(--amber);
+}
+.day-band.red {
+    stroke: var(--red);
+}
+.dial-hour {
+    fill: var(--ink-35);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    text-anchor: middle;
+    dominant-baseline: middle;
 }
 .dial-track {
     fill: none;
@@ -484,11 +455,17 @@ b {
     stroke: var(--ink-20);
     stroke-width: 14;
     stroke-linecap: round;
-    stroke-dasharray: 578;
-    stroke-dashoffset: 578;
+    /* 490 = obvod kružnice s polomerom 78 (RING.rPower). Presnú hodnotu dopočíta JS,
+       toto je len východiskový stav pred prvým prekreslením. */
+    stroke-dasharray: 490;
+    stroke-dashoffset: 490;
     transition:
         stroke-dashoffset 0.6s ease,
         stroke var(--dur);
+}
+/* Pri ťahaní jazdca musí oblúk ísť za prstom hneď, nie s polsekundovým oneskorením. */
+.panel-terazky.dragging .dial-ring {
+    transition: stroke var(--dur);
 }
 .dial-num {
     position: absolute;
@@ -498,10 +475,27 @@ b {
     align-items: center;
     justify-content: center;
     gap: 2px;
+    /* Ťuknutie do stredu ciferníka patrí ciferníku (nastaví náhľad), nie textu v ňom.
+       Tlačidlo "Teraz" si kliky vracia samo (viď .preview-reset). */
+    pointer-events: none;
+}
+/* Čas, ktorý číslo pod ním opisuje. Rovnaké písmo ako jednotka pod číslom - je to
+   popiska údaja, nie ovládač; ovládač je jazdec na prstenci. */
+.dial-num .when {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.12em;
+    color: var(--ink-35);
+    transition: color var(--dur);
+}
+.dial-num .when.preview {
+    color: var(--accent);
 }
 .dial-num .val {
     font-family: var(--font-mono);
-    font-size: var(--fs-num);
+    /* 17 % menšieho rozmeru ciferníka - najdlhšie reálne číslo ("10.44") sa tak zmestí
+       medzi prstence pri každej jeho veľkosti. */
+    font-size: clamp(22px, 17cqmin, 58px);
     font-weight: 600;
     letter-spacing: -0.03em;
     line-height: 1;
@@ -515,9 +509,67 @@ b {
     color: var(--ink-35);
 }
 
+/* ---- Spotrebiče: jazdec na dennom prstenci ----------------------------------
+   Vrstva nad ciferníkom. Značka "teraz" je vidno stále, jazdec len počas náhľadu.
+   Obe sedia v percentách obalu, takže sa s ciferníkom samy zmenšujú. */
+.dial-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.dial-now {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--ink);
+    box-shadow: 0 0 0 3px var(--bg);
+    transform: translate(-50%, -50%);
+}
+/* Dotykový cieľ je väčší než kresba: samotná objímka má 40 × 20 px, chytiť sa dá
+   štvorec 44 × 44 px okolo nej. touch-action: none, lebo ťahanie jazdca je jeho
+   vlastné gesto - prehliadač ani listovanie kariet doň nesmú hovoriť (viď DRAG_HANDLE
+   vo web/swipe.js a pravidlo "Dotyk a kurzor" v CLAUDE.md). */
+.dial-grip {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    pointer-events: auto;
+    touch-action: none;
+    cursor: grab;
+}
+.dial-grip:active {
+    cursor: grabbing;
+}
+/* Objímka: korálik navlečený na prstenci. Dlhá os leží po obvode (otočenie robí JS,
+   viď renderRingMarks), tri priečne ryhy sú úchop. */
+.grip-collar {
+    display: grid;
+    grid-auto-flow: column;
+    gap: 3px;
+    place-content: center;
+    width: 40px;
+    height: 20px;
+    border-radius: var(--radius-pill);
+    border: 2px solid var(--accent);
+    background: var(--bg);
+    box-shadow: 0 0 0 3px var(--bg);
+    transition: border-color var(--dur);
+}
+.grip-collar i {
+    width: 2px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.75;
+    transition: background-color var(--dur);
+}
+
 /* ---- Spotrebiče: verdikt a spotrebiče ------------------------------------- */
 .verdict {
-    margin-bottom: var(--sp-6);
     text-align: center;
     /* Container query jednotky (cqw) nižšie potrebujú predka s inline-size kontajnmentom -
        na rozdiel od vw sa tak veľkosť písma odvíja od skutočnej šírky karty, nie okna.
@@ -727,177 +779,12 @@ b {
     font-size: var(--fs-sm);
 }
 
-/* ---- Spotrebiče: pás dňa --------------------------------------------------- */
-.footline {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--sp-2);
-}
-.strip-head {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-}
-.chart-label,
-.season-indicator {
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink-35);
-}
-.season-indicator {
-    padding: 3px 8px;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--ink-12);
-}
-.daystrip-wrap {
-    position: relative;
-    padding-bottom: 18px;
-    cursor: pointer;
-    touch-action: pan-y;
-}
-.daystrip {
-    height: 60px;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    background: var(--ink-05);
-}
-.daystrip svg {
-    width: 100%;
-    height: 100%;
-}
-.daystrip .band.green {
-    fill: rgba(var(--green-rgb), 0.14);
-}
-.daystrip .band.amber {
-    fill: rgba(var(--amber-rgb), 0.12);
-}
-.daystrip .band.red {
-    fill: rgba(var(--red-rgb), 0.16);
-}
-.strip-stop-a {
-    stop-color: var(--green);
-    stop-opacity: 0.4;
-}
-.strip-stop-b {
-    stop-color: var(--green);
-    stop-opacity: 0;
-}
-.strip-area {
-    fill: url(#strip-fill);
-}
-.strip-line {
-    fill: none;
-    stroke: var(--green);
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
-}
-.strip-line.future {
-    stroke-opacity: 0.5;
-    stroke-dasharray: 7 6;
-}
-.strip-ticks {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 6px;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--ink-35);
-}
-.strip-marker,
-.strip-now-ghost {
-    position: absolute;
-    top: 0;
-    height: 60px;
-    width: 0;
-    pointer-events: none;
-}
-.strip-marker::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: -0.5px;
-    width: 1px;
-    background: var(--ink-45);
-}
-.strip-marker-dot,
-.strip-now-ghost-dot {
-    position: absolute;
-    left: 0;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--ink);
-    box-shadow: 0 0 0 3px var(--bg);
-}
-.strip-now-ghost-dot {
-    width: 8px;
-    height: 8px;
-    background: var(--ink-45);
-}
-.strip-now-ghost-label {
-    position: absolute;
-    top: calc(100% + 2px);
-    left: 0;
-    transform: translateX(-50%);
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--ink-45);
-}
-.strip-marker-handle {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    transform: translate(-50%, 2px);
-    width: 34px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-pill);
-    background: var(--ink);
-    color: var(--bg);
-    pointer-events: auto;
-    touch-action: none;
-    cursor: grab;
-}
-.strip-marker-handle svg {
-    width: 14px;
-    height: 14px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.4;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-.drag-tooltip {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 0;
-    transform: translateX(-50%);
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-    background: var(--ink);
-    color: var(--bg);
-    font-family: var(--font-mono);
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    white-space: nowrap;
-}
-
 /* Mobil a tablet (do 1023px): karta stráca nadpisy "Aktuálny výkon" a "Čo robiť teraz",
    uvoľnené miesto dostanú menšie medzery medzi ciferníkom, odporúčaním a pásom dňa -
    komponenty tak sedia bližšie pri sebe namiesto toho, aby po nadpisoch ostala diera.
    Na desktope (viď nižšie) ide uvoľnené miesto inam - do väčšieho ciferníka - preto sa
    táto medzera netrhá tam.
-   Medzera pod kartou "Čo robiť teraz" (.verdict margin-bottom) sa naschvál nemení - musí
-   ostať dosť veľká pre banner s náhľadom času (viď komentár pri .preview-banner vyššie),
-   ten sa doň nezmestí. */
+   Medzera pod kartou "Čo robiť teraz" tu nie je - .verdict je posledná vec v karte. */
 @media (max-width: 1023px) {
     .dial-hero {
         margin-bottom: var(--sp-3);
@@ -913,9 +800,6 @@ b {
     }
     .pager-dots {
         margin-bottom: var(--sp-2);
-    }
-    .footline {
-        margin-bottom: var(--sp-1);
     }
 }
 
@@ -948,16 +832,9 @@ b {
    predtým (nie je v tomto stĺpci, žije v .appbar) - .page preto potrebuje len o kúsok
    menšie padding-bottom než v bežnom (scrollovateľnom) režime, viď --nav-h nižšie.
 
-   Vnútri karty sa voľné miesto neminie na pevné rozmery: .col-a (ciferník + odporúčanie)
-   si necháva prirodzenú výšku, .col-b (pás dňa) dostane zvyšok (flex: 1 1 auto) a graf
-   .daystrip sa v ňom naťahuje/zmršťuje presne na to, čo ostane (min-height: 20px je len
-   poistka proti úplnému zmiznutiu na extrémne nízkych obrazovkách). SVG grafu má
-   preserveAspectRatio="none" (viď web/svg.js), takže zmena výšky kontajnera ho len
-   naťahuje, nič neorezáva. Bežec .strip-marker/.strip-now-ghost mal predtým pevnú výšku
-   60px zhodnú s .daystrip - teraz namiesto height používa bottom:37px (nameraná
-   vzdialenosť od spodku .daystrip po spodok .daystrip-wrap: odsadenie časovej osi + jej
-   margin-top + padding-bottom rezervované pre úchytku), takže výšku grafu sleduje
-   automaticky nech je akákoľvek. */
+   Vnútri karty už nie je čo rozdeľovať: po zániku pása dňa sú v nej len ciferník
+   a odporúčanie, oboje s prirodzenou výškou. Keď sa nezmestia, ustúpi ciferník
+   (viď clamp nižšie) - jediné, čo má pevný rozmer. */
 @media (max-width: 1023px) and (min-height: 620px) {
     body:has(#page[data-panel='terazky']) {
         height: 100dvh;
@@ -984,75 +861,45 @@ b {
     body:has(#page[data-panel='terazky']) #panel-terazky {
         flex: 1 1 auto;
         min-height: 0;
-        display: flex;
-        flex-direction: column;
         overflow: hidden;
-    }
-    body:has(#page[data-panel='terazky']) .col-a {
-        flex: 0 0 auto;
-    }
-    body:has(#page[data-panel='terazky']) .col-b {
-        flex: 1 1 auto;
-        /* 80px, nie 0 - skutočné dno .footline (~23px) + .daystrip-wrap (58px, viď jeho
-           min-height nižšie), aby sa pás dňa nezmestil "na papieri" (bez overflow:hidden
-           by pretiekol von), ale doslova. */
-        min-height: 80px;
-        display: flex;
-        flex-direction: column;
-    }
-    body:has(#page[data-panel='terazky']) .footline {
-        flex: 0 0 auto;
-    }
-    body:has(#page[data-panel='terazky']) .daystrip-wrap {
-        flex: 1 1 auto;
-        /* 58px, nie 0: .strip-ticks (13px + margin-top 6px) a padding-bottom (18px,
-           rezervovaný pre úchytku .strip-marker-handle) neustupujú, len .daystrip nad nimi
-           (min-height 20px nižšie) - dovoliť tu zmršťovanie pod ich súčet by pri extrémne
-           nízkych obrazovkách zrátalo výšku bežca (top:0; bottom:37px vyššie) do záporu. */
-        min-height: 58px;
-        display: flex;
-        flex-direction: column;
-    }
-    body:has(#page[data-panel='terazky']) .daystrip {
-        flex: 1 1 auto;
-        min-height: 20px;
-        height: auto;
-    }
-    body:has(#page[data-panel='terazky']) .strip-ticks {
-        flex: 0 0 auto;
-    }
-    body:has(#page[data-panel='terazky']) .strip-marker,
-    body:has(#page[data-panel='terazky']) .strip-now-ghost {
-        height: auto;
-        bottom: 37px;
     }
 }
 
-/* Nízka mobilná obrazovka: ciferník je jediné, čo má pevnú veľkosť a na výšku sa nemusí
-   zmestiť - .col-a (ciferník + odporúčanie) totiž zámerne neustupuje (flex: 0 0 auto
-   vyššie), aby text neskákal vo veľkosti. Namiesto neho tu ustúpi ciferník, plynulo
-   (clamp s dvh), nie v pevných krokoch - diskrétne skoky (vyskúšané, viď PR popis) majú
-   vždy nejakú hranicu výšky tesne pod sebou, kde ešte neustúpili dosť.
+/* Mobil, režim obrazovky: ciferník je jediné, čo sa vie prispôsobiť - odporúčanie pod ním
+   zámerne neustupuje, aby text neskákal vo veľkosti. Preto dostane presne to, čo v karte
+   zvýši: .dial-hero si vezme zvyšnú výšku (flex: 1 1 auto) a kruh v ňom je štvorec veľký
+   ako menší z rozmerov toho miesta (height: 100% + aspect-ratio: 1 + max-width: 100%).
 
-   450px v calc() je zmeraný súčet všetkého okolo ciferníka, s rezervou: hlavička (~68px)
-   + horný padding stránky (--sp-5, 22px) + spodný padding stránky pre fixnú navigáciu
-   (--nav-h, 59px - bolo 72px, kým sa spodná navigácia nezmenšila; 450px ostáva, je to teraz
-   len o 13px väčšia rezerva) + "chrome" karty .col-a okolo samotného kruhu (medzera pod ciferníkom +
-   karta .verdict + jej margin-bottom, ~185px pri jednoriadkovom odznaku tarify, no ten na
-   úzkych obrazovkách (do cca 370px) vie zalomiť na dva riadky a pridať ~20px - odznak
-   nemá, na rozdiel od nadpisov v .verdict, font-size v cqw, viď PR popis) + dno pása dňa,
-   ktoré neustupuje (.col-b min-height 80px nižšie). Ciferník tak dostane menej, než by sa
-   na jednoriadkový odznak zmestilo - to je zámer, rezerva pre ten dvojriadkový prípad.
-   120px je poistka proti neviditeľnému ciferníku, ktorá sa v praxi neujme: režim sa zapne
-   až od 620px výšky (viď @media nižšie) a tam clamp vydá 170px. Ostáva ako poistka pre
-   prípad, že sa tá hranica niekedy zmení. */
+   Zámerne bez zmeranej konštanty: predtým tu stál clamp so súčtom všetkého okolo kruhu
+   (hlavička + paddingy + navigácia + karta odporúčania), ktorý bolo treba prepočítať pri
+   každej zmene ktorejkoľvek z tých vecí. Toto číslo si dopočíta prehliadač sám a nemá ako
+   zostarnúť. Číslo v strede sa odvíja od kruhu cez cqmin (viď .dial-num .val). */
 @media (max-width: 1023px) and (min-height: 620px) {
-    body:has(#page[data-panel='terazky']) .dial-svg {
-        width: clamp(120px, calc(100dvh - 450px), 240px);
-        height: clamp(120px, calc(100dvh - 450px), 240px);
+    body:has(#page[data-panel='terazky']) #panel-terazky {
+        display: flex;
+        flex-direction: column;
+        /* Keď je miesta viac, než kruh unesie (--dial-max nižšie), nech zvyšok ostane nad
+           a pod dvojicou kruh + odporúčanie, nie medzi nimi. */
+        justify-content: center;
     }
-    body:has(#page[data-panel='terazky']) .dial-num .val {
-        font-size: clamp(22px, calc(0.18 * (100dvh - 450px)), var(--fs-num));
+    body:has(#page[data-panel='terazky']) .dial-hero {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: var(--dial-max);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: var(--sp-4);
+    }
+    body:has(#page[data-panel='terazky']) .dial-wrap {
+        height: 100%;
+        width: auto;
+        max-width: 100%;
+        max-height: var(--dial-max);
+        margin: 0;
+    }
+    body:has(#page[data-panel='terazky']) .verdict {
+        flex: 0 0 auto;
     }
 }
 
@@ -1777,21 +1624,6 @@ b {
         gap: var(--sp-6);
         align-items: start;
     }
-    /* Zámerne trieda, nie #panel-terazky: pravidlo s ID by prebilo utilitu .hidden
-       a karta by ostala viditeľná aj po prepnutí na inú kartu. */
-    .panel-terazky {
-        display: grid;
-        /* minmax(0, 1fr) z rovnakého dôvodu ako pri .page vyššie - holé 1fr by nechalo
-           stĺpec pretiecť podľa najširšieho obsahu (napr. graf Priebeh dňa). */
-        grid-template-columns: minmax(0, 1fr);
-        gap: var(--sp-4);
-    }
-    /* sp-6, nie menej: spolu s medzerou mriežky (gap na .panel-terazky vyššie) musí
-       táto medzera pojať banner s náhľadom času (#preview-banner, position:absolute,
-       visí nad pásom dňa) bez toho, aby ho orezala - viď komentár pri .preview-banner. */
-    .verdict {
-        margin-bottom: var(--sp-6);
-    }
 }
 
 /* ---- Ultra-široké monitory -------------------------------------------------
@@ -1981,14 +1813,28 @@ b {
     }
 
     /* Karta Terazky stráca nadpisy "Aktuálny výkon" a "Čo robiť teraz" - namiesto toho,
-       aby pod pásom dňa ostala len prázdna diera (karta sa naťahuje na výšku obrazovky,
-       viď .panel vyššie), dostane uvoľnené miesto väčší ciferník. */
-    .dial-svg {
-        width: 320px;
-        height: 320px;
+       aby v nej ostala prázdna diera (karta sa naťahuje na výšku obrazovky, viď .panel
+       vyššie), dostane uvoľnené miesto väčší ciferník. Tu je karta široká, takže strop
+       280px z mobilu neplatí - jazdec má do strán dosť miesta. */
+    #panel-terazky {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
-    .dial-num .val {
-        font-size: 58px;
+    .dial-hero {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: var(--dial-max);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .dial-wrap {
+        height: 100%;
+        width: auto;
+        max-width: 100%;
+        max-height: var(--dial-max);
+        margin: 0;
     }
 }
 
@@ -2002,19 +1848,13 @@ b {
     }
 }
 
-/* Nízke okno na desktope: ciferník je jediné, čo má pevnú veľkosť a nezmestí sa.
-   Číslo v ňom sa zmenšuje s ním, aby ostalo v prstenci. Dasharray prstenca je
-   v jednotkách viewBoxu, takže zmena veľkosti v CSS ho neovplyvní. */
+/* Nízke okno na desktope: kruh by si inak vzal celú výšku a na odznak tarify pod ním by
+   neostalo. Stačí mu znížiť strop - všetko ostatné sa prispôsobí samo: číslo cez cqmin,
+   jazdec so značkou "teraz" cez percentá obalu, dasharray prstenca je v jednotkách
+   viewBoxu, takže zmena veľkosti v CSS ho neovplyvní vôbec. */
 @media (min-width: 1024px) and (max-height: 720px) {
-    .dial-svg {
-        width: 190px;
-        height: 190px;
-    }
-    .dial-num .val {
-        font-size: 34px;
-    }
-    .dial-wrap {
-        margin: var(--sp-2) 0 0;
+    #panel-terazky {
+        --dial-max: 200px;
     }
     .badge {
         padding: 5px 14px;

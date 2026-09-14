@@ -9,10 +9,11 @@ import { nextPanel, panelChange } from './state.js';
 /** @typedef {import('./dom.js').Dom} Dom */
 /** @typedef {{ x: number, y: number, t: number, room: { left: number, right: number } | null, chart: boolean }} Zaciatok */
 
-/** Bežec na páse dňa nie je posuvný pás, ale úchytka na ťahanie - pravidlo o vnútorných
- * pásoch nižšie ho nechytí a bez tejto výnimky by ťahanie bežca prepínalo kartu namiesto
- * náhľadu iného času. Jediné menované miesto v celom module; inde rozhoduje pravidlo. */
-const DRAG_HANDLE = '.strip-marker-handle';
+/** Jazdec na dennom prstenci nie je posuvný pás, ale úchytka na ťahanie - pravidlo
+ * o vnútorných pásoch nižšie ho nechytí a bez tejto výnimky by ťahanie jazdca prepínalo
+ * kartu namiesto náhľadu iného času. Jediné menované miesto v celom module; inde
+ * rozhoduje pravidlo. */
+const DRAG_HANDLE = '.dial-grip';
 
 /** Nad grafom ide tooltip za prstom, takže pomalý ťah po krivke je prezeranie, nie
  * listovanie - kartu tam prepne len rýchle švihnutie (SWIPE.flickMs). */

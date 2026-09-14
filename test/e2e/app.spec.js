@@ -2,8 +2,8 @@
 // doménovou logikou (shared/), takže test chytí rozdiel medzi modelom a tým, čo je v DOM.
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { usePct, visibleHours } from '../../shared/chart-model.js';
-import { LEGACY_SOURCES, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS, WORKER_URL } from '../../shared/config.js';
+import { ringPercent, usePct, visibleHours } from '../../shared/chart-model.js';
+import { LEGACY_SOURCES, PREVIEW, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
 import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
 import { useTier } from '../../web/render/sedemdni.js';
@@ -52,6 +52,20 @@ function atTime(hm) {
 const modelAt = (wall) => heroModel({ now: wall, season: 'summer', pv, forecast, previewMinutes: null });
 
 const todayForecastMsg = forecastDayMessage(visibleHours(forecast.hourlyToday), true);
+
+/** Nástenný čas FIXED_NOW v zóne prehliadača, nie procesu - z rovnakého dôvodu, aký
+ * popisuje atTime nižšie. Testy ho potrebujú v oboch podobách: ako text v ciferníku
+ * a ako minútu dňa pre polohu na prstenci. */
+const APP_NOW = (() => {
+    const hm = FIXED_NOW.toLocaleTimeString('en-GB', {
+        timeZone: 'Europe/Bratislava',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    });
+    const [h, m] = hm.split(':').map(Number);
+    return { hm, minutes: h * 60 + m };
+})();
 
 test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     const errors = await openApp(page);
@@ -176,49 +190,81 @@ for (const [hm, label] of [
     });
 }
 
-test('náhľad iného času klikom na pás a návrat na teraz', async ({ page }) => {
+/** Bod na dennom prstenci ciferníka pre danú minútu dňa - ten istý výpočet, aký appka
+ * používa na umiestnenie jazdca. @param {{x: number, y: number, width: number, height: number}} box @param {number} minutes */
+function ringXY(box, minutes) {
+    const { left, top } = ringPercent(minutes);
+    return { x: box.x + (box.width * left) / 100, y: box.y + (box.height * top) / 100 };
+}
+
+test('náhľad iného času ťuknutím na prstenec a návrat na teraz', async ({ page }) => {
     await openApp(page);
-    const strip = page.locator('#daystrip');
-    const box = await strip.boundingBox();
-    if (!box) throw new Error('pás dňa nemá rozmer');
-    await page.mouse.click(box.x + box.width * 0.25, box.y + box.height / 2);
-    await expect(page.locator('#preview-banner')).toBeVisible();
-    // Štvrtina šírky pásu je 06:00; presná minúta závisí od zaokrúhlenia pixelov.
-    await expect(page.locator('#preview-time-label')).toHaveText(/^Náhľad · 0[56]:\d{2}$/);
+    const box = await page.locator('#dial-wrap').boundingBox();
+    if (!box) throw new Error('ciferník nemá rozmer');
+    const six = ringXY(box, 6 * 60);
+    await page.mouse.click(six.x, six.y);
+    await expect(page.locator('#dial-grip')).toBeVisible();
+    // Presná minúta závisí od zaokrúhlenia pixelov, preto rozsah okolo 06:00.
+    await expect(page.locator('#dial-when')).toHaveText(/^0[56]:\d{2}$/);
     await expect(page.locator('#pv-power-unit')).toContainText('kW (');
+    await expect(page.locator('#preview-reset')).toBeVisible();
     await page.locator('#preview-reset').click();
-    await expect(page.locator('#preview-banner')).toBeHidden();
+    await expect(page.locator('#dial-grip')).toBeHidden();
+    await expect(page.locator('#preview-reset')).toBeHidden();
     await expect(page.locator('#pv-power-unit')).toHaveText('kW teraz');
+    await expect(page.locator('#dial-when')).toHaveText(APP_NOW.hm);
 });
 
-test('ťahanie bežca: pás sa pri náhľade nemení, obnovené dáta ale dobehne', async ({ page }) => {
+test('ťahanie jazdca: denný prstenec sa nemení, dotiahnutie na "teraz" náhľad zruší', async ({ page }) => {
     const errors = await openApp(page);
-    const strip = page.locator('#daystrip');
-    const box = await strip.boundingBox();
-    if (!box) throw new Error('pás dňa nemá rozmer');
-    const y = box.y + box.height / 2;
+    const box = await page.locator('#dial-wrap').boundingBox();
+    if (!box) throw new Error('ciferník nemá rozmer');
+    const ring = page.locator('#day-ring');
 
-    // Pás dňa nezávisí od náhľadu času - počas ťahania sa jeho obsah nesmie zmeniť.
-    const beforeDrag = await strip.innerHTML();
-    // Ťahanie musí začať na samotnom bežci - poslucháče sedia na ňom, nie na páse.
-    const handle = await page.locator('#strip-marker-handle').boundingBox();
-    if (!handle) throw new Error('bežec nemá rozmer');
-    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+    // Denný prstenec závisí len na sezóne - ťahanie jazdca ním nesmie pohnúť.
+    await page.mouse.click(ringXY(box, 6 * 60).x, ringXY(box, 6 * 60).y);
+    const beforeDrag = await ring.innerHTML();
+
+    // Ťahanie musí začať na samotnom jazdci - poslucháče sedia na ňom, nie na ciferníku.
+    const grip = await page.locator('#dial-grip').boundingBox();
+    if (!grip) throw new Error('jazdec nemá rozmer');
+    await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
     await page.mouse.down();
-    for (const frac of [0.4, 0.5, 0.6, 0.7]) await page.mouse.move(box.x + box.width * frac, y);
-    await expect(page.locator('#drag-tooltip')).toBeVisible();
+    for (const m of [8 * 60, 10 * 60, 12 * 60, 14 * 60]) {
+        const p = ringXY(box, m);
+        await page.mouse.move(p.x, p.y);
+    }
     await page.mouse.up();
-    await expect(page.locator('#preview-banner')).toBeVisible();
-    // 70 % šírky pásu je zhruba 16:48; presná minúta závisí od zaokrúhlenia pixelov.
-    await expect(page.locator('#preview-time-label')).toHaveText(/^Náhľad · 1[67]:\d{2}$/);
-    expect(await strip.innerHTML()).toBe(beforeDrag);
+    await expect(page.locator('#dial-when')).toHaveText(/^1[34]:\d{2}$/);
+    expect(await ring.innerHTML()).toBe(beforeDrag);
 
-    // Nové dáta zo siete musia pás prekresliť aj vtedy, keď v ňom stojí náhľad.
-    const halved = { ...forecast, hourlyToday: forecast.hourlyToday.map((h) => ({ ...h, kw: h.kw / 2 })) };
-    await page.route(WORKER_URL, (route) => route.fulfill({ json: { pv, forecast: halved, servedAt: FIXED_NOW.toISOString() } }));
-    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-    await expect.poll(() => strip.innerHTML()).not.toBe(beforeDrag);
+    // Dotiahnutie jazdca na značku "teraz" je skratka späť do živého stavu.
+    const grip2 = await page.locator('#dial-grip').boundingBox();
+    if (!grip2) throw new Error('jazdec nemá rozmer');
+    await page.mouse.move(grip2.x + grip2.width / 2, grip2.y + grip2.height / 2);
+    await page.mouse.down();
+    const now = ringXY(box, APP_NOW.minutes);
+    await page.mouse.move(now.x, now.y);
+    await page.mouse.up();
+    await expect(page.locator('#dial-grip')).toBeHidden();
+    await expect(page.locator('#pv-power-unit')).toHaveText('kW teraz');
     expect(errors).toEqual([]);
+});
+
+test('jazdec sa dá ovládať šípkami - náhľad času nie je len pre myš', async ({ page }) => {
+    await openApp(page);
+    const box = await page.locator('#dial-wrap').boundingBox();
+    if (!box) throw new Error('ciferník nemá rozmer');
+    await page.mouse.click(ringXY(box, 6 * 60).x, ringXY(box, 6 * 60).y);
+    const grip = page.locator('#dial-grip');
+    await grip.focus();
+    const before = await grip.getAttribute('aria-valuenow');
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(async () => Number(await grip.getAttribute('aria-valuenow'))).toBe(Number(before) + PREVIEW.keyStepMin);
+    await page.keyboard.press('ArrowLeft');
+    await expect.poll(async () => await grip.getAttribute('aria-valuenow')).toBe(before);
+    // Popis pre čítačku obrazovky musí sedieť s tým, čo je v ciferníku napísané.
+    await expect(grip).toHaveAttribute('aria-valuetext', `Náhľad ${await page.locator('#dial-when').textContent()}`);
 });
 
 test('predpoveď: štatistiky, prepnutie na zajtra, správa dňa', async ({ page }) => {
@@ -511,14 +557,16 @@ test('mobil: karta Terazky sa od 620px výšky zmestí na obrazovku bez scrollov
         expect(scroll, `výška ${height}px: appka preteká o ${scroll} px`).toBeLessThanOrEqual(0);
 
         const geometria = await page.evaluate(() => ({
-            pasDnaSpodok: document.querySelector('.col-b').getBoundingClientRect().bottom,
+            kartaSpodok: document.querySelector('.verdict').getBoundingClientRect().bottom,
             navVrch: document.querySelector('.bottomnav').getBoundingClientRect().top,
         }));
-        expect(geometria.pasDnaSpodok, `výška ${height}px: pás dňa zapadá pod spodnú navigáciu`).toBeLessThanOrEqual(geometria.navVrch);
+        expect(geometria.kartaSpodok, `výška ${height}px: odporúčanie zapadá pod spodnú navigáciu`).toBeLessThanOrEqual(geometria.navVrch);
 
+        // Ciferník je jediné, čo tu ustupuje - musí ostať viditeľný aj na najnižšej výške,
+        // a s ním aj jeho denný prstenec, ktorý je jedinou cestou k náhľadu iného času.
         await expect(page.locator('.dial-svg'), `výška ${height}px`).toBeVisible();
+        await expect(page.locator('#day-ring path').first(), `výška ${height}px`).toBeVisible();
         await expect(page.locator('#verdict-dots'), `výška ${height}px`).toBeVisible();
-        await expect(page.locator('.strip-ticks'), `výška ${height}px`).toBeVisible();
         expect(errors).toEqual([]);
     }
 });
@@ -526,10 +574,10 @@ test('mobil: karta Terazky sa od 620px výšky zmestí na obrazovku bez scrollov
 /**
  * Pod 620px výšky sa režim obrazovky nezapne a karta je bežný dokument. Je to zámer:
  * v režime obrazovky sa pretečený obsah odstrihne (.page { overflow: hidden }), a odstrihnúť
- * časovú os pása dňa je horšie než dovoliť scroll. Podmienka je na výšku, nie na
+ * odporúčanie pod ciferníkom je horšie než dovoliť scroll. Podmienka je na výšku, nie na
  * orientáciu, preto sa skúša aj nízka výška na výšku (390x520), aj telefón na šírku
- * (740x360). Po doscrollovaní nadol musí byť celý pás dňa nad spodnou navigáciou - teda
- * dostupný, nie odstrihnutý ani zakrytý.
+ * (740x360). Po doscrollovaní nadol musí byť celé odporúčanie nad spodnou navigáciou -
+ * teda dostupné, nie odstrihnuté ani zakryté.
  */
 test('mobil: pod 620px výšky sa karta Terazky odomkne a dá sa doscrollovať', async ({ page }) => {
     for (const { width, height } of [
@@ -549,15 +597,14 @@ test('mobil: pod 620px výšky sa karta Terazky odomkne a dá sa doscrollovať',
 
         await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
         const geometria = await page.evaluate(() => ({
-            pasDnaSpodok: document.querySelector('.col-b').getBoundingClientRect().bottom,
+            kartaSpodok: document.querySelector('.verdict').getBoundingClientRect().bottom,
             navVrch: document.querySelector('.bottomnav').getBoundingClientRect().top,
         }));
-        expect(geometria.pasDnaSpodok, `${rozmer}: pás dňa sa ani po doscrollovaní nedostane nad spodnú navigáciu`).toBeLessThanOrEqual(
+        expect(geometria.kartaSpodok, `${rozmer}: odporúčanie sa ani po doscrollovaní nedostane nad spodnú navigáciu`).toBeLessThanOrEqual(
             geometria.navVrch,
         );
 
         await expect(page.locator('.dial-svg'), rozmer).toBeVisible();
-        await expect(page.locator('.strip-ticks'), rozmer).toBeVisible();
         expect(errors).toEqual([]);
     }
 });
@@ -679,8 +726,8 @@ async function swipe(page, sel, { dx, dy = 0, ms = 0 }) {
 
 /** Ťahanie prstom od stredu prvku, nie ponad neho: gesto musí začať presne na ňom. Bežec na
  * páse dňa je široký 34 px, takže `swipe` (ten začína o pol ťahu skôr) by sa naň netrafil.
- * @param {import('@playwright/test').Page} page @param {string} sel @param {{ dx: number, ms?: number }} opts */
-async function tahajOdStredu(page, sel, { dx, ms = 300 }) {
+ * @param {import('@playwright/test').Page} page @param {string} sel @param {{ dx: number, dy?: number, ms?: number }} opts */
+async function tahajOdStredu(page, sel, { dx, dy = 0, ms = 300 }) {
     const box = await page.locator(sel).boundingBox();
     if (!box) throw new Error(`Prvok ${sel} nie je vidno`);
     const x = box.x + box.width / 2;
@@ -689,7 +736,7 @@ async function tahajOdStredu(page, sel, { dx, ms = 300 }) {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
     for (const t of [0.34, 0.67, 1]) {
         await page.waitForTimeout(ms / 3);
-        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + dx * t, y }] });
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + dx * t, y: y + dy * t }] });
     }
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await cdp.detach();
@@ -989,41 +1036,51 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    test('ťah ponad pás dňa prepne kartu a nenastaví náhľad iného času', async ({ page }) => {
+    test('ťah ponad ciferník prepne kartu a nenastaví náhľad iného času', async ({ page }) => {
         const errors = await openApp(page);
 
-        // Pás dňa je na mobile veľká plocha, listovať sa cez ňu dá. Klik naň ale nastavuje
-        // náhľad iného času - po geste ho preto appka potlačí, aj keď gesto narazí na kraj.
-        await swipe(page, '#daystrip-wrap', { dx: 120 });
+        // Ciferník je na mobile najväčšia plocha karty, listovať sa cez ňu dá. Ťuknutie naň
+        // ale nastavuje náhľad iného času - po geste ho preto appka potlačí, aj keď gesto
+        // narazí na kraj poradia.
+        await swipe(page, '#dial-wrap', { dx: 120 });
         await ocakavajKartu(page, 'terazky');
-        await expect(page.locator('#preview-banner')).toBeHidden();
+        await expect(page.locator('#dial-grip')).toBeHidden();
 
-        await swipe(page, '#daystrip-wrap', { dx: -120 });
+        await swipe(page, '#dial-wrap', { dx: -120 });
         await ocakavajKartu(page, 'predpoved');
         await page.locator('#nav-terazky').click();
-        await expect(page.locator('#preview-banner')).toBeHidden();
+        await expect(page.locator('#dial-grip')).toBeHidden();
 
-        // Obyčajné ťuknutie na pás náhľad nastaví ako doteraz.
-        await page.locator('#daystrip-wrap').click({ position: { x: 40, y: 20 } });
-        await expect(page.locator('#preview-banner')).toBeVisible();
+        // Obyčajné ťuknutie na prstenec náhľad nastaví.
+        const box = await page.locator('#dial-wrap').boundingBox();
+        if (!box) throw new Error('ciferník nemá rozmer');
+        const six = ringXY(box, 6 * 60);
+        await page.locator('#dial-wrap').click({ position: { x: six.x - box.x, y: six.y - box.y } });
+        await expect(page.locator('#dial-grip')).toBeVisible();
         expect(errors).toEqual([]);
     });
 
-    /** Bežec je jediná výnimka z pravidla o ťahaní: gesto, ktoré by inde prelistovalo kartu,
+    /** Jazdec je jediná výnimka z pravidla o ťahaní: gesto, ktoré by inde prelistovalo kartu,
      * na ňom posúva náhľad času (výnimka DRAG_HANDLE vo `swipe.js`). Preto sa ťahá doľava
      * a dosť ďaleko - kratší ťah než SWIPE.minDistPx by za listovanie neprešiel ani bez tej
      * výnimky a test by nekontroloval nič. */
-    test('ťahanie bežca prstom posúva náhľad času a kartu neprepne', async ({ page }) => {
+    test('ťahanie jazdca prstom posúva náhľad času a kartu neprepne', async ({ page }) => {
         const errors = await openApp(page);
-        const strip = await page.locator('#daystrip').boundingBox();
-        const bezec = await page.locator('#strip-marker-handle').boundingBox();
-        if (!strip || !bezec) throw new Error('pás dňa alebo bežec nie je vidno');
+        const box = await page.locator('#dial-wrap').boundingBox();
+        if (!box) throw new Error('ciferník nemá rozmer');
 
-        const dx = strip.x + strip.width * 0.1 - (bezec.x + bezec.width / 2);
+        // Náhľad treba najprv zapnúť - bez neho jazdec na prstenci nie je.
+        const start = ringXY(box, 5 * 60);
+        await page.locator('#dial-wrap').click({ position: { x: start.x - box.x, y: start.y - box.y } });
+        const grip = await page.locator('#dial-grip').boundingBox();
+        if (!grip) throw new Error('jazdec nie je vidno');
+
+        // Ťah doľava cez vrchol ciferníka: z 05:00 smerom k 20:00 po ľavej strane.
+        const ciel = ringXY(box, 20 * 60);
+        const dx = ciel.x - (grip.x + grip.width / 2);
         expect(Math.abs(dx), 'ťah je kratší než hranica listovania, test by nič nekontroloval').toBeGreaterThan(SWIPE.minDistPx);
-        await tahajOdStredu(page, '#strip-marker-handle', { dx });
-        // Desatina šírky pásu je zhruba 02:24; presná minúta závisí od zaokrúhlenia pixelov.
-        await expect(page.locator('#preview-time-label')).toHaveText(/^Náhľad · 0[123]:\d{2}$/);
+        await tahajOdStredu(page, '#dial-grip', { dx, dy: ciel.y - (grip.y + grip.height / 2) });
+        await expect(page.locator('#dial-when')).toHaveText(/^(19|20|21):\d{2}$/);
         await ocakavajKartu(page, 'terazky');
         expect(errors).toEqual([]);
     });
