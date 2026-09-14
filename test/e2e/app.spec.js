@@ -203,13 +203,13 @@ test('náhľad iného času ťuknutím na prstenec a návrat na teraz', async ({
     if (!box) throw new Error('ciferník nemá rozmer');
     const six = ringXY(box, 6 * 60);
     await page.mouse.click(six.x, six.y);
-    await expect(page.locator('#dial-grip')).toBeVisible();
+    await expect(page.locator('#dial-grip')).not.toHaveClass(/at-now/);
     // Presná minúta závisí od zaokrúhlenia pixelov, preto rozsah okolo 06:00.
     await expect(page.locator('#dial-when')).toHaveText(/^0[56]:\d{2}$/);
     await expect(page.locator('#pv-power-unit')).toContainText('kW (');
     await expect(page.locator('#preview-reset')).toBeVisible();
     await page.locator('#preview-reset').click();
-    await expect(page.locator('#dial-grip')).toBeHidden();
+    await expect(page.locator('#dial-grip')).toHaveClass(/at-now/);
     await expect(page.locator('#preview-reset')).toBeHidden();
     await expect(page.locator('#pv-power-unit')).toHaveText('kW teraz');
     await expect(page.locator('#dial-when')).toHaveText(APP_NOW.hm);
@@ -246,25 +246,57 @@ test('ťahanie jazdca: denný prstenec sa nemení, dotiahnutie na "teraz" náhľ
     const now = ringXY(box, APP_NOW.minutes);
     await page.mouse.move(now.x, now.y);
     await page.mouse.up();
-    await expect(page.locator('#dial-grip')).toBeHidden();
+    await expect(page.locator('#dial-grip')).toHaveClass(/at-now/);
     await expect(page.locator('#pv-power-unit')).toHaveText('kW teraz');
     expect(errors).toEqual([]);
 });
 
-test('jazdec sa dá ovládať šípkami - náhľad času nie je len pre myš', async ({ page }) => {
+test('náhľad času sa dá celý ovládať z klávesnice, nielen prstom', async ({ page }) => {
+    await openApp(page);
+    const grip = page.locator('#dial-grip');
+
+    // V pokoji je jazdec značkou "teraz" - ale ostáva tlačidlom, takže sa naň dá prejsť
+    // tabulátorom. Bez toho by sa k náhľadu času z klávesnice nedalo dostať vôbec.
+    await expect(grip).toBeVisible();
+    await expect(grip).toHaveClass(/at-now/);
+    await expect(grip).toHaveAttribute('aria-valuetext', `Teraz ${APP_NOW.hm}`);
+    await grip.focus();
+    await expect(grip).toBeFocused();
+
+    // Šípka náhľad rovno otvorí, od aktuálneho času.
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(async () => Number(await grip.getAttribute('aria-valuenow'))).toBe(APP_NOW.minutes + PREVIEW.keyStepMin);
+    await expect(grip).not.toHaveClass(/at-now/);
+    await expect(page.locator('#pv-power-unit')).toContainText('kW (');
+    await page.keyboard.press('ArrowLeft');
+    await expect.poll(async () => Number(await grip.getAttribute('aria-valuenow'))).toBe(APP_NOW.minutes);
+    // Popis pre čítačku obrazovky musí sedieť s tým, čo je v ciferníku napísané.
+    await expect(grip).toHaveAttribute('aria-valuetext', `Náhľad ${await page.locator('#dial-when').textContent()}`);
+
+    // Esc sa vráti do živého stavu, Enter náhľad zase otvorí.
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#pv-power-unit')).toHaveText('kW teraz');
+    await expect(grip).toHaveClass(/at-now/);
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#pv-power-unit')).toContainText('kW (');
+});
+
+test('pri nulovej výrobe neostane na prstenci bodka', async ({ page }) => {
     await openApp(page);
     const box = await page.locator('#dial-wrap').boundingBox();
     if (!box) throw new Error('ciferník nemá rozmer');
-    await page.mouse.click(ringXY(box, 6 * 60).x, ringXY(box, 6 * 60).y);
-    const grip = page.locator('#dial-grip');
-    await grip.focus();
-    const before = await grip.getAttribute('aria-valuenow');
-    await page.keyboard.press('ArrowRight');
-    await expect.poll(async () => Number(await grip.getAttribute('aria-valuenow'))).toBe(Number(before) + PREVIEW.keyStepMin);
-    await page.keyboard.press('ArrowLeft');
-    await expect.poll(async () => await grip.getAttribute('aria-valuenow')).toBe(before);
-    // Popis pre čítačku obrazovky musí sedieť s tým, čo je v ciferníku napísané.
-    await expect(grip).toHaveAttribute('aria-valuetext', `Náhľad ${await page.locator('#dial-when').textContent()}`);
+    const ring = page.locator('#dial-ring');
+
+    // Cez deň oblúk niečo ukazuje a guľatý koniec je v poriadku.
+    await expect(ring).not.toHaveClass(/empty/);
+
+    // V noci panely nedávajú nič. Guľatý koniec by aj z nulového oblúka nakreslil bodku,
+    // preto sa na ten čas zrovná - inak by prstenec tvrdil, že sa niečo vyrába.
+    const noc = ringXY(box, 2 * 60);
+    await page.mouse.click(noc.x, noc.y);
+    await expect(page.locator('#pv-power')).toHaveText('0.00');
+    await expect(ring).toHaveClass(/empty/);
+    await expect(ring).toHaveCSS('stroke-linecap', 'butt');
 });
 
 test('predpoveď: štatistiky, prepnutie na zajtra, správa dňa', async ({ page }) => {
@@ -1044,19 +1076,19 @@ test.describe('listovanie kariet prstom', () => {
         // narazí na kraj poradia.
         await swipe(page, '#dial-wrap', { dx: 120 });
         await ocakavajKartu(page, 'terazky');
-        await expect(page.locator('#dial-grip')).toBeHidden();
+        await expect(page.locator('#dial-grip')).toHaveClass(/at-now/);
 
         await swipe(page, '#dial-wrap', { dx: -120 });
         await ocakavajKartu(page, 'predpoved');
         await page.locator('#nav-terazky').click();
-        await expect(page.locator('#dial-grip')).toBeHidden();
+        await expect(page.locator('#dial-grip')).toHaveClass(/at-now/);
 
         // Obyčajné ťuknutie na prstenec náhľad nastaví.
         const box = await page.locator('#dial-wrap').boundingBox();
         if (!box) throw new Error('ciferník nemá rozmer');
         const six = ringXY(box, 6 * 60);
         await page.locator('#dial-wrap').click({ position: { x: six.x - box.x, y: six.y - box.y } });
-        await expect(page.locator('#dial-grip')).toBeVisible();
+        await expect(page.locator('#dial-grip')).not.toHaveClass(/at-now/);
         expect(errors).toEqual([]);
     });
 

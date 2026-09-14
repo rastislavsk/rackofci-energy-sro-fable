@@ -82,8 +82,12 @@ function renderHero(state, m, dom) {
     dom.pvPower.textContent = m.powerText;
     dom.pvPower.style.color = Number.isFinite(m.power) ? tierVar(m.accent) : 'var(--ink)';
     dom.pvPowerUnit.textContent = m.unitText;
+    dom.dialRing.style.strokeDasharray = String(DIAL_CIRCUMFERENCE);
     dom.dialRing.style.strokeDashoffset = String(DIAL_CIRCUMFERENCE * (1 - m.dial.fraction));
     dom.dialRing.style.stroke = tierVar(m.dial.tier);
+    // Pri nulovej výrobe by guľatý koniec oblúka nechal na vrchu prstenca bodku, hoci
+    // nie je čo ukázať. Trieda ho na ten čas zrovná (viď .dial-ring.empty v style.css).
+    dom.dialRing.classList.toggle('empty', !(m.dial.fraction > 0));
     renderEyebrowBadge(m, dom);
     dom.verdictHeadline.textContent = m.message.headline;
     dom.verdictBody.textContent = m.message.body;
@@ -110,19 +114,21 @@ function renderDayRing(state, dom) {
     writeHtml(dom.dayRing, dayRingSvg(dayRingModel(state.season)), 'day-ring');
 }
 
-/** Jazdec a značka "teraz" na dennom prstenci. Jazdec je vidno len počas náhľadu; značka
- * "teraz" stále, aby bolo aj v pokoji vidieť, kde v dni sa appka nachádza.
+/** Jazdec na dennom prstenci. Je v stránke stále, aj keď náhľad nebeží - v pokoji je
+ * značkou "teraz" a zároveň jedinou cestou, ako sa k náhľadu dostať z klávesnice. Počas
+ * náhľadu sa mení na objímku a značku "teraz" preberie samostatná bodka.
  * @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} hero @param {import('../dom.js').Dom} dom */
 function renderRingMarks(state, hero, dom) {
     const nowMinutes = minutesOfDay(state.now);
     placeOnRing(dom.dialNow, nowMinutes);
-    dom.dialGrip.classList.toggle('hidden', !hero.preview);
-    if (!hero.preview) return;
+    dom.dialNow.classList.toggle('hidden', !hero.preview);
+
     placeOnRing(dom.dialGrip, hero.minutes);
+    dom.dialGrip.classList.toggle('at-now', !hero.preview);
     // Otočenie o uhol času: dlhá os objímky tak leží po obvode prstenca.
     dom.dialGrip.style.transform = `translate(-50%, -50%) rotate(${(hero.minutes / MINUTES_PER_DAY) * 360}deg)`;
     dom.dialGrip.setAttribute('aria-valuenow', String(hero.minutes));
-    dom.dialGrip.setAttribute('aria-valuetext', `Náhľad ${minutesToTimeStr(hero.minutes)}`);
+    dom.dialGrip.setAttribute('aria-valuetext', `${hero.preview ? 'Náhľad' : 'Teraz'} ${minutesToTimeStr(hero.minutes)}`);
 }
 
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} hero @param {import('../dom.js').Dom} dom */

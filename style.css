@@ -455,13 +455,20 @@ b {
     stroke: var(--ink-20);
     stroke-width: 14;
     stroke-linecap: round;
-    /* 490 = obvod kružnice s polomerom 78 (RING.rPower). Presnú hodnotu dopočíta JS,
-       toto je len východiskový stav pred prvým prekreslením. */
+    /* 490 ≈ obvod kružnice s polomerom 78 (RING.rPower). Je to len východiskový stav pred
+       prvým prekreslením - presnú hodnotu nastaví render do oboch vlastností naraz, aby sa
+       podiel počítal z toho istého čísla, akým je prstenec rozdelený. */
     stroke-dasharray: 490;
     stroke-dashoffset: 490;
     transition:
         stroke-dashoffset 0.6s ease,
         stroke var(--dur);
+}
+/* Guľatý koniec oblúka nakreslí bodku aj vtedy, keď je oblúk nulový - pri nulovej výrobe
+   tak na vrchu prstenca ostávala farebná bodka, hoci nebolo čo ukázať. Zrovnaný koniec
+   nenakreslí nič. Prepína to render podľa podielu výkonu (viď renderHero). */
+.dial-ring.empty {
+    stroke-linecap: butt;
 }
 /* Pri ťahaní jazdca musí oblúk ísť za prstom hneď, nie s polsekundovým oneskorením. */
 .panel-terazky.dragging .dial-ring {
@@ -543,6 +550,35 @@ b {
 }
 .dial-grip:active {
     cursor: grabbing;
+}
+/* Rámček zaostrenia obopína kresbu, nie neviditeľný dotykový štvorec 44 × 44 px - okolo
+   neho by z jazdca spravil terč trikrát väčší, než v skutočnosti je. Predvolený rámček
+   prehliadača robil presne to. */
+.dial-grip:focus-visible {
+    outline: none;
+}
+.dial-grip:focus-visible .grip-collar {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+}
+/* V pokoji (žiadny náhľad) je jazdec značkou "teraz" - vyzerá ako bodka, nie ako úchytka.
+   Ostáva pritom tlačidlom, takže sa naň dá prejsť tabulátorom a šípkami rovno otvoriť
+   náhľad; bez toho by sa k náhľadu času z klávesnice nedalo dostať vôbec.
+   pointer-events: none je zámer: prstu ani myši nemá čo brať. Ťuknutie tak prepadne na
+   ciferník pod ním (ten nastaví náhľad na tú istú minútu) a ťah do strán ponad bodku
+   naďalej prepína kartu, namiesto aby ho zožrala výnimka DRAG_HANDLE. */
+.dial-grip.at-now {
+    pointer-events: none;
+}
+.dial-grip.at-now .grip-collar {
+    width: 9px;
+    height: 9px;
+    border: 0;
+    background: var(--ink);
+    gap: 0;
+}
+.dial-grip.at-now .grip-collar i {
+    display: none;
 }
 /* Objímka: korálik navlečený na prstenci. Dlhá os leží po obvode (otočenie robí JS,
    viď renderRingMarks), tri priečne ryhy sú úchop. */
