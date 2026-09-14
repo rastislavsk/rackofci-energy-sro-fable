@@ -1,0 +1,1005 @@
+<title>Náhľad času pri ciferníku</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+/>
+
+<style>
+    /* ============================================================================
+   Náhľad troch variantov umiestnenia bubliny s náhľadom času.
+   Farby, písma a rozmery sú prevzaté 1:1 z style.css appky - mock je v mierke
+   telefónu 375px, aby boli rozmery porovnateľné s realitou.
+   Appka je zámerne len tmavá, preto aj tento náhľad ostáva jednofarebný.
+   ============================================================================ */
+    :root {
+        /* Tokeny appky */
+        --bg: #0a0a0a;
+        --ink: #f2f0ea;
+        --ink-70: rgba(242, 240, 234, 0.94);
+        --ink-45: rgba(242, 240, 234, 0.64);
+        --ink-35: rgba(242, 240, 234, 0.54);
+        --ink-20: rgba(242, 240, 234, 0.26);
+        --ink-12: rgba(242, 240, 234, 0.16);
+        --ink-08: rgba(242, 240, 234, 0.1);
+        --ink-05: rgba(242, 240, 234, 0.06);
+        --green: #9ef25b;
+        --amber: #ffc24b;
+        --red: #ff6b57;
+        --amber-rgb: 255, 194, 75;
+
+        --font-body: 'Space Grotesk', -apple-system, 'Segoe UI', Arial, sans-serif;
+        --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+        /* Chrome náhľadu - o chlp chladnejšia čierna než appka, aby bolo vidno,
+       kde končí stránka a kde začína mock. */
+        --page-bg: #0e0f11;
+        --page-panel: #131417;
+        --page-line: rgba(242, 240, 234, 0.11);
+
+        --mock-w: 375px;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: var(--page-bg);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding-inline: 20px;
+        padding-block: 40px 64px;
+    }
+
+    /* ---- Hlavička --------------------------------------------------------------- */
+    .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        margin: 0 0 10px;
+    }
+    h1 {
+        font-size: clamp(26px, 4.4vw, 38px);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.12;
+        margin: 0 0 14px;
+        text-wrap: balance;
+    }
+    .lede {
+        max-width: 62ch;
+        color: var(--ink-45);
+        margin: 0;
+    }
+    .lede b {
+        color: var(--ink-70);
+        font-weight: 600;
+    }
+
+    /* ---- Ovládanie --------------------------------------------------------------- */
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px 26px;
+        margin: 32px 0 8px;
+        padding: 16px 18px;
+        background: var(--page-panel);
+        border: 1px solid var(--page-line);
+        border-radius: 14px;
+    }
+    .ctl {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .ctl-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        white-space: nowrap;
+    }
+    .switch {
+        display: inline-flex;
+        padding: 3px;
+        gap: 3px;
+        background: var(--ink-05);
+        border: 1px solid var(--page-line);
+        border-radius: 999px;
+    }
+    .switch button {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: var(--ink-45);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 6px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+    .switch button[aria-pressed='true'] {
+        background: var(--ink);
+        color: var(--bg);
+    }
+    input[type='range'] {
+        width: 150px;
+        accent-color: var(--amber);
+        cursor: pointer;
+    }
+    .ctl-val {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--ink-70);
+        font-variant-numeric: tabular-nums;
+        min-width: 52px;
+    }
+    .hint {
+        font-size: 13px;
+        color: var(--ink-35);
+        margin: 0 0 30px;
+    }
+
+    /* ---- Mriežka variantov --------------------------------------------------------- */
+    .grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px 24px;
+        align-items: start;
+    }
+    .variant {
+        flex: 0 0 auto;
+        width: var(--mock-w);
+        max-width: 100%;
+    }
+    .v-head {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        margin-bottom: 4px;
+    }
+    .v-key {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: var(--bg);
+        background: var(--ink-45);
+        border-radius: 4px;
+        padding: 2px 7px;
+        line-height: 1.4;
+    }
+    .variant[data-rec='1'] .v-key {
+        background: var(--green);
+    }
+    .v-name {
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+    .v-sub {
+        font-size: 13px;
+        color: var(--ink-35);
+        margin: 0 0 14px;
+        min-height: 40px;
+    }
+
+    /* ---- Mock telefónu ------------------------------------------------------------- */
+    .mock {
+        width: 100%;
+        height: 518px;
+        background: var(--bg);
+        border: 1px solid var(--page-line);
+        border-radius: 20px;
+        padding: 22px 18px 0;
+        display: flex;
+        flex-direction: column;
+        /* Ako v appke na mobile: karta sa nescrolluje, čo sa nezmestí, to ustúpi. */
+        overflow: hidden;
+        position: relative;
+        user-select: none;
+    }
+
+    /* Stĺpec A: ciferník + odporúčanie. Prirodzená výška, neustupuje. */
+    .m-cola {
+        flex: 0 0 auto;
+    }
+    /* Stĺpec B: pás dňa. Dostane všetko, čo zvýši - preto je jeho výška meradlom. */
+    .m-colb {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        margin-top: 16px; /* gap mriežky .panel-terazky */
+    }
+
+    .m-dialhero {
+        text-align: center;
+        margin-bottom: 22px;
+    }
+    .m-dialwrap {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        margin: 18px 0 4px;
+    }
+    .m-dial {
+        width: 210px;
+        height: 210px;
+        display: block;
+    }
+    .m-track {
+        fill: none;
+        stroke: var(--ink-08);
+        stroke-width: 14;
+    }
+    .m-ring {
+        fill: none;
+        stroke-width: 14;
+        stroke-linecap: round;
+        stroke-dasharray: 578;
+        transition:
+            stroke-dashoffset 0.45s ease,
+            stroke 0.35s;
+    }
+    .m-dialnum {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+    }
+    .m-val {
+        font-family: var(--font-mono);
+        font-size: 38px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        transition: color 0.35s;
+    }
+    .m-unit {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+    }
+
+    .m-verdict {
+        text-align: center;
+        /* Dnešná rezerva pre banner. Varianty A/B/C ju zmenšujú - to je tá ušetrená výška. */
+        margin-bottom: 32px;
+    }
+    .m-badge {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid;
+        border-radius: 999px;
+        padding: 8px 18px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        transition:
+            color 0.35s,
+            border-color 0.35s,
+            background-color 0.35s;
+    }
+    .m-dots {
+        display: flex;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 12px;
+    }
+    .m-dots i {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--ink-12);
+    }
+    .m-dots i:first-child {
+        background: var(--ink-45);
+    }
+
+    .m-footline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        flex: 0 0 auto;
+    }
+    .m-chartlabel,
+    .m-season {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+    }
+    .m-season {
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--ink-12);
+    }
+    .m-stripwrap {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 18px;
+        cursor: crosshair;
+    }
+    .m-strip {
+        flex: 1 1 auto;
+        min-height: 20px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--ink-05);
+    }
+    .m-strip svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    .m-ticks {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--ink-35);
+        flex: 0 0 auto;
+    }
+    /* Bežec a jeho duch kopírujú .strip-marker z appky: od vrchu pásu po jeho spodok. */
+    .m-marker,
+    .m-ghost {
+        position: absolute;
+        top: 0;
+        bottom: 37px;
+        width: 0;
+        pointer-events: none;
+    }
+    .m-marker {
+        border-left: 1px dashed var(--ink-20);
+    }
+    .m-ghost {
+        border-left: 1px dotted var(--ink-12);
+    }
+    .m-dot {
+        position: absolute;
+        left: -4px;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--ink);
+        box-shadow: 0 0 0 3px var(--bg);
+    }
+    .m-ghost .m-dot {
+        background: var(--ink-20);
+    }
+
+    /* ---- Bublina: spoločný vzhľad ---------------------------------------------------
+   Jedna bublina = displej aj tlačidlo. Prerušovaný rámček nesie „toto nie je teraz",
+   šípka ↩ nesie „klikni a vráť sa". */
+    .m-pill {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px dashed color-mix(in srgb, var(--pv-accent, var(--amber)) 55%, transparent);
+        background: color-mix(in srgb, var(--pv-accent, var(--amber)) 14%, #0a0a0a);
+        color: var(--pv-accent, var(--amber));
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        font-variant-numeric: tabular-nums;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+            color 0.35s,
+            border-color 0.35s,
+            background-color 0.35s;
+    }
+    .m-pill:hover {
+        background: color-mix(in srgb, var(--pv-accent, var(--amber)) 26%, #0a0a0a);
+    }
+    .m-pill:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 2px;
+    }
+    .m-pill svg {
+        width: 12px;
+        height: 12px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+    }
+    .m-pill .ret {
+        opacity: 0.75;
+    }
+
+    /* ---- Variant A: vnútri kruhu ------------------------------------------------- */
+    .mock[data-v='a'] .m-verdict {
+        margin-bottom: 16px;
+    }
+    .mock[data-v='a'] .m-pill {
+        margin-top: 8px;
+    }
+
+    /* ---- Variant B: prívesok na prstenci ------------------------------------------
+   Lem vo farbe pozadia vyreže do prstenca zárez, takže bublina pôsobí ako jeho
+   súčasť. Posun o 22° doprava od spodku: tam koniec oblúka nikdy nezastane. */
+    .mock[data-v='b'] .m-verdict {
+        margin-bottom: 16px;
+    }
+    .mock[data-v='b'] .m-pill {
+        position: absolute;
+        left: 50%;
+        bottom: -2px;
+        transform: translateX(calc(-50% + 34px));
+        box-shadow: 0 0 0 4px var(--bg);
+    }
+
+    /* ---- Variant C: satelit vedľa kruhu ------------------------------------------- */
+    .mock[data-v='c'] .m-verdict {
+        margin-bottom: 16px;
+    }
+    .mock[data-v='c'] .m-sat {
+        position: absolute;
+        top: 52px;
+        left: calc(50% + 86px);
+        display: flex;
+        align-items: center;
+        pointer-events: none;
+    }
+    .mock[data-v='c'] .m-sat .m-pill {
+        pointer-events: auto;
+    }
+    /* Vlásočnica od prstenca k satelitu. */
+    .m-tether {
+        width: 12px;
+        height: 1px;
+        background: color-mix(in srgb, var(--pv-accent, var(--amber)) 45%, transparent);
+        flex: 0 0 auto;
+    }
+
+    /* ---- Variant DNES: dnešný banner s dvoma bublinami ---------------------------- */
+    .m-banner {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding-bottom: 12px;
+    }
+    .m-oldpill {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: 1px dashed color-mix(in srgb, var(--pv-accent, var(--amber)) 50%, transparent);
+        background: color-mix(in srgb, var(--pv-accent, var(--amber)) 10%, transparent);
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--pv-accent, var(--amber));
+        white-space: nowrap;
+    }
+    .m-oldreset {
+        appearance: none;
+        border: 0;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: var(--pv-accent, var(--amber));
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--bg);
+        cursor: pointer;
+        animation: pulse 1.6s ease-in-out infinite;
+    }
+    .m-oldpill svg,
+    .m-oldreset svg {
+        width: 13px;
+        height: 13px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+    }
+    @keyframes pulse {
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(var(--amber-rgb), 0.45);
+        }
+        50% {
+            box-shadow: 0 0 0 7px rgba(var(--amber-rgb), 0);
+        }
+    }
+    /* Dnešné nafúknutie koridoru, kým je banner vidno (pravidlá :has() v style.css). */
+    .mock[data-v='dnes'][data-preview='1'] .m-verdict {
+        margin-bottom: 48px;
+    }
+    .mock[data-v='dnes'][data-preview='1'] .m-footline {
+        margin-top: 8px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .m-oldreset {
+            animation: none;
+        }
+        .m-ring,
+        .m-val,
+        .m-badge,
+        .m-pill {
+            transition: none;
+        }
+    }
+
+    /* ---- Meranie pod mockom --------------------------------------------------------- */
+    .v-meter {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid var(--page-line);
+    }
+    .v-meter .m-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+    }
+    .v-meter .m-num {
+        font-family: var(--font-mono);
+        font-size: 19px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+    }
+    .v-meter .m-delta {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--green);
+        margin-left: auto;
+    }
+    .v-meter .m-delta[data-zero='1'] {
+        color: var(--ink-35);
+    }
+
+    .v-notes {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0 0;
+        display: grid;
+        gap: 7px;
+    }
+    .v-notes li {
+        display: grid;
+        grid-template-columns: 15px 1fr;
+        gap: 8px;
+        font-size: 13.5px;
+        line-height: 1.45;
+        color: var(--ink-45);
+    }
+    .v-notes li::before {
+        content: '+';
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--green);
+    }
+    .v-notes li[data-k='con']::before {
+        content: '−';
+        color: var(--red);
+    }
+    .v-notes li[data-k='note']::before {
+        content: '·';
+        color: var(--ink-35);
+    }
+
+    /* ---- Záver ----------------------------------------------------------------------- */
+    .closing {
+        margin-top: 56px;
+        padding: 24px 26px;
+        background: var(--page-panel);
+        border: 1px solid var(--page-line);
+        border-left: 3px solid var(--green);
+        border-radius: 4px 14px 14px 4px;
+        max-width: 72ch;
+    }
+    .closing h2 {
+        font-size: 19px;
+        font-weight: 600;
+        margin: 0 0 10px;
+        letter-spacing: -0.01em;
+    }
+    .closing p {
+        margin: 0 0 12px;
+        color: var(--ink-45);
+    }
+    .closing p:last-child {
+        margin-bottom: 0;
+    }
+    .closing b {
+        color: var(--ink-70);
+        font-weight: 600;
+    }
+    .tag {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+    }
+
+    @media (max-width: 460px) {
+        .wrap {
+            padding-block: 28px 44px;
+        }
+        :root {
+            --mock-w: 100%;
+        }
+        .variant {
+            width: 100%;
+        }
+        input[type='range'] {
+            width: 110px;
+        }
+    }
+</style>
+
+<div class="wrap">
+    <p class="eyebrow">Karta Spotrebiče · návrh</p>
+    <h1>Bublina s náhľadom času k ciferníku</h1>
+    <p class="lede">
+        Dnes visí nad pásom dňa ako dve bubliny a rezervuje si tam miesto, aj keď ju nevidno. Tri varianty ju menia na
+        <b>jednu bublinu pri ciferníku</b>, ktorá je zároveň tlačidlom späť na „teraz“. Mock je v mierke telefónu, takže
+        <b>výška pása dňa dole je skutočná</b>, nie ilustračná.
+    </p>
+
+    <div class="controls">
+        <div class="ctl">
+            <span class="ctl-label">Stav</span>
+            <div class="switch" role="group" aria-label="Stav náhľadu">
+                <button type="button" id="st-now" aria-pressed="false">Teraz</button>
+                <button type="button" id="st-prev" aria-pressed="true">Náhľad 13:06</button>
+            </div>
+        </div>
+        <div class="ctl">
+            <span class="ctl-label">Šírka mobilu</span>
+            <input type="range" id="width" min="330" max="440" step="1" value="375" aria-label="Šírka obrazovky v pixeloch" />
+            <span class="ctl-val" id="width-val">375 px</span>
+        </div>
+    </div>
+    <p class="hint">Klikni kdekoľvek do pása dňa a zvoľ si iný čas. Klik na bublinu ťa vráti na „teraz“.</p>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="closing">
+        <p class="tag">Odporúčanie</p>
+        <h2>Variant B, s variantom A ako poistkou</h2>
+        <p>
+            <b>B</b> dáva ten pocit „je to súčasť kruhu“, o ktorý ti išlo, a nemá problém so šírkou — je vycentrovaný, takže na najužšom
+            telefóne vyzerá rovnako ako na najširšom. Posunul som ho o kúsok doprava od spodku prstenca: presne dole by mu do zárezu občas
+            dobehla špička oblúka.
+        </p>
+        <p>
+            <b>A</b> je bezpečný ústup s rovnakou úsporou miesta, ak by ti zárez do prstenca prekážal. Jediné riziko je na nízkych
+            telefónoch, kde sa ciferník zmršťuje až na 170 px — tam by bublina stratila ikonku hodín a nechala len čas so šípkou.
+        </p>
+        <p>
+            <b>C</b> by som nechal bokom. Potiahni posuvník šírky pod 375 px a uvidíš, prečo: vedľa 210 px ciferníka ostáva na každej strane
+            ~55 px a bublina potrebuje ~85 px. Práve na úzkych telefónoch, kde je miesta najmenej, funguje najhoršie.
+        </p>
+    </div>
+</div>
+
+<script>
+    /* ---- Doménové dáta prevzaté zo shared/config.js (letné tarifné okná) ------------ */
+    const SEGMENTS = [
+        { from: 0, to: 450, tier: 'amber', title: 'Lacný nočný prúd' },
+        { from: 450, to: 510, tier: 'red', title: 'Najdrahšia sieť' },
+        { from: 510, to: 570, tier: 'amber', title: 'Menšie spotrebiče' },
+        { from: 570, to: 630, tier: 'red', title: 'Najdrahšia sieť' },
+        { from: 630, to: 1050, tier: 'green', title: 'Ideálne okno' },
+        { from: 1050, to: 1230, tier: 'amber', title: 'Bežná prevádzka' },
+        { from: 1230, to: 1290, tier: 'red', title: 'Najdrahšia sieť' },
+        { from: 1290, to: 1350, tier: 'amber', title: 'OK (Lacná)' },
+        { from: 1350, to: 1410, tier: 'red', title: 'Najdrahšia sieť' },
+        { from: 1410, to: 1440, tier: 'amber', title: 'Lacný nočný prúd' },
+    ];
+
+    const NOW_MIN = 1000; // 16:40
+    const DEFAULT_PREVIEW = 786; // 13:06
+    const AC_LIMIT_KW = 10; // PLANT.acLimitKw
+    const POWER_LOW_KW = 2;
+    const POWER_HIGH_KW = 4;
+    const DIAL_CIRCUMFERENCE = 578;
+
+    /** Letný jasný deň v Dvoranoch: zvon s vrcholom o 13:00. */
+    const kwAt = (m) => {
+        const v = 7.8 * Math.exp(-Math.pow((m - 780) / 235, 2));
+        return v < 0.06 ? 0 : v;
+    };
+    const segmentAt = (m) => SEGMENTS.find((s) => m >= s.from && m < s.to) || SEGMENTS[0];
+    const tierOfPower = (kw) => (kw >= POWER_HIGH_KW ? 'green' : kw >= POWER_LOW_KW ? 'amber' : 'red');
+    const tierVar = (t) => `var(--${t})`;
+    const fmt1 = (n) => n.toFixed(1).replace('.', ',');
+    const hhmm = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.round(m) % 60).padStart(2, '0')}`;
+
+    /* ---- SVG pása dňa ------------------------------------------------------------- */
+    const CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>';
+    const BACK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14l-4-4 4-4" /><path d="M5 10h9a5 5 0 015 5v1" /></svg>';
+
+    function curvePoints() {
+        const pts = [];
+        for (let m = 0; m <= 1440; m += 15) {
+            const y = 96 - (kwAt(m) / 8.2) * 84;
+            pts.push(`${m},${y.toFixed(1)}`);
+        }
+        return pts;
+    }
+
+    function stripSvg() {
+        const bands = SEGMENTS.map(
+            (s) => `<rect x="${s.from}" y="0" width="${s.to - s.from}" height="100" fill="var(--${s.tier})" opacity="0.13" />`,
+        ).join('');
+        const all = curvePoints();
+        // Do „teraz" je krivka nameraná (plná), ďalej predpoveď (prerušovaná) - ako v appke.
+        const measured = all.filter((p) => Number(p.split(',')[0]) <= NOW_MIN);
+        return (
+            `<svg viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true">${bands}` +
+            `<polyline points="${all.join(' ')}" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="10 8" opacity="0.55" />` +
+            `<polyline points="${measured.join(' ')}" fill="none" stroke="var(--green)" stroke-width="3" />` +
+            `</svg>`
+        );
+    }
+
+    /* ---- Šablóna mocku -------------------------------------------------------------- */
+    const pill = (cls) =>
+        `<button type="button" class="m-pill ${cls}" data-reset aria-label="Náhľad času, klikni pre návrat na teraz">` +
+        `${CLOCK}<span data-time>13:06</span><span class="ret">${BACK}</span></button>`;
+
+    function mockHtml(v) {
+        const inDial = v === 'a' ? pill('') : '';
+        const onRing = v === 'b' ? pill('') : '';
+        const satellite = v === 'c' ? `<div class="m-sat"><span class="m-tether"></span>${pill('')}</div>` : '';
+        const banner =
+            v === 'dnes'
+                ? `<div class="m-banner"><span class="m-oldpill">${CLOCK}<span data-time-old>Náhľad · 13:06</span></span>` +
+                  `<button type="button" class="m-oldreset" data-reset>${BACK}Teraz</button></div>`
+                : '';
+        return (
+            `<div class="m-cola">` +
+            `<div class="m-dialhero"><div class="m-dialwrap">` +
+            `<svg class="m-dial" viewBox="0 0 220 220" aria-hidden="true">` +
+            `<circle class="m-track" cx="110" cy="110" r="92" />` +
+            `<circle class="m-ring" data-ring cx="110" cy="110" r="92" transform="rotate(-90 110 110)" />` +
+            `</svg>` +
+            `<div class="m-dialnum"><span class="m-val" data-val>3,1</span><span class="m-unit" data-unit>kW teraz</span>${inDial}</div>` +
+            `${onRing}${satellite}</div></div>` +
+            `<div class="m-verdict"><span class="m-badge" data-badge>Bežná prevádzka</span>` +
+            `<div class="m-dots"><i></i><i></i><i></i><i></i></div></div>` +
+            `</div>` +
+            `<div class="m-colb">${banner}` +
+            `<div class="m-footline"><span class="m-chartlabel">Priebeh dňa</span><span class="m-season">Leto</span></div>` +
+            `<div class="m-stripwrap" data-strip>` +
+            `<div class="m-strip">${stripSvg()}</div>` +
+            `<div class="m-ghost" data-ghost hidden><span class="m-dot"></span></div>` +
+            `<div class="m-marker" data-marker><span class="m-dot"></span></div>` +
+            `<div class="m-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>` +
+            `</div></div>`
+        );
+    }
+
+    const VARIANTS = [
+        {
+            v: 'dnes',
+            key: 'Dnes',
+            name: 'Dve bubliny nad pásom',
+            sub: 'Súčasný stav. Koridor nad pásom dňa je rezervovaný stále, pri zobrazení sa ešte nafúkne.',
+            notes: [['note', 'Referencia pre porovnanie — nič sa nemení.']],
+        },
+        {
+            v: 'a',
+            key: 'A',
+            name: 'Vnútri kruhu',
+            sub: 'Tretí riadok pod „kW (odhad)“. Čas a výkon čítaš ako jeden údaj.',
+            notes: [
+                ['pro', 'Nezaberie ani milimeter navyše — ani zvisle, ani vodorovne.'],
+                ['pro', 'Hovorí „tých 7,8 kW patrí k času 13:06“, čo je presne tá informácia.'],
+                ['con', 'Na nízkych telefónoch sa ciferník zmršťuje na 170 px a tri riadky v ňom budú tesné.'],
+            ],
+        },
+        {
+            v: 'b',
+            key: 'B',
+            name: 'Prívesok na prstenci',
+            sub: 'Sedí na okraji prstenca a vyrezáva doň zárez. Zmestí sa do medzery, ktorá pod ciferníkom už je.',
+            notes: [
+                ['pro', 'Najsilnejšie pôsobí ako súčasť kruhu.'],
+                ['pro', 'Šírka nie je problém — je vycentrovaná, na úzkom telefóne vyzerá rovnako.'],
+                ['con', 'Zárez prerušuje prstenec. Posun o 22° doprava drží zárez mimo miesta, kde končí oblúk.'],
+            ],
+        },
+        {
+            v: 'c',
+            key: 'C',
+            name: 'Satelit vedľa kruhu',
+            sub: 'Vpravo hore na úrovni jednej hodiny, spojená s prstencom vlásočnicou.',
+            notes: [
+                ['pro', 'Kruh ostáva nedotknutý — žiadna kolízia s oblúkom ani s číslom.'],
+                ['pro', 'Jasne oddelené: je to ovládací prvok, nie ďalší údaj.'],
+                ['con', 'Na 375 px sa už dotýka okraja karty, pod ním prečnieva. Potiahni posuvník.'],
+            ],
+        },
+    ];
+
+    /* ---- Vykreslenie ---------------------------------------------------------------- */
+    const grid = document.getElementById('grid');
+    grid.innerHTML = VARIANTS.map(
+        (d) =>
+            `<div class="variant" data-rec="${d.v === 'b' ? 1 : 0}">` +
+            `<div class="v-head"><span class="v-key">${d.key}</span><span class="v-name">${d.name}</span></div>` +
+            `<p class="v-sub">${d.sub}</p>` +
+            `<div class="mock" data-v="${d.v}" data-preview="1">${mockHtml(d.v)}</div>` +
+            `<div class="v-meter"><span class="m-label">Pás dňa</span><span class="m-num" data-meter>–</span>` +
+            `<span class="m-delta" data-delta data-zero="1">referencia</span></div>` +
+            `<ul class="v-notes">${d.notes.map(([k, t]) => `<li data-k="${k}">${t}</li>`).join('')}</ul>` +
+            `</div>`,
+    ).join('');
+
+    const mocks = [...grid.querySelectorAll('.mock')];
+    /** Náhľadový čas v minútach, alebo null = „teraz". Jeden pre všetky mocky, aby sa dali porovnať. */
+    let preview = DEFAULT_PREVIEW;
+
+    function paint() {
+        const minutes = preview === null ? NOW_MIN : preview;
+        const kw = kwAt(minutes);
+        const seg = segmentAt(minutes);
+        const accent = tierOfPower(kw);
+
+        for (const mock of mocks) {
+            mock.dataset.preview = preview === null ? '0' : '1';
+            mock.style.setProperty('--pv-accent', tierVar(accent));
+
+            const ring = mock.querySelector('[data-ring]');
+            ring.style.strokeDashoffset = String(DIAL_CIRCUMFERENCE * (1 - Math.min(1, kw / AC_LIMIT_KW)));
+            ring.style.stroke = tierVar(accent);
+
+            const val = mock.querySelector('[data-val]');
+            val.textContent = fmt1(kw);
+            val.style.color = tierVar(accent);
+
+            mock.querySelector('[data-unit]').textContent = preview === null ? 'kW teraz' : 'kW (odhad)';
+
+            const badge = mock.querySelector('[data-badge]');
+            badge.textContent = seg.title;
+            badge.style.color = tierVar(seg.tier);
+            badge.style.borderColor = `color-mix(in srgb, ${tierVar(seg.tier)} 40%, transparent)`;
+            badge.style.backgroundColor = `color-mix(in srgb, ${tierVar(seg.tier)} 16%, transparent)`;
+
+            const t = mock.querySelector('[data-time]');
+            if (t) t.textContent = hhmm(minutes);
+            const told = mock.querySelector('[data-time-old]');
+            if (told) told.textContent = `Náhľad · ${hhmm(minutes)}`;
+
+            // Bublina/banner je vidno len pri náhľade - logika zobrazenia sa nemení.
+            const bubble = mock.querySelector('.m-pill, .m-banner');
+            const holder = mock.querySelector('.m-sat') || bubble;
+            if (holder) holder.hidden = preview === null;
+
+            mock.querySelector('[data-marker]').style.left = `${(minutes / 1440) * 100}%`;
+            const ghost = mock.querySelector('[data-ghost]');
+            ghost.hidden = preview === null;
+            ghost.style.left = `${(NOW_MIN / 1440) * 100}%`;
+        }
+        requestAnimationFrame(measure);
+    }
+
+    /** Výška pása dňa je jediné, čo sa medzi variantmi naozaj líši - preto sa meria naživo. */
+    function measure() {
+        const heights = mocks.map((m) => Math.round(m.querySelector('.m-strip').getBoundingClientRect().height));
+        const base = heights[0];
+        mocks.forEach((mock, i) => {
+            const box = mock.parentElement;
+            box.querySelector('[data-meter]').textContent = `${heights[i]} px`;
+            const delta = box.querySelector('[data-delta]');
+            if (i === 0) {
+                delta.textContent = 'referencia';
+                delta.dataset.zero = '1';
+            } else {
+                const pct = base > 0 ? Math.round(((heights[i] - base) / base) * 100) : 0;
+                delta.textContent = `+${heights[i] - base} px · +${pct} %`;
+                delta.dataset.zero = heights[i] === base ? '1' : '0';
+            }
+        });
+    }
+
+    /* ---- Interakcia ------------------------------------------------------------------ */
+    const btnNow = document.getElementById('st-now');
+    const btnPrev = document.getElementById('st-prev');
+
+    function setPreview(next) {
+        preview = next;
+        btnNow.setAttribute('aria-pressed', String(next === null));
+        btnPrev.setAttribute('aria-pressed', String(next !== null));
+        btnPrev.textContent = next === null ? 'Náhľad 13:06' : `Náhľad ${hhmm(next)}`;
+        paint();
+    }
+
+    btnNow.addEventListener('click', () => setPreview(null));
+    btnPrev.addEventListener('click', () => setPreview(preview === null ? DEFAULT_PREVIEW : preview));
+
+    grid.addEventListener('click', (e) => {
+        const target = e.target instanceof Element ? e.target : null;
+        if (!target) return;
+        if (target.closest('[data-reset]')) {
+            setPreview(null);
+            return;
+        }
+        const strip = target.closest('[data-strip]');
+        if (!strip) return;
+        const box = strip.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (e.clientX - box.left) / box.width));
+        setPreview(Math.round((ratio * 1440) / 5) * 5);
+    });
+
+    const width = document.getElementById('width');
+    const widthVal = document.getElementById('width-val');
+    width.addEventListener('input', () => {
+        document.documentElement.style.setProperty('--mock-w', `${width.value}px`);
+        widthVal.textContent = `${width.value} px`;
+        requestAnimationFrame(measure);
+    });
+
+    window.addEventListener('resize', () => requestAnimationFrame(measure));
+    document.fonts?.ready.then(measure);
+    paint();
+</script>
