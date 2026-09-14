@@ -181,15 +181,18 @@ const MIN_FLICK_SPEED = SWIPE.minDistPx / SWIPE.flickMs;
  * @param {HTMLElement} wrap @param {(clientX: number, clientY: number) => void} handle @param {() => void} hide
  */
 function bindTouch(wrap, handle, hide) {
-    /** @type {{ x: number, y: number, t: number } | null} */
+    /** @typedef {{ x: number, y: number, t: number, scrollY: number }} Zaciatok */
+    /** @type {Zaciatok | null} */
     let start = null;
     let shown = false;
-    const vzdialenost = (/** @type {Touch} */ t) => Math.hypot(t.clientX - (start?.x ?? 0), t.clientY - (start?.y ?? 0));
+    // Začiatok gesta ide dovnútra ako parameter, nie cez `start` zvonku: v touchend je už
+    // vynulovaný a vzdialenosť by sa merala od ľavého horného rohu displeja.
+    const vzdialenost = (/** @type {Touch} */ t, /** @type {Zaciatok} */ from) => Math.hypot(t.clientX - from.x, t.clientY - from.y);
 
     wrap.addEventListener(
         'touchstart',
         (e) => {
-            start = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: e.timeStamp };
+            start = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: e.timeStamp, scrollY: window.scrollY };
             shown = false;
         },
         { passive: true },
@@ -200,7 +203,7 @@ function bindTouch(wrap, handle, hide) {
             if (!start) return;
             const cas = e.timeStamp - start.t;
             const zvislo = Math.abs(e.touches[0].clientY - start.y) > Math.abs(e.touches[0].clientX - start.x);
-            if (zvislo || (cas <= SWIPE.flickMs && vzdialenost(e.touches[0]) / (cas || 1) >= MIN_FLICK_SPEED)) return;
+            if (zvislo || (cas <= SWIPE.flickMs && vzdialenost(e.touches[0], start) / (cas || 1) >= MIN_FLICK_SPEED)) return;
             shown = true;
             handle(e.touches[0].clientX, e.touches[0].clientY);
         },
@@ -210,7 +213,15 @@ function bindTouch(wrap, handle, hide) {
         const bolStart = start;
         start = null;
         // Ťuknutie ukáže tooltip až tu; švihnutie ho neukáže vôbec (kartu prepne swipe.js).
-        if (!shown && bolStart && e.changedTouches.length === 1 && vzdialenost(e.changedTouches[0]) < SWIPE.minDistPx)
+        // Posunutá stránka znamená, že gesto si vzal prehliadač na scrollovanie - aj keď prst
+        // prešiel krátku vzdialenosť a na ťuknutie by inak vyzeral.
+        if (
+            !shown &&
+            bolStart &&
+            e.changedTouches.length === 1 &&
+            window.scrollY === bolStart.scrollY &&
+            vzdialenost(e.changedTouches[0], bolStart) < SWIPE.minDistPx
+        )
             handle(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
         setTimeout(hide, TOOLTIP_HOLD_MS);
     });
@@ -235,8 +246,13 @@ function bindPointer(wrap, tooltip, handle) {
         }, TOOLTIP_FADE_MS);
     };
     tapTooltips.push({ wrap, hide });
-    wrap.addEventListener('mousemove', (e) => handle(e.clientX, e.clientY));
-    wrap.addEventListener('mouseleave', hide);
+    // Kurzor a pero idú cez pointer udalosti, prst nie - toho obsluhuje bindTouch nižšie.
+    // Prehliadač totiž po každom ťuknutí prstom dopošle aj kurzorové udalosti (mouseover,
+    // mousemove, click, mouseout, mouseleave), takže tooltip ukázaný prstom hneď zhaslo
+    // `mouseleave` - na displeji z neho ostalo asi 15 ms bliknutie. Rozhoduje teda typ
+    // vstupu, nie druh udalosti.
+    wrap.addEventListener('pointermove', (e) => e.pointerType !== 'touch' && handle(e.clientX, e.clientY));
+    wrap.addEventListener('pointerleave', (e) => e.pointerType !== 'touch' && hide());
     bindTouch(wrap, handle, hide);
 }
 
