@@ -687,6 +687,16 @@ async function tuknutie(page, x, y) {
     await cdp.detach();
 }
 
+/** Ťuknutie úplne bez pohybu: prst sa nepohol ani o pixel, takže neprišiel žiadny touchmove
+ * a appka má na rozhodnutie len touchstart a touchend. @param {import('@playwright/test').Page} page @param {number} x @param {number} y */
+async function tuknutieBezPohybu(page, x, y) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    await page.waitForTimeout(80);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await cdp.detach();
+}
+
 /** Preblikol tooltip niekedy počas gesta? Stav po geste nestačí: appka tooltip po prepnutí
  * karty aj tak zatvára a sám sa zatvára po TOOLTIP_HOLD_MS, takže kontrola „potom" by
  * preblikutie nikdy nechytila. Preto sa trieda sleduje cez MutationObserver od začiatku gesta.
@@ -898,7 +908,37 @@ test.describe('listovanie kariet prstom', () => {
         await swipe(page, '#forecast-chart-wrap', { dx: 0, dy: -120, ms: 400 });
         expect(await boloVidno(page), 'tooltip preblikol pri posúvaní stránky').toBe(false);
         expect(await page.evaluate(() => window.scrollY), 'stránka sa cez graf neposunula').toBeGreaterThan(0);
+
+        // Aj krátky scroll je scroll: prst prešiel menej, než je hranica švihnutia, takže na
+        // dĺžku vyzerá ako ťuknutie - rozhoduje to, že sa stránka posunula.
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await sledujTooltip(page, 'forecast-tooltip');
+        await swipe(page, '#forecast-chart-wrap', { dx: 0, dy: -40, ms: 400 });
+        expect(await boloVidno(page), 'tooltip sa ukázal po krátkom posunutí stránky').toBe(false);
         await ocakavajKartu(page, 'predpoved');
+        expect(errors).toEqual([]);
+    });
+
+    /** Ťuknutie, pri ktorom sa prst ani nepohne, nepošle jediný touchmove - appka má na
+     * rozhodnutie len začiatok a koniec gesta. Aj tak musí hodnotu ukázať, a nechať ju na
+     * displeji: prehliadač po ťuknutí dopošle kurzorové udalosti a tooltip z nich kedysi
+     * zhasol do 15 ms, takže z neho ostalo bliknutie. Test preto kontroluje aj to, že tam
+     * po chvíli ešte stále je. */
+    test('ťuknutie na graf bez pohybu prsta ukáže tooltip a ten ostane', async ({ page }) => {
+        const errors = await openApp(page);
+        await page.locator('#nav-predpoved').click();
+        const graf = await page.locator('#forecast-chart-wrap').boundingBox();
+        if (!graf) throw new Error('graf predpovede nie je vidno');
+
+        await sledujTooltip(page, 'forecast-tooltip');
+        await tuknutieBezPohybu(page, graf.x + graf.width / 2, graf.y + graf.height / 2);
+        expect(await boloVidno(page), 'ťuknutie bez pohybu prsta neukázalo tooltip').toBe(true);
+        // Polovica času, po ktorom sa tooltip zatvára sám - dovtedy musí byť vidno.
+        await page.waitForTimeout(TOOLTIP_HOLD_MS / 2);
+        expect(
+            await page.evaluate(() => document.getElementById('forecast-tooltip')?.classList.contains('visible')),
+            'tooltip po ťuknutí hneď zhasol',
+        ).toBe(true);
         expect(errors).toEqual([]);
     });
 
