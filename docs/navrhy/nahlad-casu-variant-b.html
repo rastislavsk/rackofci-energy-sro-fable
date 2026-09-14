@@ -1,0 +1,979 @@
+<title>Bublina na prstenci</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+/>
+
+<style>
+    /* ============================================================================
+   Tri podvarianty variantu B - bublina s náhľadom času na prstenci ciferníka.
+   Tokeny, písma a rozmery sú z style.css appky; mock je v mierke telefónu 375px.
+   Appka je zámerne len tmavá, preto aj tento náhľad ostáva jednofarebný.
+
+   Geometria (platí pre všetky tri):
+     viewBox 220, r=92, stroke 14, ciferník 210px  ->  mierka 0,9545
+     stred prstenca:  105 px od vrchu obalu, polomer 87,8 px
+     vonkajší okraj:  polomer 94,5 px
+   ============================================================================ */
+    :root {
+        --bg: #0a0a0a;
+        --ink: #f2f0ea;
+        --ink-70: rgba(242, 240, 234, 0.94);
+        --ink-45: rgba(242, 240, 234, 0.64);
+        --ink-35: rgba(242, 240, 234, 0.54);
+        --ink-20: rgba(242, 240, 234, 0.26);
+        --ink-12: rgba(242, 240, 234, 0.16);
+        --ink-08: rgba(242, 240, 234, 0.1);
+        --ink-05: rgba(242, 240, 234, 0.06);
+        --green: #9ef25b;
+        --amber: #ffc24b;
+        --red: #ff6b57;
+
+        --font-body: 'Space Grotesk', -apple-system, 'Segoe UI', Arial, sans-serif;
+        --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+        --page-bg: #0e0f11;
+        --page-panel: #131417;
+        --page-line: rgba(242, 240, 234, 0.11);
+
+        --dial: 210px;
+        --dial-r: 87.8px; /* stred prstenca */
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+    body {
+        margin: 0;
+        background: var(--page-bg);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+    }
+    .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding-inline: 20px;
+        padding-block: 40px 64px;
+    }
+
+    /* ---- Hlavička ------------------------------------------------------------- */
+    .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        margin: 0 0 10px;
+    }
+    h1 {
+        font-size: clamp(26px, 4.4vw, 38px);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.12;
+        margin: 0 0 14px;
+        text-wrap: balance;
+    }
+    .lede {
+        max-width: 64ch;
+        color: var(--ink-45);
+        margin: 0;
+    }
+    .lede b {
+        color: var(--ink-70);
+        font-weight: 600;
+    }
+
+    /* ---- Ovládanie ------------------------------------------------------------ */
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px 26px;
+        margin: 32px 0 8px;
+        padding: 16px 18px;
+        background: var(--page-panel);
+        border: 1px solid var(--page-line);
+        border-radius: 14px;
+    }
+    .ctl {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .ctl-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        white-space: nowrap;
+    }
+    .switch {
+        display: inline-flex;
+        padding: 3px;
+        gap: 3px;
+        background: var(--ink-05);
+        border: 1px solid var(--page-line);
+        border-radius: 999px;
+    }
+    .switch button {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: var(--ink-45);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 6px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+    .switch button[aria-pressed='true'] {
+        background: var(--ink);
+        color: var(--bg);
+    }
+    input[type='range'] {
+        width: 190px;
+        accent-color: var(--green);
+        cursor: pointer;
+    }
+    .ctl-val {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink-70);
+        font-variant-numeric: tabular-nums;
+        min-width: 46px;
+    }
+    .hint {
+        font-size: 13px;
+        color: var(--ink-35);
+        margin: 0 0 30px;
+    }
+
+    /* ---- Mriežka -------------------------------------------------------------- */
+    .grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 34px 24px;
+        align-items: start;
+    }
+    .variant {
+        flex: 0 0 auto;
+        width: 375px;
+        max-width: 100%;
+    }
+    .v-head {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        margin-bottom: 4px;
+    }
+    .v-key {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: var(--bg);
+        background: var(--ink-45);
+        border-radius: 4px;
+        padding: 2px 7px;
+        line-height: 1.4;
+    }
+    .variant[data-rec='1'] .v-key {
+        background: var(--green);
+    }
+    .v-name {
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+    .v-sub {
+        font-size: 13px;
+        color: var(--ink-35);
+        margin: 0 0 14px;
+        min-height: 58px;
+    }
+
+    /* ---- Mock ----------------------------------------------------------------- */
+    .mock {
+        width: 100%;
+        height: 518px;
+        background: var(--bg);
+        border: 1px solid var(--page-line);
+        border-radius: 20px;
+        padding: 22px 18px 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+        user-select: none;
+    }
+    /* Detailný režim: preč s kontextom karty, ciferník na 1,7x pre posúdenie remesla. */
+    .grid[data-mode='detail'] .mock {
+        height: 400px;
+        justify-content: center;
+        padding: 0;
+    }
+    .grid[data-mode='detail'] .m-verdict,
+    .grid[data-mode='detail'] .m-colb {
+        display: none;
+    }
+    .grid[data-mode='detail'] .m-dialhero {
+        margin: 0;
+    }
+    .grid[data-mode='detail'] .m-dialwrap {
+        margin: 0;
+        transform: scale(1.7);
+    }
+
+    .m-cola {
+        flex: 0 0 auto;
+    }
+    .m-colb {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        margin-top: 16px;
+    }
+    .m-dialhero {
+        text-align: center;
+        margin-bottom: 22px;
+    }
+    .m-dialwrap {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        margin: 18px 0 4px;
+    }
+    .m-dial {
+        width: var(--dial);
+        height: var(--dial);
+        display: block;
+    }
+    .m-track {
+        fill: none;
+        stroke: var(--ink-08);
+        stroke-width: 14;
+    }
+    .m-ring {
+        fill: none;
+        stroke-width: 14;
+        stroke-linecap: round;
+        stroke-dasharray: 578;
+        transition:
+            stroke-dashoffset 0.45s ease,
+            stroke 0.35s,
+            opacity 0.35s;
+    }
+    /* Spoločná úprava všetkých troch: pri náhľade prstenec zosvetlie. Nadväzuje na to,
+   čo appka už hovorí prerušovanou čiarou v páse dňa - "toto nie je namerané". */
+    .mock[data-preview='1'] .m-ring {
+        opacity: 0.62;
+    }
+    .m-dialnum {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        pointer-events: none;
+    }
+    .m-val {
+        font-family: var(--font-mono);
+        font-size: 38px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        transition: color 0.35s;
+    }
+    .m-unit {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+    }
+
+    .m-verdict {
+        text-align: center;
+        margin-bottom: 16px;
+    }
+    .m-badge {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid;
+        border-radius: 999px;
+        padding: 8px 18px;
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        transition:
+            color 0.35s,
+            border-color 0.35s,
+            background-color 0.35s;
+    }
+    .m-dots {
+        display: flex;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 12px;
+    }
+    .m-dots i {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--ink-12);
+    }
+    .m-dots i:first-child {
+        background: var(--ink-45);
+    }
+
+    .m-footline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        flex: 0 0 auto;
+    }
+    .m-chartlabel,
+    .m-season {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+    }
+    .m-season {
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--ink-12);
+    }
+    .m-stripwrap {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 18px;
+        cursor: crosshair;
+    }
+    .m-strip {
+        flex: 1 1 auto;
+        min-height: 20px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--ink-05);
+    }
+    .m-strip svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    .m-ticks {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--ink-35);
+        flex: 0 0 auto;
+    }
+    .m-marker,
+    .m-ghost {
+        position: absolute;
+        top: 0;
+        bottom: 37px;
+        width: 0;
+        pointer-events: none;
+    }
+    .m-marker {
+        border-left: 1px dashed var(--ink-20);
+    }
+    .m-ghost {
+        border-left: 1px dotted var(--ink-12);
+    }
+    .m-dot {
+        position: absolute;
+        left: -4px;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--ink);
+        box-shadow: 0 0 0 3px var(--bg);
+    }
+    .m-ghost .m-dot {
+        background: var(--ink-20);
+    }
+
+    /* ---- Bublina: spoločný základ ---------------------------------------------- */
+    .m-pill {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 11px;
+        border-radius: 999px;
+        border: 1px dashed color-mix(in srgb, var(--pv) 60%, transparent);
+        background: color-mix(in srgb, var(--pv) 15%, #0a0a0a);
+        color: var(--pv);
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        line-height: 1.25;
+        font-variant-numeric: tabular-nums;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+            color 0.35s,
+            border-color 0.35s,
+            background-color 0.35s;
+    }
+    .m-pill:hover {
+        background: color-mix(in srgb, var(--pv) 30%, #0a0a0a);
+    }
+    .m-pill:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 3px;
+    }
+    .m-pill svg {
+        width: 12px;
+        height: 12px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+    }
+    .m-pill .ret {
+        opacity: 0.72;
+        display: flex;
+    }
+    /* Obal bubliny: presne 210x210 nad ciferníkom, aby sa dala polohovať v jeho
+   súradniciach bez ohľadu na to, aká široká je karta. */
+    .m-anchor {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: var(--dial);
+        height: var(--dial);
+        transform: translateX(-50%);
+        pointer-events: none;
+    }
+    .m-anchor > * {
+        pointer-events: auto;
+    }
+
+    /* ---- B1 Prívesok: visí pod prstencom na krátkej stopke ---------------------- */
+    /* Stred prstenca je 192,8 px od vrchu, vonkajší okraj 199,5 px. Stopka odtiaľ
+   vedie 6 px nadol, bublina za ňou. Prstenec ostáva celý. */
+    .b1-stem {
+        position: absolute;
+        left: calc(50% + 30px);
+        top: 199px;
+        width: 1px;
+        height: 6px;
+        background: color-mix(in srgb, var(--pv) 55%, transparent);
+    }
+    .b1-pill {
+        position: absolute;
+        left: calc(50% + 30px);
+        top: 205px;
+        transform: translateX(-50%);
+    }
+
+    /* ---- B2 Zárez: bublina je vsadená do prstenca ------------------------------- */
+    /* Stred bubliny leží presne na strednici prstenca (192,8 px), lem vo farbe
+   pozadia doň vyreže zárez - prstenec a bublina sú jeden objekt. */
+    .b2-pill {
+        position: absolute;
+        left: calc(50% + 30px);
+        top: 192.8px;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 0 5px var(--bg);
+    }
+
+    /* ---- B3 Obežnica: bublina obieha prstenec podľa času dňa -------------------- */
+    /* Ciferník sa tu číta aj ako 24-hodinový: 00:00 hore, poludnie dole. Polohu
+   dopočítava JS (orbitPos), lebo závisí od zvoleného času. */
+    .b3-pill {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 0 5px var(--bg);
+        padding: 4px 9px;
+        font-size: 12px;
+    }
+    /* Duch "teraz" na obežnej dráhe - rovnaký nápad, aký má appka na páse dňa. */
+    .b3-ghost {
+        position: absolute;
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        border: 1.5px solid var(--ink-20);
+        background: var(--bg);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+    /* Štvrtiny dňa (00/06/12/18) ako rysky vnútri prstenca, viď dialTicks. */
+    .b3-ticks line {
+        stroke: var(--ink-20);
+        stroke-width: 2;
+        stroke-linecap: round;
+    }
+    .mock[data-v='b3'] .m-dialwrap {
+        cursor: grab;
+    }
+    .mock[data-v='b3'] .m-dialwrap:active {
+        cursor: grabbing;
+    }
+
+    /* Kým je "teraz", bublina ani jej ozdoby nie sú v DOM-e vidieť. */
+    .mock[data-preview='0'] .m-anchor {
+        display: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .m-ring,
+        .m-val,
+        .m-badge,
+        .m-pill {
+            transition: none;
+        }
+    }
+
+    /* ---- Poznámky ------------------------------------------------------------- */
+    .v-notes {
+        list-style: none;
+        padding: 0;
+        margin: 16px 0 0;
+        display: grid;
+        gap: 7px;
+    }
+    .v-notes li {
+        display: grid;
+        grid-template-columns: 15px 1fr;
+        gap: 8px;
+        font-size: 13.5px;
+        line-height: 1.45;
+        color: var(--ink-45);
+    }
+    .v-notes li::before {
+        content: '+';
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--green);
+    }
+    .v-notes li[data-k='con']::before {
+        content: '−';
+        color: var(--red);
+    }
+    .v-notes li[data-k='note']::before {
+        content: '·';
+        color: var(--ink-35);
+    }
+
+    /* ---- Záver ---------------------------------------------------------------- */
+    .closing {
+        margin-top: 56px;
+        padding: 24px 26px;
+        background: var(--page-panel);
+        border: 1px solid var(--page-line);
+        border-left: 3px solid var(--green);
+        border-radius: 4px 14px 14px 4px;
+        max-width: 74ch;
+    }
+    .closing h2 {
+        font-size: 19px;
+        font-weight: 600;
+        margin: 0 0 10px;
+        letter-spacing: -0.01em;
+    }
+    .closing p {
+        margin: 0 0 12px;
+        color: var(--ink-45);
+    }
+    .closing p:last-child {
+        margin-bottom: 0;
+    }
+    .closing b {
+        color: var(--ink-70);
+        font-weight: 600;
+    }
+    .tag {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+    }
+
+    @media (max-width: 460px) {
+        .wrap {
+            padding-block: 28px 44px;
+        }
+        .variant {
+            width: 100%;
+        }
+        input[type='range'] {
+            width: 100%;
+            min-width: 120px;
+        }
+        .ctl {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="wrap">
+    <p class="eyebrow">Karta Spotrebiče · variant B, rozpracovaný</p>
+    <h1>Tri spôsoby, ako bublinu pripnúť na prstenec</h1>
+    <p class="lede">
+        Všetky tri zaberajú <b>rovnako málo miesta</b> — pás dňa dostane v každom z nich tých istých 85 px. Líšia sa vzťahom ku kruhu: jedna
+        na ňom <b>visí</b>, druhá je doň <b>vsadená</b>, tretia po ňom <b>obieha</b>. Spoločnú úpravu majú všetky: pri náhľade prstenec
+        zosvetlie — appka tým istým spôsobom (prerušovaná čiara v páse dňa) už hovorí „toto nie je namerané“.
+    </p>
+
+    <div class="controls">
+        <div class="ctl">
+            <span class="ctl-label">Režim</span>
+            <div class="switch" role="group" aria-label="Režim zobrazenia">
+                <button type="button" id="md-card" aria-pressed="true">V karte</button>
+                <button type="button" id="md-zoom" aria-pressed="false">Detail 1,7×</button>
+            </div>
+        </div>
+        <div class="ctl">
+            <span class="ctl-label">Stav</span>
+            <div class="switch" role="group" aria-label="Stav náhľadu">
+                <button type="button" id="st-now" aria-pressed="false">Teraz</button>
+                <button type="button" id="st-prev" aria-pressed="true">Náhľad</button>
+            </div>
+        </div>
+        <div class="ctl">
+            <span class="ctl-label">Čas náhľadu</span>
+            <input type="range" id="time" min="0" max="1435" step="5" value="786" aria-label="Čas náhľadu" />
+            <span class="ctl-val" id="time-val">13:06</span>
+        </div>
+    </div>
+    <p class="hint">
+        Potiahni čas a sleduj, čo robí bublina. V B3 sa dá ťahať aj priamo po prstenci. Klik na bublinu vráti „teraz“ (16:40).
+    </p>
+
+    <div class="grid" id="grid" data-mode="card"></div>
+
+    <div class="closing">
+        <p class="tag">Odporúčanie</p>
+        <h2>B2 Zárez, ak ide o pokoj. B3 Obežnica, ak chceš niečo navyše.</h2>
+        <p>
+            <b>B2</b> je najtichšia a najviac splýva s kruhom — bublina je doň vsadená, nie prilepená. Je to najmenej kódu a najmenej vecí,
+            čo sa môže pokaziť.
+        </p>
+        <p>
+            <b>B3</b> je jediná, čo pridáva informáciu: uhol bubliny hovorí, kde v dni si, a prázdny krúžok ukazuje, kde je „teraz“ — presne
+            ten istý nápad, aký má appka na páse dňa. Navyše sa dá ťahať priamo po prstenci, takže si čas nastavíš aj bez pása. Cenu za to
+            platí zmätkom: prstenec zrazu nesie dve veci naraz — dĺžkou výkon, uhlom bubliny čas. <b>Domnienka:</b> pre teba, kto appku
+            pozná, to bude čitateľné; pre hosťa možno nie.
+        </p>
+        <p>
+            <b>B1</b> som nechal v hre ako najkonzervatívnejšiu možnosť — prstenec ostáva úplne nedotknutý. Pri malom ciferníku (nízke
+            telefóny, 170 px) je ale tá stopka najkrehkejšia z troch.
+        </p>
+    </div>
+</div>
+
+<script>
+    /* ---- Doménové dáta zo shared/config.js (letné tarifné okná) ---------------- */
+    const SEGMENTS = [
+        { from: 0, to: 450, tier: 'amber', title: 'Lacný nočný prúd' },
+        { from: 450, to: 510, tier: 'red', title: 'Najdrahšia sieť' },
+        { from: 510, to: 570, tier: 'amber', title: 'Menšie spotrebiče' },
+        { from: 570, to: 630, tier: 'red', title: 'Najdrahšia sieť' },
+        { from: 630, to: 1050, tier: 'green', title: 'Ideálne okno' },
+        { from: 1050, to: 1230, tier: 'amber', title: 'Bežná prevádzka' },
+        { from: 1230, to: 1290, tier: 'red', title: 'Najdrahšia sieť' },
+        { from: 1290, to: 1350, tier: 'amber', title: 'OK (Lacná)' },
+        { from: 1350, to: 1410, tier: 'red', title: 'Najdrahšia sieť' },
+        { from: 1410, to: 1440, tier: 'amber', title: 'Lacný nočný prúd' },
+    ];
+
+    const NOW_MIN = 1000; // 16:40
+    const AC_LIMIT_KW = 10;
+    const POWER_LOW_KW = 2;
+    const POWER_HIGH_KW = 4;
+    const DIAL_CIRCUMFERENCE = 578;
+    const DIAL_PX = 210;
+    const RING_R = 87.8; // strednica prstenca v CSS px
+
+    const kwAt = (m) => {
+        const v = 7.8 * Math.exp(-Math.pow((m - 780) / 235, 2));
+        return v < 0.06 ? 0 : v;
+    };
+    const segmentAt = (m) => SEGMENTS.find((s) => m >= s.from && m < s.to) || SEGMENTS[0];
+    const tierOfPower = (kw) => (kw >= POWER_HIGH_KW ? 'green' : kw >= POWER_LOW_KW ? 'amber' : 'red');
+    const tierVar = (t) => `var(--${t})`;
+    const fmt1 = (n) => n.toFixed(1).replace('.', ',');
+    const hhmm = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.round(m) % 60).padStart(2, '0')}`;
+
+    /** Poloha na obežnej dráhe: 00:00 hore, deň v smere hodinových ručičiek. */
+    function orbitPos(minutes, radius = RING_R) {
+        const rad = ((minutes / 1440) * 360 - 90) * (Math.PI / 180);
+        return { x: DIAL_PX / 2 + radius * Math.cos(rad), y: DIAL_PX / 2 + radius * Math.sin(rad) };
+    }
+
+    /** Štvrtiny dňa ako rysky vnútri prstenca: 00:00 hore, potom v smere ručičiek. */
+    function dialTicks() {
+        const lines = [0, 90, 180, 270]
+            .map((deg) => {
+                const rad = ((deg - 90) * Math.PI) / 180;
+                const p = (r) => [110 + r * Math.cos(rad), 110 + r * Math.sin(rad)];
+                const [x1, y1] = p(72);
+                const [x2, y2] = p(80);
+                return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" />`;
+            })
+            .join('');
+        return `<g class="b3-ticks">${lines}</g>`;
+    }
+
+    const CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>';
+    const BACK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14l-4-4 4-4" /><path d="M5 10h9a5 5 0 015 5v1" /></svg>';
+
+    /* ---- Pás dňa --------------------------------------------------------------- */
+    function curvePoints() {
+        const pts = [];
+        for (let m = 0; m <= 1440; m += 15) pts.push(`${m},${(96 - (kwAt(m) / 8.2) * 84).toFixed(1)}`);
+        return pts;
+    }
+    function stripSvg() {
+        const bands = SEGMENTS.map(
+            (s) => `<rect x="${s.from}" y="0" width="${s.to - s.from}" height="100" fill="var(--${s.tier})" opacity="0.13" />`,
+        ).join('');
+        const all = curvePoints();
+        const measured = all.filter((p) => Number(p.split(',')[0]) <= NOW_MIN);
+        return (
+            `<svg viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true">${bands}` +
+            `<polyline points="${all.join(' ')}" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="10 8" opacity="0.55" />` +
+            `<polyline points="${measured.join(' ')}" fill="none" stroke="var(--green)" stroke-width="3" />` +
+            `</svg>`
+        );
+    }
+
+    /* ---- Bublina a jej ozdoby podľa podvariantu -------------------------------- */
+    const pill = (cls, withClock) =>
+        `<button type="button" class="m-pill ${cls}" data-reset aria-label="Náhľad času, klikni pre návrat na teraz">` +
+        (withClock ? CLOCK : '') +
+        `<span data-time>13:06</span><span class="ret">${BACK}</span></button>`;
+
+    function anchorHtml(v) {
+        if (v === 'b1') return `<div class="m-anchor"><span class="b1-stem"></span>${pill('b1-pill', true)}</div>`;
+        if (v === 'b2') return `<div class="m-anchor">${pill('b2-pill', true)}</div>`;
+        // B3: štyri orientačné body dňa + duch "teraz" + bublina bez ikonky (musí ostať malá).
+        return `<div class="m-anchor"><span class="b3-ghost" data-ghost-orbit></span>${pill('b3-pill', false)}</div>`;
+    }
+
+    function mockHtml(v) {
+        return (
+            `<div class="m-cola"><div class="m-dialhero"><div class="m-dialwrap" data-dialwrap>` +
+            `<svg class="m-dial" viewBox="0 0 220 220" aria-hidden="true">` +
+            `<circle class="m-track" cx="110" cy="110" r="92" />` +
+            `<circle class="m-ring" data-ring cx="110" cy="110" r="92" transform="rotate(-90 110 110)" />` +
+            (v === 'b3' ? dialTicks() : '') +
+            `</svg>` +
+            `<div class="m-dialnum"><span class="m-val" data-val>–</span><span class="m-unit" data-unit>kW teraz</span></div>` +
+            `${anchorHtml(v)}</div></div>` +
+            `<div class="m-verdict"><span class="m-badge" data-badge>—</span>` +
+            `<div class="m-dots"><i></i><i></i><i></i><i></i></div></div></div>` +
+            `<div class="m-colb">` +
+            `<div class="m-footline"><span class="m-chartlabel">Priebeh dňa</span><span class="m-season">Leto</span></div>` +
+            `<div class="m-stripwrap" data-strip><div class="m-strip">${stripSvg()}</div>` +
+            `<div class="m-ghost" data-ghost><span class="m-dot"></span></div>` +
+            `<div class="m-marker" data-marker><span class="m-dot"></span></div>` +
+            `<div class="m-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>` +
+            `</div></div>`
+        );
+    }
+
+    const VARIANTS = [
+        {
+            v: 'b1',
+            key: 'B1',
+            name: 'Prívesok',
+            sub: 'Visí pod prstencom na krátkej stopke. Prstenec ostáva celý — bublina sa ho iba dotýka, nezasahuje doň.',
+            notes: [
+                ['pro', 'Prstenec sa nikde neprerušuje, takže sa dá čítať ako doteraz.'],
+                ['pro', 'Najmenej invazívne — ak sa vám návrh neosvedčí, nezanechá stopu.'],
+                ['con', 'Stopka je drobný detail, ktorý sa pri zmenšenom ciferníku (170 px) stratí.'],
+                ['note', 'Visí mimo spodku, aby si nezavadzala s koncom oblúka.'],
+            ],
+        },
+        {
+            v: 'b2',
+            key: 'B2',
+            name: 'Zárez',
+            sub: 'Vsadená priamo do prstenca. Lem vo farbe pozadia doň vyreže zárez, takže prstenec a bublina tvoria jeden objekt.',
+            notes: [
+                ['pro', 'Najviac splýva s kruhom — nie je prilepená, je jeho súčasťou.'],
+                ['pro', 'Najmenej kódu z troch: jedna poloha, žiaden výpočet.'],
+                ['con', 'Prstenec sa prerušuje. Posun o kúsok doprava drží zárez mimo miesta, kde oblúk končí.'],
+                ['note', 'Skús posunúť čas na ~18:00 — tam oblúk končí najbližšie k zárezu.'],
+            ],
+        },
+        {
+            v: 'b3',
+            key: 'B3',
+            name: 'Obežnica',
+            sub: 'Obieha prstenec podľa času dňa: 00:00 hore, poludnie dole (rysky vnútri prstenca). Prázdny krúžok ukazuje, kde je „teraz“.',
+            notes: [
+                ['pro', 'Jediná pridáva informáciu — uhol hovorí, kde v dni si.'],
+                ['pro', 'Dá sa ťahať priamo po prstenci, čas nastavíš bez pása dňa.'],
+                ['pro', 'Duch „teraz“ je ten istý nápad, aký appka už má na páse dňa.'],
+                ['con', 'Prstenec nesie dve veci naraz: dĺžkou výkon, uhlom bubliny čas.'],
+            ],
+        },
+    ];
+
+    /* ---- Vykreslenie ------------------------------------------------------------ */
+    const grid = document.getElementById('grid');
+    grid.innerHTML = VARIANTS.map(
+        (d) =>
+            `<div class="variant" data-rec="${d.v === 'b2' ? 1 : 0}">` +
+            `<div class="v-head"><span class="v-key">${d.key}</span><span class="v-name">${d.name}</span></div>` +
+            `<p class="v-sub">${d.sub}</p>` +
+            `<div class="mock" data-v="${d.v}" data-preview="1">${mockHtml(d.v)}</div>` +
+            `<ul class="v-notes">${d.notes.map(([k, t]) => `<li data-k="${k}">${t}</li>`).join('')}</ul>` +
+            `</div>`,
+    ).join('');
+
+    const mocks = [...grid.querySelectorAll('.mock')];
+    /** Čas náhľadu v minútach, alebo null = „teraz“. Spoločný pre všetky tri, aby sa dali porovnať. */
+    let preview = 786;
+
+    function paint() {
+        const minutes = preview === null ? NOW_MIN : preview;
+        const kw = kwAt(minutes);
+        const seg = segmentAt(minutes);
+        const accent = tierOfPower(kw);
+
+        for (const mock of mocks) {
+            mock.dataset.preview = preview === null ? '0' : '1';
+            mock.style.setProperty('--pv', tierVar(accent));
+
+            const ring = mock.querySelector('[data-ring]');
+            ring.style.strokeDashoffset = String(DIAL_CIRCUMFERENCE * (1 - Math.min(1, kw / AC_LIMIT_KW)));
+            ring.style.stroke = tierVar(accent);
+
+            const val = mock.querySelector('[data-val]');
+            val.textContent = fmt1(kw);
+            val.style.color = tierVar(accent);
+            mock.querySelector('[data-unit]').textContent = preview === null ? 'kW teraz' : 'kW (odhad)';
+
+            const badge = mock.querySelector('[data-badge]');
+            badge.textContent = seg.title;
+            badge.style.color = tierVar(seg.tier);
+            badge.style.borderColor = `color-mix(in srgb, ${tierVar(seg.tier)} 40%, transparent)`;
+            badge.style.backgroundColor = `color-mix(in srgb, ${tierVar(seg.tier)} 16%, transparent)`;
+
+            mock.querySelector('[data-time]').textContent = hhmm(minutes);
+
+            // B3: bublina aj duch "teraz" si polohu dopočítajú z času.
+            if (mock.dataset.v === 'b3') {
+                const p = orbitPos(minutes);
+                const b3 = mock.querySelector('.b3-pill');
+                b3.style.left = `${p.x}px`;
+                b3.style.top = `${p.y}px`;
+                const g = orbitPos(NOW_MIN);
+                const ghost = mock.querySelector('[data-ghost-orbit]');
+                ghost.style.left = `${g.x}px`;
+                ghost.style.top = `${g.y}px`;
+            }
+
+            mock.querySelector('[data-marker]').style.left = `${(minutes / 1440) * 100}%`;
+            const ghost = mock.querySelector('[data-ghost]');
+            ghost.hidden = preview === null;
+            ghost.style.left = `${(NOW_MIN / 1440) * 100}%`;
+        }
+    }
+
+    /* ---- Ovládanie -------------------------------------------------------------- */
+    const btnNow = document.getElementById('st-now');
+    const btnPrev = document.getElementById('st-prev');
+    const timeInput = document.getElementById('time');
+    const timeVal = document.getElementById('time-val');
+
+    function setPreview(next) {
+        preview = next;
+        btnNow.setAttribute('aria-pressed', String(next === null));
+        btnPrev.setAttribute('aria-pressed', String(next !== null));
+        if (next !== null) timeInput.value = String(next);
+        timeVal.textContent = hhmm(next === null ? NOW_MIN : next);
+        paint();
+    }
+
+    btnNow.addEventListener('click', () => setPreview(null));
+    btnPrev.addEventListener('click', () => setPreview(preview === null ? Number(timeInput.value) : preview));
+    timeInput.addEventListener('input', () => setPreview(Number(timeInput.value)));
+
+    for (const [id, mode] of [
+        ['md-card', 'card'],
+        ['md-zoom', 'detail'],
+    ]) {
+        document.getElementById(id).addEventListener('click', () => {
+            grid.dataset.mode = mode;
+            document.getElementById('md-card').setAttribute('aria-pressed', String(mode === 'card'));
+            document.getElementById('md-zoom').setAttribute('aria-pressed', String(mode === 'detail'));
+        });
+    }
+
+    grid.addEventListener('click', (e) => {
+        const target = e.target instanceof Element ? e.target : null;
+        if (!target) return;
+        if (target.closest('[data-reset]')) return setPreview(null);
+        const strip = target.closest('[data-strip]');
+        if (!strip) return;
+        const box = strip.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (e.clientX - box.left) / box.width));
+        setPreview(Math.round((ratio * 1440) / 5) * 5);
+    });
+
+    /* ---- B3: ťahanie po prstenci -------------------------------------------------
+       Uhol od stredu ciferníka -> minúta dňa. Rovnaká matematika ako orbitPos, len
+       opačným smerom. */
+    const b3wrap = grid.querySelector('.mock[data-v="b3"] [data-dialwrap]');
+    let dragging = false;
+
+    function angleToMinutes(e) {
+        const box = b3wrap.getBoundingClientRect();
+        const dx = e.clientX - (box.left + box.width / 2);
+        const dy = e.clientY - (box.top + box.height / 2);
+        let deg = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+        if (deg < 0) deg += 360;
+        return Math.round(((deg / 360) * 1440) / 5) * 5;
+    }
+
+    b3wrap.addEventListener('pointerdown', (e) => {
+        if (e.target instanceof Element && e.target.closest('[data-reset]')) return;
+        dragging = true;
+        b3wrap.setPointerCapture(e.pointerId);
+        setPreview(angleToMinutes(e));
+    });
+    b3wrap.addEventListener('pointermove', (e) => {
+        if (dragging) setPreview(angleToMinutes(e));
+    });
+    for (const ev of ['pointerup', 'pointercancel']) b3wrap.addEventListener(ev, () => (dragging = false));
+
+    paint();
+</script>
