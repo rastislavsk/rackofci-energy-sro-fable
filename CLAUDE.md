@@ -36,6 +36,31 @@ nebola. Inde `!important` nepíš.
 Kontroluje to e2e test „`.hidden` skryje každý prvok v stránke“, ktorý prejde všetky
 prvky vo všetkých kartách. Nový prvok netreba nikam dopisovať – test ho uvidí sám.
 
+## Dotyk a kurzor
+
+**Pravidlo: rozhoduj podľa typu vstupu, nie podľa druhu udalosti.**
+
+Prehliadač po každom ťuknutí prstom dopošle aj kurzorové udalosti – `mouseover`, `mousemove`,
+`click`, `mouseout`, `mouseleave`. Kód písaný pre myš tak beží aj pod prstom, hoci o ňom nevie.
+Tooltip grafu ukázaný prstom nám takto zhasínal `mouseleave` do 15 ms: na displeji z neho ostalo
+bliknutie a ťuknutie na graf prakticky nefungovalo. Kurzor a pero preto obsluhujú pointer udalosti
+s kontrolou `pointerType !== 'touch'`, prst má vlastný kód nad touch udalosťami (`bindTouch`
+vo `web/interactions.js`).
+
+Typ zariadenia nezisťuj – žiadne `maxTouchPoints`, `@media (hover: hover)` ani userAgent. Appka
+reaguje na to, čím sa práve ovláda, nie na to, čo to je za prístroj; mobil s myšou aj notebook
+s dotykovým displejom sú bežné. Z toho istého dôvodu nie je v `style.css` ani jedno pravidlo
+`:hover` – na dotyku by ostávalo visieť po ťuknutí.
+
+V CSS to isté hovorí `touch-action`. `none` znamená, že prehliadač nad prvkom nesmie nič, ani
+posunúť stránku – patrí len úchytkám na ťahanie (bežec na páse dňa). Plochy, cez ktoré človek
+scrolluje popri ceste, majú `pan-y` (`.chart-wrap`, `.daystrip-wrap`): zvislé posúvanie si necháva
+prehliadač, vodorovné gesto JS. Kde `touch-action` nie je, rozhoduje prehliadač o oboch smeroch –
+to je pre bežný obsah správne, dopisovať ho netreba.
+
+Kontrolujú to e2e testy v skupine „listovanie kariet prstom“: ťuknutie bez jediného pohybu prsta
+musí tooltip ukázať a nechať svietiť, zvislý ťah cez graf musí posunúť stránku a tooltip neukázať.
+
 ## Ako overovať
 
 ```bash
