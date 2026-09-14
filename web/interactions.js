@@ -89,8 +89,16 @@ function initTimePreview(store, dom) {
     };
     grip.addEventListener('pointerup', end);
     grip.addEventListener('pointercancel', end);
-    // Bez šípok by sa náhľad času z klávesnice ovládať nedal - jazdec je jediná cesta k nemu.
+    // Jazdec je jediná cesta k náhľadu času, preto musí celý fungovať aj z klávesnice:
+    // šípky ho posúvajú a keď náhľad nebeží, rovno ho otvoria od aktuálneho času; Esc sa
+    // vráti do živého stavu. Otvoriť náhľad inak než ťuknutím sa dá len takto - v pokoji
+    // je jazdec značkou "teraz" bez pointer-events (viď .dial-grip.at-now v style.css),
+    // takže myš ani prst sa naň nedostanú a ťuknutie prepadne na ciferník pod ním.
     grip.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            return store.setState({ previewMinutes: null, isDragging: false });
+        }
         const step =
             e.key === 'ArrowLeft' || e.key === 'ArrowDown'
                 ? -PREVIEW.keyStepMin
@@ -101,6 +109,15 @@ function initTimePreview(store, dom) {
         e.preventDefault();
         const from = store.get().previewMinutes ?? minutesOfDay(store.get().now);
         store.setState({ previewMinutes: (((from + step) % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY });
+    });
+    // Enter a medzerník na značke "teraz" otvoria náhľad na aktuálnom čase.
+    // detail === 0 je klik z klávesnice; myš a prst posielajú aspoň 1. Bez tej podmienky by
+    // sa náhľad znovu otvoril hneď po tom, ako ho dotiahnutie jazdca na "teraz" zrušilo -
+    // ťahanie totiž na konci pošle aj klik.
+    grip.addEventListener('click', (e) => {
+        if (e.detail === 0 && store.get().previewMinutes === null) {
+            store.setState({ previewMinutes: minutesOfDay(store.get().now) });
+        }
     });
     dom.dialWrap.addEventListener('click', (e) => {
         const target = /** @type {HTMLElement} */ (e.target);
