@@ -16,6 +16,7 @@ import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
 import { escapeHtml, fmt1, hourLabel, pad2, weekDateLabel, weekDayLong, weekDayShort } from '../../shared/format.js';
 import { dayDetailMessage, EMPTY_MESSAGES, weekMessage } from '../../shared/messages.js';
 import { ICON_CLOUD, ICON_PARTLY, ICON_SUN } from '../icons.js';
+import { changed } from '../memo.js';
 import { forecastChartSvg, weekBarsSvg, weekHeatSvg } from '../svg.js';
 
 /** @typedef {import('../../shared/solar.js').ForecastDay} ForecastDay */
@@ -192,6 +193,38 @@ function renderDayHead(detail, day, sel, dom) {
     dom.weekDayTitle.textContent = detail === 'week' ? 'Celý týždeň' : weekDayLong(day.date, sel);
 }
 
+/**
+ * Prisunutie pri prelistovaní dňa (ťah prstom, viď targetFor vo web/swipe.js): nový deň príde
+ * z tej strany, ktorou sa listovalo - to isté, čo panel-in-* robí pri prepnutí kariet.
+ *
+ * Animuje sa len samotné prelistovanie, nie otvorenie detailu: keď sa zmenil aj druh detailu,
+ * používateľ práve prišiel z prehľadu a nič sa nelistovalo. Oba kľúče sa preto kontrolujú pri
+ * každom prekreslení, nech si memo pamätá, čo naozaj bolo na obrazovke.
+ *
+ * Reštart animácie: karta sa pri zmene dňa neprekresľuje z display:none, tak si animácia nemá
+ * ako naskočiť sama - prehliadač ju spustí odznova až vtedy, keď sa zmení jej meno. Preto sú
+ * v CSS dve rovnaké (day-in-a a day-in-b) a striedajú sa; ktorá bola naposledy, drží samotná
+ * trieda na prvku.
+ * @param {'day' | 'week' | null} detail @param {number} sel @param {1 | -1} dir
+ * @param {import('../dom.js').Dom} dom
+ */
+function renderDayAnim(detail, sel, dir, dom) {
+    const inyDruh = changed('weekDetailDruh', detail);
+    const inyDen = changed('weekDetailDen', sel);
+    const prvky = [dom.weekDayHead, dom.weekGrid];
+    // Pri odchode z detailu aj pri príchode doň trieda z posledného listovania odchádza.
+    // Hlavička detailu sa totiž medzitým skryje a znovu ukáže, a to samo o sebe animáciu
+    // spustí - detail otvorený z prehľadu by sa tak prisunul, hoci sa nelistovalo.
+    if (inyDruh) for (const el of prvky) el.classList.remove('day-in-a', 'day-in-b', 'day-in-prev');
+    if (detail !== 'day' || !inyDen || inyDruh) return;
+    const dalsia = dom.weekDayHead.classList.contains('day-in-b') ? 'day-in-a' : 'day-in-b';
+    for (const el of prvky) {
+        el.classList.remove('day-in-a', 'day-in-b');
+        el.classList.add(dalsia);
+        el.classList.toggle('day-in-prev', dir < 0);
+    }
+}
+
 /** Mapa výroby: v prehľade a v detaile týždňa celý týždeň, v detaile dňa jediný riadok
  * vybraného dňa (mierka farieb ostáva z celého týždňa).
  * @param {import('../state.js').AppState} state @param {ForecastDay[]} days @param {number} sel
@@ -250,6 +283,7 @@ export function renderSedemdni(state, dom) {
     const sel = Math.min(state.weekSelDay, days.length - 1);
 
     renderDayHead(detail, days[sel], sel, dom);
+    renderDayAnim(detail, sel, state.weekDayDir, dom);
     renderStats(weekStatsModel(days, state.pv, state.forecast ? state.forecast.tomorrowSunny : false), dom, !!detail);
 
     // Mapa a stĺpce dostanú skutočný rozmer karty len na širokej obrazovke; na mobile si

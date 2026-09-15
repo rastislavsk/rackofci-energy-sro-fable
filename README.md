@@ -36,7 +36,8 @@ jej QR kód kreslí knižnica z CDN.
 
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v
 poradí spodnej navigácie – aj ponad grafy a tabuľku 7 dní. V detaile dňa listuje to isté
-gesto dni v týždni, nie karty: doľava na ďalší deň, doprava na predchádzajúci. Nezacyklí sa
+gesto dni v týždni, nie karty: doľava na ďalší deň, doprava na predchádzajúci – a nový deň
+sa prisunie z tej strany, ktorou si ťahal, rovnako ako karta pri prepnutí. Nezacyklí sa
 – za posledným dňom ani pred prvým už ťah nevedie nikam a von z detailu vedie šípka späť
 v jeho hlavičke. V detaile týždňa ťah neurobí nič, lebo je tam jediná obrazovka. Nad grafom
 listuje rýchle švihnutie a tooltip sa pri ňom vôbec neukáže; pomalé ťahanie po krivke ostáva

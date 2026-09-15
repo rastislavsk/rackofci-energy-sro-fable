@@ -57,8 +57,11 @@ function pansInner(from, dx) {
 function targetFor(state, dx) {
     if (state.panel === '7dni' && state.weekDetail && !state.wide) {
         if (state.weekDetail !== 'day') return null;
-        const den = nextWeekDay(state.weekSelDay, dx < 0 ? 1 : -1, state.forecast?.days.length ?? 0);
-        return den === null ? null : { weekSelDay: den };
+        const dir = /** @type {1 | -1} */ (dx < 0 ? 1 : -1);
+        const den = nextWeekDay(state.weekSelDay, dir, state.forecast?.days.length ?? 0);
+        // Smer ide do stavu s dňom: podľa neho sa detail prisunie z tej strany, ktorou sa
+        // listovalo - to isté, čo panelChange robí pre karty.
+        return den === null ? null : { weekSelDay: den, weekDayDir: dir };
     }
     const panel = nextPanel(state.panel, dx < 0 ? 1 : -1);
     return panel ? panelChange(state.panel, panel) : null;

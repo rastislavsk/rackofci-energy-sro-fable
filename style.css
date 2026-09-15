@@ -1436,6 +1436,46 @@ b {
         color: var(--ink-35);
     }
 }
+/* Prelistovanie dňa v detaile (ťah prstom): nový deň príde posunutý z tej strany, ktorou sa
+   listovalo, a za 200 ms dojde na miesto - to isté, čo panel-in-* robí pri prepnutí kariet.
+   Triedu pridáva renderDayAnim vo web/render/sedemdni.js na hlavičku detailu a na mriežku,
+   teda na všetko, čo je v detaile vidno.
+
+   Prečo dve rovnaké animácie: karta sa pri zmene dňa neprekresľuje z display:none (ako pri
+   prepnutí kariet), takže animácia nemá ako naskočiť sama - prehliadač ju spustí odznova až
+   vtedy, keď sa zmení jej meno. Render preto medzi a a b strieda. Smer nesie premenná
+   --day-in-from, nech nie sú potrebné štyri.
+
+   Útlm pohybu ich vypína globálne, viď @media na začiatku súboru. Pravidlá zámerne nesiahajú
+   na display, takže utilitu .hidden nemajú ako prebiť. */
+@keyframes day-in-a {
+    from {
+        opacity: 0;
+        transform: translateX(var(--day-in-from));
+    }
+}
+@keyframes day-in-b {
+    from {
+        opacity: 0;
+        transform: translateX(var(--day-in-from));
+    }
+}
+.day-in-a,
+.day-in-b {
+    --day-in-from: 24px;
+    animation-duration: 200ms;
+    animation-timing-function: ease-out;
+}
+.day-in-a {
+    animation-name: day-in-a;
+}
+.day-in-b {
+    animation-name: day-in-b;
+}
+.day-in-prev {
+    --day-in-from: -24px;
+}
+
 /* Hlavička obrazovky s detailom dňa: šípka späť a názov dňa. Zobrazuje sa len vtedy, keď
    je karta v detaile (renderSedemdni jej inak pridá .hidden). */
 .day-head {

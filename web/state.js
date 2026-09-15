@@ -16,6 +16,7 @@ import { PANELS } from './dom.js';
  *   source: 'worker' | 'legacy' | null,
  *   dataError: boolean,
  *   weekSelDay: number,
+ *   weekDayDir: 1 | -1,
  *   weekDetail: 'day' | 'week' | null,
  *   verdictPage: number,
  *   previewMinutes: number | null,
@@ -40,6 +41,10 @@ export function initialState(now, season, layout) {
         source: null,
         dataError: false,
         weekSelDay: 0,
+        // Smer posledného prelistovania dní v detaile dňa: 1 na ďalší deň, -1 na predchádzajúci.
+        // Od neho závisí, z ktorej strany sa detail prisunie (viď day-in-* v style.css) - to isté,
+        // čo panelDir robí pre karty.
+        weekDayDir: /** @type {1 | -1} */ (1),
         // Karta 7 dní má na mobile dve obrazovky: prehľad dní a detail vybraného dňa.
         // Na širokej obrazovke je na všetko miesto naraz a toto pole sa neprejaví.
         weekDetail: null,

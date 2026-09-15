@@ -902,6 +902,25 @@ function boloVidno(page) {
     return page.evaluate(() => window.tooltipBolVidno);
 }
 
+/** Animácia trvá 200 ms, takže na pohľad po geste už môže byť preč - test preto zbiera
+ * `animationstart` rovnako, ako sledujTooltip zbiera preblikanie tooltipu.
+ * @param {import('@playwright/test').Page} page */
+async function sledujAnimacie(page) {
+    await page.evaluate(() => {
+        // Poslucháč sa vešia raz za stránku; ďalšie volania len vynulujú zoznam. Druhý
+        // poslucháč by do toho istého poľa zapisoval každú animáciu dvakrát.
+        if (!window.spusteneAnimacie)
+            document.addEventListener('animationstart', (e) => window.spusteneAnimacie.push(e.animationName), true);
+        window.spusteneAnimacie = [];
+    });
+}
+
+/** Mená animácií prisunutia dňa, ktoré odvtedy naskočili. @param {import('@playwright/test').Page} page */
+async function animacieDna(page) {
+    const mena = await page.evaluate(() => window.spusteneAnimacie);
+    return mena.filter((/** @type {string} */ n) => n.startsWith('day-in'));
+}
+
 /** @param {import('@playwright/test').Page} page @param {string} panel */
 async function ocakavajKartu(page, panel) {
     await expect(page.locator(`#panel-${panel}`)).toBeVisible();
@@ -1270,6 +1289,45 @@ test.describe('listovanie kariet prstom', () => {
         await ocakavajDetailDna(page, 0);
         await page.locator('#week-day-back').click();
         await expect(page.locator('#week-day-head')).toBeHidden();
+        expect(errors).toEqual([]);
+    });
+
+    /** Prisunutie je jediné, čo o prelistovaní dňa povie oko - bez neho sa obsah len prepne.
+     * Test drží obe polovice: že animácia naskočí, aj že naskočí znovu pri druhom ťahu tým
+     * istým smerom (vtedy sa karta neprekresľuje z display:none a bez striedania dvoch
+     * rovnakých animácií by prehliadač druhýkrát nespustil nič). */
+    test('prelistovanie dňa prisunie detail z tej strany, ktorou sa ťahalo', async ({ page }) => {
+        const errors = await openApp(page);
+        await page.locator('#nav-7dni').click();
+        await page.locator('#week-tbody tr[data-day-index="2"]').click();
+        await ocakavajDetailDna(page, 2);
+
+        // Ťah doľava: nový deň príde sprava (bez triedy day-in-prev), na hlavičke aj na mriežke.
+        await sledujAnimacie(page);
+        await swipe(page, '#week-day-head', { dx: -120 });
+        await ocakavajDetailDna(page, 3);
+        expect(await animacieDna(page), 'prisunutie nenaskočilo').toHaveLength(2);
+        await expect(page.locator('#week-grid')).not.toHaveClass(/day-in-prev/);
+
+        // Druhý ťah tým istým smerom musí animáciu spustiť znovu.
+        await sledujAnimacie(page);
+        await swipe(page, '#week-day-head', { dx: -120 });
+        await ocakavajDetailDna(page, 4);
+        expect(await animacieDna(page), 'druhé prelistovanie nič nespustilo').toHaveLength(2);
+
+        // Ťah doprava prisunie deň zľava.
+        await sledujAnimacie(page);
+        await swipe(page, '#week-day-head', { dx: 120 });
+        await ocakavajDetailDna(page, 3);
+        expect(await animacieDna(page), 'prisunutie späť nenaskočilo').toHaveLength(2);
+        await expect(page.locator('#week-grid')).toHaveClass(/day-in-prev/);
+
+        // Otvorenie detailu z prehľadu nie je listovanie - tam sa neprisúva nič.
+        await page.locator('#week-day-back').click();
+        await sledujAnimacie(page);
+        await page.locator('#week-tbody tr[data-day-index="5"]').click();
+        await ocakavajDetailDna(page, 5);
+        expect(await animacieDna(page), 'otvorenie detailu sa tvárilo ako listovanie').toHaveLength(0);
         expect(errors).toEqual([]);
     });
 
