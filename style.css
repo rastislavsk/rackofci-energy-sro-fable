@@ -1413,11 +1413,12 @@ b {
    celú kartu miesto naraz. Šípka „›" preto svieti len tu: hovorí, že riadok tabuľky aj
    bublina Dnes/Zajtra otvárajú detail, a nad 768 px by klamala. V tabuľke ju kreslí posledná
    bunka, aby nepotrebovala stĺpec navyše (a s ním prázdnu hlavičku), v bubline ide za jej
-   popiskou. */
+   popiskou. Miesto pre ňu (padding-right) je tesne nad jej šírkou z rovnakého dôvodu, pre
+   ktorý je tu tabuľka celkovo úspornejšia - viď odsadenie buniek nižšie. */
 @media (max-width: 767px) {
     .week-table tbody td:last-child {
         position: relative;
-        padding-right: 24px;
+        padding-right: 20px;
     }
     .week-table tbody td:last-child::after {
         content: '›';
@@ -1488,6 +1489,19 @@ b {
     padding: 9px 10px;
     text-align: left;
     white-space: nowrap;
+}
+/* Na úzkej obrazovke sa tabuľka musí zmestiť na šírku bez posúvania - inak prvé vodorovné
+   gesto posunie ju a až druhé prelistuje kartu. S odsadením 10 px si tabuľka pýtala 326 px,
+   o 8 viac, než jej pri 360 px širokom displeji ostáva. Šetrí sa odsadenie, nie stĺpec: text
+   sa nestratí a na širšej obrazovke vyzerá tabuľka rovnako ako predtým - stĺpce si voľné
+   miesto aj tak rozdelia (tabuľka má width: 100 %). Pravidlo musí stáť až za základným,
+   nie v skoršom @media bloku - rovnakú špecificitu rozhoduje poradie v súbore. */
+@media (max-width: 767px) {
+    .week-table th,
+    .week-table td {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
 }
 .week-table th {
     font-family: var(--font-mono);
