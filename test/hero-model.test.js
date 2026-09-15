@@ -20,7 +20,7 @@ test('13:00 v lete so 6,4 kW: zelené okno, všetky spotrebiče go, žiadne čak
     const m = heroModel({ ...base, now: at('13:00') });
     assert.equal(m.tier, 'green');
     assert.equal(m.accent, 'green');
-    assert.equal(m.eyebrow, "IT'S GREENTIME 🙂 · silné slnko");
+    assert.equal(m.eyebrow, 'Suntime · silné slnko');
     assert.equal(m.message.headline, 'Najlepší čas dňa — zapni všetko');
     assert.ok(m.devices.every((d) => d.state === 'go' && d.tier === 'green'));
     assert.equal(m.waitTime, null);

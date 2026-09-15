@@ -409,10 +409,12 @@ b {
     padding-top: var(--sp-1);
     margin-bottom: var(--sp-5);
 }
+/* Hlášky v pageri (tu a .wait-chip nižšie) nemajú rám - farbu nesie výplň a text.
+   Ohraničené ostávajú len spotrebiče (.go-chip), lebo sú to tlačidlá a rám je to,
+   čo na nich vidno, že sa dajú stlačiť. */
 .badge {
     display: inline-flex;
     align-items: center;
-    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
     background: color-mix(in srgb, var(--accent) 16%, transparent);
     border-radius: var(--radius-pill);
     padding: 8px 18px;
@@ -424,8 +426,7 @@ b {
     color: var(--accent);
     transition:
         color var(--dur),
-        background-color var(--dur),
-        border-color var(--dur);
+        background-color var(--dur);
 }
 /* Obal je štvorec presne veľký ako ciferník - značka "teraz" aj jazdec sa v ňom
    polohujú v percentách (viď ringPercent), takže o jeho veľkosti nemusia vedieť.
@@ -833,7 +834,6 @@ b {
     gap: 7px;
     padding: 8px 12px;
     border-radius: var(--radius-pill);
-    border: 1px solid color-mix(in srgb, var(--green) 40%, transparent);
     background: color-mix(in srgb, var(--green) 12%, transparent);
     color: var(--green);
     font-family: var(--font-mono);
