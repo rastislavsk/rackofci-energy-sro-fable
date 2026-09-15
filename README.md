@@ -35,9 +35,12 @@ jej QR kód kreslí knižnica z CDN.
 - **Zdieľať** – QR kód, odkaz na appku a tlačidlo na poslanie cez WhatsApp.
 
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v
-poradí spodnej navigácie – aj ponad grafy a tabuľku 7 dní. Nad grafom kartu prepne rýchle
-švihnutie a tooltip sa pri ňom vôbec neukáže; pomalé ťahanie po krivke ostáva prezeraním
-s tooltipom ako doteraz. Zvislý ťah je posúvanie stránky – aj keď prst začne na grafe – a
+poradí spodnej navigácie – aj ponad grafy a tabuľku 7 dní. V detaile dňa listuje to isté
+gesto dni v týždni, nie karty: doľava na ďalší deň, doprava na predchádzajúci. Nezacyklí sa
+– za posledným dňom ani pred prvým už ťah nevedie nikam a von z detailu vedie šípka späť
+v jeho hlavičke. V detaile týždňa ťah neurobí nič, lebo je tam jediná obrazovka. Nad grafom
+listuje rýchle švihnutie a tooltip sa pri ňom vôbec neukáže; pomalé ťahanie po krivke ostáva
+prezeraním s tooltipom ako doteraz. Zvislý ťah je posúvanie stránky – aj keď prst začne na grafe – a
 tooltip sa pri ňom neukáže tiež. Nová karta sa pritom prisunie z tej strany, ktorou si listoval –
 rovnako pri ťahaní aj pri kliku na navigáciu. Kto má v systéme zapnutý útlm pohybu, dostane
 prepnutie bez animácie. Ťahanie si pre seba

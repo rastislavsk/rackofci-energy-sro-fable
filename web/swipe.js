@@ -1,8 +1,9 @@
-// Prepínanie kariet potiahnutím prsta (mobil, tablet). Gesto len rozhodne, ktorá karta je
-// na rade; zmenu robí setState ako všetko ostatné, takže sa to od kliku na navigáciu nelíši.
+// Listovanie potiahnutím prsta (mobil, tablet): karty, a v detaile dňa dni v týždni. Gesto
+// len rozhodne, čo je na rade; zmenu robí setState ako všetko ostatné, takže sa to od kliku
+// na navigáciu nelíši.
 
 import { SWIPE } from '../shared/config.js';
-import { nextPanel, panelChange } from './state.js';
+import { nextPanel, nextWeekDay, panelChange } from './state.js';
 
 /** @typedef {import('./state.js').Store} Store */
 /** @typedef {import('./dom.js').Dom} Dom */
@@ -45,12 +46,20 @@ function pansInner(from, dx) {
     return !!from.room && (dx < 0 ? from.room.right : from.room.left) > 1;
 }
 
-/** Kam gesto vedie: buď späť z detailu dňa (podobrazovka karty 7 dní), alebo na susednú
- * kartu, alebo nikam (kraj poradia). @param {import('./state.js').AppState} state @param {number} dx */
+/** Kam gesto vedie: buď na susedný deň (v detaile dňa), alebo na susednú kartu, alebo
+ * nikam (kraj poradia, detail týždňa).
+ *
+ * Detail je podobrazovka karty 7 dní a ťah ju neopúšťa - v detaile dňa listuje dni, tak ako
+ * inde listuje karty, a v detaile týždňa nerobí nič, lebo tam je jediná obrazovka a listovať
+ * nie je čo. Von z detailu vedie šípka späť v jeho hlavičke (a tlačidlo Späť v prehliadači).
+ * Na širokej obrazovke detail neexistuje (viď renderSedemdni), tam sa ťahom prepína karta.
+ * @param {import('./state.js').AppState} state @param {number} dx */
 function targetFor(state, dx) {
-    // V detaile dňa je ťah doprava to isté ako tlačidlo Späť. Na širokej obrazovke detail
-    // neexistuje (viď renderSedemdni), tam sa ťahom rovno prepína karta.
-    if (state.panel === '7dni' && state.weekDetail && !state.wide && dx > 0) return { weekDetail: null };
+    if (state.panel === '7dni' && state.weekDetail && !state.wide) {
+        if (state.weekDetail !== 'day') return null;
+        const den = nextWeekDay(state.weekSelDay, dx < 0 ? 1 : -1, state.forecast?.days.length ?? 0);
+        return den === null ? null : { weekSelDay: den };
+    }
     const panel = nextPanel(state.panel, dx < 0 ? 1 : -1);
     return panel ? panelChange(state.panel, panel) : null;
 }
@@ -108,7 +117,8 @@ export function initSwipe(store, dom, hideTooltips) {
             if (e.cancelable) e.preventDefault();
             const patch = targetFor(store.get(), dx);
             if (!patch) return;
-            // Tooltip grafu ostal otvorený pod prstom - po odchode z karty nemá čo držať.
+            // Tooltip grafu ostal otvorený pod prstom - po odchode z karty (aj po prelistovaní
+            // na iný deň) ukazuje hodnotu, ktorá už pod ním nie je.
             hideTooltips();
             store.setState(patch);
         },

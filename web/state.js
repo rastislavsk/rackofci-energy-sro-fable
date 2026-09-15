@@ -92,6 +92,19 @@ export function nextPanel(panel, dir) {
 }
 
 /**
+ * Susedný deň v detaile dňa, alebo null na kraji týždňa - listovanie sa nezacyklí, rovnako
+ * ako pri kartách. Z posledného dňa teda ťah doľava nevedie nikam a z prvého ťah doprava
+ * tiež nie; von z detailu vedie šípka späť v jeho hlavičke.
+ * @param {number} sel @param {1 | -1} dir 1 = nasledujúci deň, -1 = predchádzajúci
+ * @param {number} count koľko dní predpoveď má
+ * @returns {number | null}
+ */
+export function nextWeekDay(sel, dir, count) {
+    const i = sel + dir;
+    return i >= 0 && i < count ? i : null;
+}
+
+/**
  * Zmena karty aj so smerom, ktorým sa má nová karta prisunúť. Smer sa berie z poradia
  * v navigácii, nie z toho, či sa ťahalo alebo klikalo - prechod tak vyzerá rovnako pri
  * oboch. Detail dňa sa pritom zatvára: je to vec jedného pozretia, nie stav, do ktorého

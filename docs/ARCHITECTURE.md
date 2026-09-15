@@ -48,7 +48,8 @@ súčasťou stavu a zapisujú sa priamo. `dom.js` drží všetky odkazy do DOM, 
 funkcie nikdy nevolajú `querySelector` samy. `svg.js` skladá SVG z modelu a nič nepočíta.
 `memo.js` drží tri pomôcky, vďaka ktorým render zapisuje do DOM len to, čo sa naozaj
 zmenilo (viď „Nezapisuj, čo sa nezmenilo“ nižšie). `swipe.js` prekladá ťahanie prstom na
-susednú kartu – rozhodne len, čo je na rade, a zmenu urobí `setState` ako pri kliku na
+susednú kartu – a v detaile dňa na susedný deň, lebo detail je podobrazovka karty a gesto ju
+neopúšťa – rozhodne len, čo je na rade, a zmenu urobí `setState` ako pri kliku na
 navigáciu. Čo si ťahanie nechá pre seba, nie je zoznam výnimiek, ale pravidlo: keď sa
 najbližší vnútorný pás pod prstom ešte má kam posunúť tým smerom, patrí gesto jemu.
 Menovaný je jediný prvok – úchytka bežca na páse dňa, ktorá sa ťahá a neposúva.
