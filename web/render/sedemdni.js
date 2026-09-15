@@ -4,7 +4,7 @@
 
 import { forecastChartModel, usePct, weekBarsModel, weekHeatModel, weekStatsModel } from '../../shared/chart-model.js';
 import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
-import { escapeHtml, fmt1, hourLabel, weekDateLabel, weekDayLong, weekDayShort } from '../../shared/format.js';
+import { escapeHtml, fmt1, hourLabel, pad2, weekDateLabel, weekDayLong, weekDayShort } from '../../shared/format.js';
 import { EMPTY_MESSAGES, weekMessage } from '../../shared/messages.js';
 import { ICON_CLOUD, ICON_PARTLY, ICON_SUN } from '../icons.js';
 import { dimsFor } from './predpoved.js';
@@ -12,13 +12,20 @@ import { forecastChartSvg, weekBarsSvg, weekHeatSvg } from '../svg.js';
 
 /** @typedef {import('../../shared/solar.js').ForecastDay} ForecastDay */
 
-/** Vstup grafu priebehu vybraného dňa - zdieľaný s tooltipom. @param {import('../state.js').AppState} state */
+/** Vstup grafu priebehu vybraného dňa - zdieľaný s tooltipom. Dnešok tu ukazuje nameranú
+ * krivku rovnako ako graf na karte Dnes-Zajtra; ostatné dni zatiaľ merané nemajú.
+ * @param {import('../state.js').AppState} state */
 export function weekCurveModel(state) {
     const days = state.forecast ? state.forecast.days : [];
     const day = days[state.weekSelDay];
     if (!day) return null;
-    const nowHour = state.weekSelDay === 0 ? state.now.getHours() + state.now.getMinutes() / 60 : null;
-    return forecastChartModel({ pts: day.hourly, nowHour, dims: dimsFor(state, 'weekCurve') });
+    const isToday = state.weekSelDay === 0;
+    return forecastChartModel({
+        pts: day.hourly,
+        realPts: isToday && state.pv ? state.pv.realCurveToday : [],
+        nowHour: isToday ? state.now.getHours() + state.now.getMinutes() / 60 : null,
+        dims: dimsFor(state, 'weekCurve'),
+    });
 }
 
 /** @param {boolean} sunny @param {number | null} cloudPct */
@@ -113,6 +120,11 @@ function renderCurve(state, day, dom) {
     const m = weekCurveModel(state);
     dom.weekCurve.innerHTML = m ? forecastChartSvg(m) : '';
     if (m) dom.weekCurve.setAttribute('viewBox', `0 0 ${m.dims.w} ${m.dims.h}`);
+    // Značka "teraz" patrí k dnešku, položka legendy ku krivke - keď sa krivka nekreslí,
+    // legenda by ohlasovala niečo, čo v grafe nie je.
+    dom.weekCurveNowBadge.classList.toggle('hidden', state.weekSelDay !== 0);
+    dom.weekCurveNowTime.textContent = `teraz ${pad2(state.now.getHours())}:${pad2(state.now.getMinutes())}`;
+    dom.weekCurveLiveLegend.classList.toggle('hidden', !m || !m.real.length);
     const parts = [];
     if (Number.isFinite(day.peakKw) && day.peakHour != null)
         parts.push(`<span>Špička <b>${day.peakKw.toFixed(1)} kW</b> o ${hourLabel(day.peakHour)}</span>`);
@@ -150,6 +162,8 @@ function renderEmpty(dom) {
     ])
         el.innerHTML = '';
     for (const el of [dom.weekToday, dom.weekTomorrow, dom.weekTotal]) el.textContent = '–';
+    dom.weekCurveNowBadge.classList.add('hidden');
+    dom.weekCurveLiveLegend.classList.add('hidden');
     for (const el of [
         dom.weekTodayBadge,
         dom.weekTodayMeta,
