@@ -2,7 +2,7 @@
 // doménovou logikou (shared/), takže test chytí rozdiel medzi modelom a tým, čo je v DOM.
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { ringPercent, usePct, visibleHours } from '../../shared/chart-model.js';
+import { ringPercent, usePct, visibleHours, WEEK_HOURS } from '../../shared/chart-model.js';
 import { LEGACY_SOURCES, PREVIEW, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
 import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
@@ -352,8 +352,10 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
     // správa o tom dni - očakávanie sa počíta tou istou funkciou ako v appke.
     await expect(page.locator('#week-msg-title')).toHaveText(dayDetailMessage(visibleHours(forecast.days[5].hourly)).title);
     await expect(page.locator('#week-curve-stat')).toContainText(`${fmt1(forecast.days[5].kwhTotal)} kWh`);
-    await expect(page.locator('#week-heat .day-label')).toHaveCount(1);
-    await expect(page.locator('#week-heat .day-label')).toHaveAttribute('data-day-index', '5');
+    // Jediný riadok mapy patrí vybranému dňu; skratka dňa v ňom nie je, deň hovorí hlavička.
+    await expect(page.locator('#week-heat .day-label')).toHaveCount(0);
+    await expect(page.locator('#week-heat .heat-cell:not([data-day-index="5"])')).toHaveCount(0);
+    await expect(page.locator('#week-heat .heat-cell')).toHaveCount(WEEK_HOURS.length);
 
     // Z detailu vedie späť jedine šípka vľavo hore. Atribút data-panel nesie aj #page, takže
     // klik kdekoľvek v stránke sa kedysi tváril ako prepnutie karty a detail zavrel.

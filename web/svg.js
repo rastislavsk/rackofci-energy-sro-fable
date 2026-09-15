@@ -65,7 +65,8 @@ export function weekHeatSvg(m) {
                 `<rect class="heat-cell${c.tier ? ` tier-${c.tier}` : ''}"${tipAttrs(c.tip)} data-day-index="${c.dayIndex}" x="${n(c.x)}" y="${n(c.y)}" width="${n(c.w)}" height="${n(c.h)}" rx="3" fill-opacity="${c.tier ? n(0.12 + c.frac * 0.8) : 0.05}"${c.tier ? '' : ' data-empty="1"'}/>`,
         )
         .join('');
-    out += `<rect class="week-row-sel" x="${m.selRect.x}" y="${n(m.selRect.y)}" width="${n(m.selRect.w)}" height="${n(m.selRect.h)}" rx="4"/>`;
+    if (m.selRect)
+        out += `<rect class="week-row-sel" x="${m.selRect.x}" y="${n(m.selRect.y)}" width="${n(m.selRect.w)}" height="${n(m.selRect.h)}" rx="4"/>`;
     return out;
 }
 

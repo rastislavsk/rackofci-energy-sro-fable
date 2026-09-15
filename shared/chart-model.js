@@ -274,7 +274,9 @@ function heatBand(frac) {
  * @param {ForecastDay[]} days @param {number} selDay @param {{ W: number, H: number } | null} [size]
  */
 export function weekHeatModel(days, selDay, size = null, jedenDen = false) {
-    const padL = 44;
+    // Miesto vľavo je na skratky dní. V detaile dňa deň pomenúva hlavička nad mapou, takže
+    // skratka odpadá a riadok sa roztiahne na celú šírku.
+    const padL = jedenDen ? 4 : 44;
     const padT = 20;
     const padR = 4;
     const gap = 2;
@@ -294,14 +296,16 @@ export function weekHeatModel(days, selDay, size = null, jedenDen = false) {
         y: padT - 8,
         label: String(h),
     }));
-    const dayLabels = riadky.map((di, ri) => ({
-        x: padL - 8,
-        y: padT + ri * rh + rh / 2 + 3.5,
-        label: weekDayShort(days[di].date, di),
-        dayIndex: di,
-        today: di === 0,
-        sel: di === selDay,
-    }));
+    const dayLabels = jedenDen
+        ? []
+        : riadky.map((di, ri) => ({
+              x: padL - 8,
+              y: padT + ri * rh + rh / 2 + 3.5,
+              label: weekDayShort(days[di].date, di),
+              dayIndex: di,
+              today: di === 0,
+              sel: di === selDay,
+          }));
     const cells = [];
     riadky.forEach((di, ri) => {
         WEEK_HOURS.forEach((h, ci) => {
@@ -320,8 +324,8 @@ export function weekHeatModel(days, selDay, size = null, jedenDen = false) {
             });
         });
     });
-    const selRiadok = riadky.indexOf(selDay);
-    const selRect = { x: padL - 1, y: padT + Math.max(selRiadok, 0) * rh, w: W - padL - padR + 2, h: rh - gap };
+    // Zvýraznenie riadka má zmysel len v mape celého týždňa - v jednom riadku niet čo odlíšiť.
+    const selRect = jedenDen ? null : { x: padL - 1, y: padT + selDay * rh, w: W - padL - padR + 2, h: rh - gap };
     const legend = Array.from({ length: 10 }, (_, i) => {
         const frac = i / 9;
         return { frac, tier: heatBand(frac) };
