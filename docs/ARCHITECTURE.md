@@ -100,9 +100,9 @@ plátno presne na kartu. Rozmer teda prichádza tou istou cestou ako každý in�
   zapíšeš to isté, čo tam už je. Účet nepríde hneď – príde, keď si appka najbližšie vypýta
   rozmery, lebo vtedy musí prehliadač dopočítať layout. Pri ťahaní jazdca po dennom prstenci
   tak jeden zbytočný zápis zdražel každý ďalší pohyb prsta. `memo.js` si preto pamätá, čo sám
-  naposledy zapísal, a denný prstenec, chipy spotrebičov, klony pageru aj celá karta
-  Dnes-Zajtra sa prekresľujú len pri zmene vlastných vstupov. Namerané: 1,675 → 0,675 ms na pohyb na
-  mobilnej šírke, 2,817 → 0,892 ms na desktope.
+  naposledy zapísal, a denný prstenec, chipy spotrebičov aj klony pageru sa prekresľujú len
+  pri zmene vlastných vstupov. Namerané: 1,675 → 0,675 ms na pohyb na mobilnej šírke,
+  2,817 → 0,892 ms na desktope.
 - **Plátno grafu sa rovná karte.** Grafy sa nekreslia na pevné plátno, ktoré potom CSS
   natiahne, ale rovno na skutočný rozmer karty (`fillDims`). Naťahovanie skresľovalo
   popisky a pri nízkej karte kreslilo do zápornej plochy; opačná voľba (zachovať pomer
@@ -147,6 +147,15 @@ nebolo vidno.
 Od 1024 px sa stránka správa ako obrazovka, nie ako dokument: `body` nescrolluje a karta
 vyplní výšku okna. Grafy sa tak natiahnu na veľkom monitore a stlačia na nízkom notebooku.
 
+Od 768 px mala stránka mriežku dvoch rovnakých stĺpcov: vľavo Terazky, vpravo Dnes-Zajtra
+(tá preto na desktope nemala vlastnú položku v navigácii). Keď karta Dnes-Zajtra zanikla,
+mriežka zanikla s ňou a Terazky idú cez celú šírku stránky. Stránka je tu položkou zvislého
+flexu a vystredenie cez `margin: 0 auto` jej vypína naťahovanie na šírku rodiča, takže
+potrebuje `width: 100%`: karta Terazky vlastnú šírku nemá (ciferník sa počíta z percent,
+odporúčanie je `container-type: inline-size`, teda so size containmentom v osi x), takže bez
+toho by sa stránka scvrkla na svoje okraje. Stráži to e2e test „Spotrebiče majú celú šírku
+stránky“.
+
 Meranie pred tou zmenou ukázalo, že problém bol užší, než sa zdalo: karty Terazky
 a Zdieľať sa zmestili už predtým (na 1920 × 1080 im ostávalo 347 px prázdneho miesta,
 lebo mali pevnú výšku), pretekala len karta 7 dní, a to o 97 až 409 px podľa výšky okna.
@@ -177,7 +186,7 @@ e2e test, ktorý prejde všetky prvky vo všetkých kartách.
 | Výstup predpovede | golden súbor `test/golden/forecast.json`                                  |
 | Kontrakt dát      | `schema.js` proti výstupu parsera a predpovede                            |
 | Worker            | cron a endpoint proti KV v pamäti a podvrhnutému `fetch`                  |
-| Appka             | Playwright: štyri karty, interakcie, chyby v konzole, prístupnosť cez axe |
+| Appka             | Playwright: tri karty, interakcie, chyby v konzole, prístupnosť cez axe   |
 | Kaskáda CSS       | `.hidden` sa skúša na každom prvku vo všetkých kartách                    |
 | Rozloženie        | na 1366 × 768 nesmie žiadna karta pretekať a tabuľka ukáže všetkých 7 dní |
 

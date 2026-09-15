@@ -12,9 +12,9 @@ Cloudflare Worker.
 
 Karty sú pomenované tak, ako ich vidno v spodnej navigácii.
 
-|                Terazky                 |                  Dnes-Zajtra                   |               7 dní               |
-| :------------------------------------: | :--------------------------------------------: | :-------------------------------: |
-| ![Karta Terazky](docs/img/terazky.png) | ![Karta Dnes-Zajtra](docs/img/dnes-zajtra.png) | ![Karta 7 dní](docs/img/7dni.png) |
+|                Terazky                 |               7 dní               |
+| :------------------------------------: | :-------------------------------: |
+| ![Karta Terazky](docs/img/terazky.png) | ![Karta 7 dní](docs/img/7dni.png) |
 
 Snímky sú z testovacích dát a pevného času (13:00), nie zo živej elektrárne – čísla na nich
 sú syntetické. Prekresliť ich vie `npm run screenshots`. Karta Zdieľať na obrázku nie je,
@@ -26,15 +26,11 @@ jej QR kód kreslí knižnica z CDN.
   strán alebo klikom na bodky. Ciferník sa číta aj ako 24-hodinový: vonkajší prstenec je
   deň s farebnými tarifnými pásmami, biela bodka na ňom je „teraz“. Potiahnutím jazdca po
   prstenci alebo ťuknutím naň si pozrieš, ako to bude vyzerať v inom čase.
-- **Dnes-Zajtra** – hodinová krivka výroby na dnes alebo zajtra, oblačnosť a skutočná
-  nameraná výroba nad ňou, k tomu špička dňa a odhad výroby.
 - **7 dní** – prehľad dní v tabuľke a súhrn za dnes, zajtra a celý týždeň. Klik na deň
-  otvorí jeho detail: dennú výrobu, priebeh výroby a mapu výroby hodina × deň so
-  zvýrazneným dňom. Na širokej obrazovke je vidno všetko naraz.
+  otvorí jeho detail: dennú výrobu, priebeh výroby s oblačnosťou (pri dnešku aj so skutočnou
+  nameranou krivkou a značkou „teraz“) a mapu výroby hodina × deň so zvýrazneným dňom.
+  Na širokej obrazovke je vidno všetko naraz.
 - **Zdieľať** – QR kód, odkaz na appku a tlačidlo na poslanie cez WhatsApp.
-
-Na desktope (od 1024 px) nemá Dnes-Zajtra vlastnú položku v navigácii – je vidno rovno
-vedľa Terazky.
 
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v
 poradí spodnej navigácie – aj ponad grafy a tabuľku 7 dní. Nad grafom kartu prepne rýchle
@@ -49,8 +45,8 @@ predtým.
 
 Systémové tlačidlo Späť na telefóne a tablete (a šípka v prehliadači) vracia o krok späť
 v appke: najprv zavrie detail dňa, potom sa vracia po kartách v opačnom poradí, než si
-nimi prešiel. Dopredu vedie tá istá cesta naspäť. Výber vnútri karty – vybraný deň,
-prepínač Dnes/Zajtra, stránka kolotoča – krok navigácie nie je, na ten sa Späť nevracia.
+nimi prešiel. Dopredu vedie tá istá cesta naspäť. Výber vnútri karty – vybraný deň
+alebo stránka kolotoča – krok navigácie nie je, na ten sa Späť nevracia.
 Keď sa kroky minú, ďalšie Späť z appky odíde; v nainštalovanej appke (PWA) to znamená jej
 zatvorenie. Zatvorenie sa nikde nevynucuje dvojitým stlačením – to je zvyk natívnych
 androidových appiek, nie webu, a stránka sa sama zavrieť ani nevie. Adresa sa pritom

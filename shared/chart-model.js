@@ -239,15 +239,6 @@ export function dayKwAt(minutes, realCurve, hourlyToday, nowMinutes) {
 
 // ---- Karta 7 dní -----------------------------------------------------------------
 
-/** Skutočná výroba dnes: špička krivky a nabehnuté kWh. @param {import('./kiosk.js').PvData | null | undefined} pv */
-export function realProductionSoFar(pv) {
-    if (!pv) return null;
-    const curve = Array.isArray(pv.realCurveToday) ? pv.realCurveToday : [];
-    const peak = curve.length ? curve.reduce((a, b) => (b.kw > a.kw ? b : a), curve[0]) : null;
-    const total = Number.isFinite(Number(pv.dailyEnergyKwh)) ? Number(pv.dailyEnergyKwh) : null;
-    return { peakKw: peak ? peak.kw : null, peakHour: peak ? peak.hour : null, total };
-}
-
 /** @param {ForecastDay} day */
 function hourMap(day) {
     /** @type {Record<number, import('./solar.js').DayHourPoint>} */ const map = {};
@@ -392,11 +383,10 @@ export function weekStatsModel(days, pv, tomorrowSunny) {
             bestIndex = i;
         }
     });
-    const real = realProductionSoFar(pv);
-    const progress =
-        real && Number.isFinite(real.total) && today.kwhTotal > 0
-            ? { realKwh: /** @type {number} */ (real.total), pct: Math.round((100 * /** @type {number} */ (real.total)) / today.kwhTotal) }
-            : null;
+    // Dnešná nabehnutá výroba proti predpovedi. Iné dni namerané nie sú, takže progress
+    // patrí vždy k dnešku.
+    const realKwh = pv && Number.isFinite(Number(pv.dailyEnergyKwh)) ? Number(pv.dailyEnergyKwh) : null;
+    const progress = realKwh !== null && today.kwhTotal > 0 ? { realKwh, pct: Math.round((100 * realKwh) / today.kwhTotal) } : null;
     const trendPct = tomorrow && today.kwhTotal > 0 ? Math.round((100 * (tomorrow.kwhTotal - today.kwhTotal)) / today.kwhTotal) : null;
     return {
         today,

@@ -244,7 +244,10 @@ b {
     max-width: var(--page-max);
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    /* Stĺpce podľa počtu položiek, nie pevné číslo - pri pridaní či zrušení karty by sa
+       inak navigácia stiahla do časti šírky (alebo sa stlačila). */
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
 }
 .nav-item {
     display: flex;
@@ -989,14 +992,10 @@ b {
     color: var(--bg);
     border-color: var(--ink);
 }
-.stat-pair,
 .stat-trio {
     display: grid;
     gap: var(--sp-2);
     margin-bottom: var(--sp-4);
-}
-.stat-pair {
-    grid-template-columns: 1fr 1fr;
 }
 /* Na mobile sú tri rovnaké stĺpce príliš úzke (číslo aj popisky sa lámu), preto sú vedľa
    seba len dve kartičky a tretia (.hi) dostane celú šírku - viac miesta pre tú, ktorá má
@@ -1017,11 +1016,6 @@ b {
 .stat.hi {
     border-color: color-mix(in srgb, var(--green) 30%, transparent);
 }
-.stat .cols {
-    display: flex;
-    gap: var(--sp-3);
-    margin-top: 6px;
-}
 .stat .num {
     font-family: var(--font-mono);
     font-size: 22px;
@@ -1033,16 +1027,6 @@ b {
     font-size: var(--fs-xs);
     color: var(--ink-35);
     margin-left: 3px;
-}
-.stat .subtxt {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--ink-35);
-    margin-top: 2px;
-}
-.col-real .num {
-    color: var(--green);
 }
 .stat-top {
     display: flex;
@@ -1179,7 +1163,6 @@ b {
     height: auto;
     overflow: visible;
 }
-#forecast-chart,
 #week-curve {
     aspect-ratio: 320 / 150;
 }
@@ -1604,7 +1587,6 @@ b {
         font-size: 9px;
         color: var(--ink-35);
     }
-    #forecast-chart,
     #week-curve {
         aspect-ratio: 680 / 420;
     }
@@ -1653,7 +1635,7 @@ b {
     }
     .bottomnav-inner {
         max-width: var(--page-max);
-        grid-template-columns: repeat(4, max-content);
+        grid-auto-columns: max-content;
         gap: var(--sp-6);
         padding: 0 20px;
     }
@@ -1674,28 +1656,19 @@ b {
         left: 0;
         right: 0;
     }
-    /* Predpoveď tu nie je samostatná destinácia - zobrazuje sa rovno vedľa Spotrebičov
-       (viď isForecastVisible v web/render/index.js), položka v navigácii by bola duplicitná. */
-    .nav-item-predpoved {
-        display: none;
-    }
-    .page[data-panel='terazky'],
-    .page[data-panel='predpoved'] {
-        display: grid;
-        /* minmax(0, 1fr), nie holé 1fr - inak by stĺpec preberal šírku podľa obsahu
-           (min-content) a karta so širším obsahom by narástla na úkor druhej. */
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: var(--sp-6);
-        align-items: start;
+    /* Spotrebiče majú na širokej obrazovke celú šírku stránky. Kým vedľa nich stála karta
+       Dnes-Zajtra, delila si stránka šírku mriežkou 1:1; tá karta zanikla (jej dáta sú
+       v karte 7 dní), takže tu mriežka nie je a karta ide cez celú šírku - ciferník
+       s odporúčaním pod ním sa vystredia, spotrebiče a hlášky v pageri dostanú celý riadok. */
+    #panel-terazky {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 }
 
 /* ---- Ultra-široké monitory -------------------------------------------------
-   Nad 1600px len o niečo širšia stránka, rozloženie kariet sa nemení (zostáva
-   Spotrebiče a Predpoveď 1:1 vedľa seba, viď media query vyššie). Skúšaný
-   trojstĺpcový rozpad karty Spotrebiče (graf Priebeh dňa ako samostatný stĺpec)
-   vyzeral zle - graf je oveľa nižší než ciferník+odporúčanie, pod ním by ostala
-   veľká prázdna diera. */
+   Nad 1600px len o niečo širšia stránka, rozloženie kariet sa nemení. */
 @media (min-width: 1600px) {
     :root {
         --page-max: 1440px;
@@ -1729,11 +1702,12 @@ b {
         min-height: 0;
         padding-top: var(--sp-3);
         padding-bottom: var(--sp-3);
-    }
-    /* Karty sa naťahujú na výšku stránky, nie na výšku svojho obsahu. */
-    .page[data-panel='terazky'],
-    .page[data-panel='predpoved'] {
-        align-items: stretch;
+        /* Stránka je tu položkou zvislého flexu a `margin: 0 auto` (vystredenie na širokom
+           monitore) jej vypína naťahovanie na šírku rodiča - bez tohto by si šírku vzala
+           podľa obsahu. Karta Spotrebiče pritom vlastnú šírku nemá: ciferník sa počíta
+           z percent a odporúčanie je `container-type: inline-size`, takže do nej nerátajú
+           ani ony. Stránka by sa scvrkla na svoje okraje. */
+        width: 100%;
     }
     .panel {
         min-height: 0;
@@ -1826,14 +1800,12 @@ b {
     }
 
     /* Graf v karte si vezme všetko, čo po textoch okolo neho zostane. */
-    .week-block,
-    #panel-predpoved {
+    .week-block {
         min-height: 0;
         display: flex;
         flex-direction: column;
     }
-    .week-block .chart-card,
-    #panel-predpoved .chart-card {
+    .week-block .chart-card {
         flex: 1 1 auto;
         min-height: 0;
         display: flex;
@@ -1856,17 +1828,14 @@ b {
     }
     /* Plátno sa nesmie zmestiť pod vlastné okraje (padT + padB = 52 px), inak by graf
        kreslil do zápornej plochy. Radšej sa stránka o kúsok posunie. */
-    .week-block .chart-wrap,
-    #panel-predpoved .chart-wrap {
+    .week-block .chart-wrap {
         flex: 1 1 auto;
         min-height: 96px;
     }
-    .week-block .chart-wrap svg,
-    #panel-predpoved .chart-wrap svg {
+    .week-block .chart-wrap svg {
         height: 100%;
     }
     /* Pevný pomer strán by tu bránil grafu vyplniť výšku. */
-    #forecast-chart,
     #week-curve {
         aspect-ratio: auto;
     }
@@ -1876,29 +1845,10 @@ b {
         overflow: auto;
     }
 
-    /* Karta Terazky stráca nadpisy "Aktuálny výkon" a "Čo robiť teraz" - namiesto toho,
-       aby v nej ostala prázdna diera (karta sa naťahuje na výšku obrazovky, viď .panel
-       vyššie), dostane uvoľnené miesto väčší ciferník. Tu je karta široká, takže strop
-       280px z mobilu neplatí - jazdec má do strán dosť miesta. */
-    #panel-terazky {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    .dial-hero {
-        flex: 1 1 auto;
-        min-height: 0;
-        max-height: var(--dial-max);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+    /* Ciferník sa drží stropu --dial-max a stojí v strede karty; zvislé miesto navyše ostáva
+       nad a pod dvojicou ciferník + odporúčanie (justify-content: center vyššie). */
     .dial-wrap {
-        height: 100%;
-        width: auto;
-        max-width: 100%;
-        max-height: var(--dial-max);
-        margin: 0;
+        margin: 0 auto;
     }
 }
 

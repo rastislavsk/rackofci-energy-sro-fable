@@ -8,10 +8,10 @@ const byId = (/** @type {string} */ id) => {
 };
 
 // Karty v poradí navigácie. Kódový názov a popiska v navigácii nie sú vždy to isté slovo,
-// preto tu ostáva mapovanie: terazky = „Terazky", predpoved = „Dnes-Zajtra", 7dni = „7 dní",
-// zdielat = „Zdieľať". Popiska je text pre používateľa a mení sa podľa chuti; kódový názov
-// drží HTML id, CSS selektory aj stav, tak nech ho popiska nemusí naháňať.
-export const PANELS = /** @type {const} */ (['terazky', 'predpoved', '7dni', 'zdielat']);
+// preto tu ostáva mapovanie: terazky = „Terazky", 7dni = „7 dní", zdielat = „Zdieľať".
+// Popiska je text pre používateľa a mení sa podľa chuti; kódový názov drží HTML id,
+// CSS selektory aj stav, tak nech ho popiska nemusí naháňať.
+export const PANELS = /** @type {const} */ (['terazky', '7dni', 'zdielat']);
 
 function headerDom() {
     return {
@@ -57,31 +57,6 @@ function terazkyDom() {
         dialWhen: byId('dial-when'),
         dialNow: byId('dial-now'),
         dialGrip: byId('dial-grip'),
-    };
-}
-
-function predpovedDom() {
-    return {
-        forecastSub: byId('forecast-sub'),
-        dayBtnToday: byId('day-btn-today'),
-        dayBtnTomorrow: byId('day-btn-tomorrow'),
-        forecastPeak: byId('forecast-peak'),
-        forecastPeakTime: byId('forecast-peak-time'),
-        forecastPeakRealCol: byId('forecast-peak-real-col'),
-        forecastPeakReal: byId('forecast-peak-real'),
-        forecastPeakRealTime: byId('forecast-peak-real-time'),
-        forecastTotal: byId('forecast-total'),
-        forecastTotalRealCol: byId('forecast-total-real-col'),
-        forecastTotalReal: byId('forecast-total-real'),
-        forecastNowBadge: byId('forecast-now-badge'),
-        forecastNowTime: byId('forecast-now-time'),
-        forecastChartWrap: byId('forecast-chart-wrap'),
-        forecastChart: byId('forecast-chart'),
-        forecastTooltip: byId('forecast-tooltip'),
-        forecastLiveLegend: byId('forecast-live-legend'),
-        forecastMsgBlock: byId('forecast-msg-block'),
-        forecastMessageTitle: byId('forecast-message-title'),
-        forecastMessageBody: byId('forecast-message-body'),
     };
 }
 
@@ -142,7 +117,7 @@ function zdielatDom() {
 }
 
 export function collectDom() {
-    return { ...headerDom(), ...terazkyDom(), ...predpovedDom(), ...sedemdniDom(), ...zdielatDom() };
+    return { ...headerDom(), ...terazkyDom(), ...sedemdniDom(), ...zdielatDom() };
 }
 
 /** @typedef {ReturnType<typeof collectDom>} Dom */

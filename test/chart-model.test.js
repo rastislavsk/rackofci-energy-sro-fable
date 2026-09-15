@@ -11,7 +11,6 @@ import {
     interpolate,
     kwGridStep,
     minutesFromAngle,
-    realProductionSoFar,
     RING,
     ringGap,
     ringPercent,
@@ -228,10 +227,7 @@ test('weekBarsModel: showCeiling = false vypne čiaru stropu, ale nie tooltip', 
     assert.match(m.bars[0].tip.text, /kWh · strop/, 'tooltip pri hoveri stále ukáže strop');
 });
 
-test('weekStatsModel a realProductionSoFar', () => {
-    assert.equal(realProductionSoFar(null), null);
-    const real = realProductionSoFar(pv);
-    assert.ok(real && real.total === 31.7 && real.peakKw !== null && real.peakHour !== null);
+test('weekStatsModel', () => {
     const s = weekStatsModel(forecast.days, pv, forecast.tomorrowSunny);
     assert.ok(s.progress && s.progress.realKwh === 31.7);
     assert.ok(Math.abs(s.totalKwh - forecast.days.reduce((a, d) => a + d.kwhTotal, 0)) < 1e-9);

@@ -88,7 +88,7 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     await expect(page.locator('#verdict-page-eyebrow')).toBeInViewport();
     // Odznak s tarifou nie je nad ciferníkom, žije len vo vlastnej stránke pageru.
     await expect(page.locator('#verdict-page-eyebrow')).toContainText(expected.eyebrow);
-    // Správa o predpovedi dňa je tu v pageri (karta Predpoveď je na mobile teraz skrytá).
+    // Správa o predpovedi dňa žije už len tu, v pageri.
     await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
     await expect(page.locator('#verdict-forecast-body')).toHaveText(todayForecastMsg.body);
     // Zelené okno prefarbí pozadie celej stránky dozelena.
@@ -308,27 +308,6 @@ test('pri nulovej výrobe neostane na prstenci bodka', async ({ page }) => {
     await expect(ring).toHaveCSS('stroke-linecap', 'butt');
 });
 
-test('predpoveď: štatistiky, prepnutie na zajtra, správa dňa', async ({ page }) => {
-    const errors = await openApp(page);
-    await page.locator('#nav-predpoved').click();
-    await expect(page.locator('#panel-predpoved')).toBeVisible();
-    await expect(page.locator('#forecast-peak')).toHaveText(
-        String(Math.max(...forecast.hourlyToday.filter((p) => p.hour >= 6 && p.hour <= 21).map((p) => p.kw)).toFixed(1)),
-    );
-    await expect(page.locator('#forecast-peak-real-col')).toBeVisible();
-    await expect(page.locator('#forecast-chart path.line-real')).toHaveCount(1);
-    await page.locator('#day-btn-tomorrow').click();
-    await expect(page.locator('#forecast-now-badge')).toBeHidden();
-    await expect(page.locator('#forecast-chart path.line-real')).toHaveCount(0);
-    // Zajtra nemá nameranú výrobu, takže jej položka v legende musí zmiznúť - inak by
-    // legenda ohlasovala krivku, ktorá sa v grafe nekreslí.
-    await expect(page.locator('#forecast-live-legend')).toBeHidden();
-    await expect(page.locator('#forecast-message-title')).not.toHaveText('Načítavam…');
-    // Na mobile je tá istá správa duplicitne aj v karte Spotrebiče (v pageri) aj tu.
-    await expect(page.locator('#forecast-msg-block')).toBeVisible();
-    expect(errors).toEqual([]);
-});
-
 /** Poradie viditeľných blokov karty 7 dní zhora nadol - tak, ako ich vidí používateľ
  * (CSS `order` mení poradie oproti HTML). @param {import('@playwright/test').Page} page */
 function viditelneBloky(page) {
@@ -466,8 +445,6 @@ test('bez dát: appka neukáže chybu, iba stav "dáta nedostupné"', async ({ p
     await expect(page.locator('#pv-updated')).toHaveText('dáta nedostupné');
     await expect(page.locator('#pv-power')).toHaveText('–');
     await expect(page.locator('#verdict-headline')).not.toHaveText('Načítavam…');
-    await page.locator('#nav-predpoved').click();
-    await expect(page.locator('#forecast-message-title')).toHaveText('Predpoveď sa pripravuje');
     await page.locator('#nav-7dni').click();
     await expect(page.locator('#week-msg-title')).toHaveText('Predpoveď sa pripravuje');
     expect(errors).toEqual([]);
@@ -483,7 +460,7 @@ test('bez dát: appka neukáže chybu, iba stav "dáta nedostupné"', async ({ p
 test('.hidden skryje každý prvok v stránke, nič ju neprebíja', async ({ page }) => {
     const errors = await openApp(page);
     // Karty sa vykresľujú až po otvorení, aby test videl aj ich obsah.
-    for (const nav of ['#nav-predpoved', '#nav-7dni', '#nav-zdielat', '#nav-terazky']) await page.locator(nav).click();
+    for (const nav of ['#nav-7dni', '#nav-zdielat', '#nav-terazky']) await page.locator(nav).click();
 
     const broken = await page.evaluate(() => {
         const out = [];
@@ -519,7 +496,7 @@ const pockajNaPrechod = (page) =>
 
 test('prístupnosť: žiadne závažné nálezy axe na žiadnej karte', async ({ page }) => {
     await openApp(page);
-    for (const panel of ['terazky', 'predpoved', '7dni', 'zdielat']) {
+    for (const panel of ['terazky', '7dni', 'zdielat']) {
         await page.locator(`#nav-${panel}`).click();
         await pockajNaPrechod(page);
         const results = await new AxeBuilder({ page }).analyze();
@@ -535,18 +512,55 @@ test('prístupnosť: žiadne závažné nálezy axe na žiadnej karte', async ({
     expect(vazne.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
 });
 
-test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }) => {
+/**
+ * Karta Spotrebiče má na širokej obrazovke celú šírku stránky - kým existovala karta
+ * Dnes-Zajtra, delili si ju na polovicu. Stránka je tu položkou zvislého flexu a vystredenie
+ * cez `margin: 0 auto` jej vypína naťahovanie na šírku; karta pritom vlastnú šírku nemá
+ * (ciferník sa počíta z percent, odporúčanie je `container-type: inline-size`), takže bez
+ * `width: 100%` by sa stránka scvrkla na svoje okraje. Práve to test stráži.
+ */
+test('široká obrazovka: Spotrebiče majú celú šírku stránky', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     const errors = await openApp(page);
     await expect(page.locator('#panel-terazky')).toBeVisible();
-    await expect(page.locator('#panel-predpoved')).toBeVisible();
-    // Karta Predpoveď tu nemá vlastnú položku v navigácii - je vidno rovno vedľa Spotrebičov.
-    await expect(page.locator('#nav-predpoved')).toBeHidden();
-    // Plátno grafu sa na širokej karte kreslí na jej skutočný rozmer (fillDims), nie na pevné
-    // 680x420 - viewBox preto musí sedieť s pixelmi 1:1, inak by sa graf naťahoval a popisky
-    // skresľovali. Zároveň mu musí ostať kladná plocha pod okrajmi plátna.
+
+    const rozlozenie = await page.evaluate(() => {
+        const stranka = document.getElementById('page');
+        const style = getComputedStyle(stranka);
+        const obsah = stranka.getBoundingClientRect().width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        return {
+            stranka: Math.round(stranka.getBoundingClientRect().width),
+            obsah: Math.round(obsah),
+            panel: Math.round(document.getElementById('panel-terazky').getBoundingClientRect().width),
+            pager: Math.round(document.getElementById('verdict-pager').getBoundingClientRect().width),
+        };
+    });
+    // Stránka je široká na maximum, ktoré jej dáva --page-max (1120 px na desktope).
+    expect(rozlozenie.stranka, 'stránka sa scvrkla, karta nedostala celú šírku').toBe(1120);
+    expect(Math.abs(rozlozenie.panel - rozlozenie.obsah), 'karta nevyplní celú šírku stránky').toBeLessThanOrEqual(1);
+    expect(Math.abs(rozlozenie.pager - rozlozenie.obsah), 'pager odporúčaní nevyplní celú šírku karty').toBeLessThanOrEqual(1);
+
+    // Odznak s tarifou nikde nad ciferníkom nie je (ani na desktope) - žije len v defaultnej
+    // prvej stránke pageru, tá preto nesmie ostať prázdna.
+    const expectedEyebrow = modelAt(atTime('13:00').wall).eyebrow;
+    await expect(page.locator('#verdict-dots .pager-dot').first()).toHaveClass(/active/);
+    await expect(page.locator('#verdict-page-eyebrow')).toBeVisible();
+    await expect(page.locator('#verdict-page-eyebrow')).toHaveText(expectedEyebrow);
+    await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
+    expect(errors).toEqual([]);
+});
+
+/**
+ * Plátno grafu sa na širokej karte kreslí na jej skutočný rozmer (fillDims), nie na pevné
+ * 680x420 - viewBox preto musí sedieť s pixelmi 1:1, inak by sa graf naťahoval a popisky
+ * skresľovali. Zároveň mu musí ostať kladná plocha pod okrajmi plátna.
+ */
+test('široká obrazovka: plátno grafu sedí s rozmerom karty 1:1', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const errors = await openApp(page);
+    await page.locator('#nav-7dni').click();
     const chart = await page.evaluate(() => {
-        const el = document.getElementById('forecast-chart');
+        const el = document.getElementById('week-curve');
         const [, , vw, vh] = (el.getAttribute('viewBox') || '').split(/\s+/).map(Number);
         const r = el.getBoundingClientRect();
         return { vw, vh, w: Math.round(r.width), h: Math.round(r.height) };
@@ -555,15 +569,6 @@ test('široká obrazovka: Spotrebiče a Predpoveď vedľa seba', async ({ page }
     expect(Math.abs(chart.vh - chart.h), `výška plátna ${chart.vh} nesedí s kartou ${chart.h}`).toBeLessThanOrEqual(1);
     // padT (18) + padB (34) z chartDims; pod tým by graf kreslil do zápornej plochy.
     expect(chart.vh, 'plátno grafu je nižšie než jeho vlastné okraje').toBeGreaterThan(18 + 34);
-    // Odznak s tarifou nikde nad ciferníkom nie je (ani na desktope) - žije len v defaultnej
-    // prvej stránke pageru, tá preto nesmie ostať prázdna.
-    const expectedEyebrow = modelAt(atTime('13:00').wall).eyebrow;
-    await expect(page.locator('#verdict-dots .pager-dot').first()).toHaveClass(/active/);
-    await expect(page.locator('#verdict-page-eyebrow')).toBeVisible();
-    await expect(page.locator('#verdict-page-eyebrow')).toHaveText(expectedEyebrow);
-    // Správa o predpovedi dňa je na desktope už len v pageri, v karte Predpoveď sa neduplikuje.
-    await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
-    await expect(page.locator('#forecast-msg-block')).toBeHidden();
     expect(errors).toEqual([]);
 });
 
@@ -682,7 +687,7 @@ test('mobil: pod 620px výšky sa karta Terazky odomkne a dá sa doscrollovať',
  */
 test('mobil: ťahom nadol sa dá obnoviť každá karta', async ({ page }) => {
     const errors = await openApp(page);
-    for (const panel of ['terazky', 'predpoved', '7dni', 'zdielat']) {
+    for (const panel of ['terazky', '7dni', 'zdielat']) {
         await page.locator(`#nav-${panel}`).click();
         await expect(page.locator(`#panel-${panel}`)).toBeVisible();
         const zamknute = await page.evaluate(() =>
@@ -701,7 +706,6 @@ test('široká obrazovka: prepnutie na 7 dní skryje kartu Spotrebiče', async (
     await page.locator('#nav-7dni').click();
     await expect(page.locator('#panel-7dni')).toBeVisible();
     await expect(page.locator('#panel-terazky')).toBeHidden();
-    await expect(page.locator('#panel-predpoved')).toBeHidden();
     await page.locator('#nav-zdielat').click();
     await expect(page.locator('#panel-terazky')).toBeHidden();
     expect(errors).toEqual([]);
@@ -851,6 +855,14 @@ async function ocakavajKartu(page, panel) {
     await expect(page.locator(`#nav-${panel}`)).toHaveAttribute('aria-current', 'page');
 }
 
+/** Graf priebehu dňa je na mobile až v detaile vybraného dňa - otvára sa klikom na riadok
+ * v prehľade dní. @param {import('@playwright/test').Page} page @param {number} [den] */
+async function otvorDetailDna(page, den = 0) {
+    await page.locator('#nav-7dni').click();
+    await page.locator(`#week-tbody tr[data-day-index="${den}"]`).click();
+    await expect(page.locator('#week-curve-wrap')).toBeVisible();
+}
+
 test('prechod medzi kartami: smer podľa poradia a nič nepretečie do strán', async ({ page }) => {
     const errors = await openApp(page);
 
@@ -863,7 +875,7 @@ test('prechod medzi kartami: smer podľa poradia a nič nepretečie do strán', 
 
     await page.locator('#nav-7dni').click();
     expect(await smerAAnimacia()).toEqual({ dir: 'next', animacia: 'panel-in-next' });
-    await page.locator('#nav-predpoved').click();
+    await page.locator('#nav-terazky').click();
     expect(await smerAAnimacia()).toEqual({ dir: 'prev', animacia: 'panel-in-prev' });
 
     // Posunutá karta na okamih presiahne stránku do strany. Meria sa to počas celého prechodu,
@@ -896,7 +908,7 @@ test('tlačidlo Späť vracia o krok v appke, dopredu ide zase tam', async ({ pa
     const errors = await openApp(page);
     const adresa = page.url();
 
-    await page.locator('#nav-predpoved').click();
+    await page.locator('#nav-zdielat').click();
     await page.locator('#nav-7dni').click();
     await page.locator('#week-tbody tr[data-day-index="5"]').click();
     await expect(page.locator('#week-day-head')).toBeVisible();
@@ -907,13 +919,13 @@ test('tlačidlo Späť vracia o krok v appke, dopredu ide zase tam', async ({ pa
     await expect(page.locator('#week-day-head')).toBeHidden();
     await ocakavajKartu(page, '7dni');
     await page.goBack();
-    await ocakavajKartu(page, 'predpoved');
+    await ocakavajKartu(page, 'zdielat');
     await page.goBack();
     await ocakavajKartu(page, 'terazky');
 
     // Dopredu vedie tá istá cesta naspäť, vrátane otvoreného detailu dňa.
     await page.goForward();
-    await ocakavajKartu(page, 'predpoved');
+    await ocakavajKartu(page, 'zdielat');
     await page.goForward();
     await ocakavajKartu(page, '7dni');
     await page.goForward();
@@ -921,17 +933,16 @@ test('tlačidlo Späť vracia o krok v appke, dopredu ide zase tam', async ({ pa
     expect(errors).toEqual([]);
 });
 
-/** Krokom navigácie je karta a detail dňa, nič iné. Prepínač Dnes/Zajtra, výber dňa či
- * listovanie odporúčaní sa deje vnútri karty, takže Späť ich nepočíta - inak by sa z appky
- * nedalo odísť. */
+/** Krokom navigácie je karta a detail dňa, nič iné. Listovanie odporúčaní či výber dňa sa
+ * deje vnútri karty, takže Späť ich nepočíta - inak by sa z appky nedalo odísť. */
 test('Späť nepočíta výber vnútri karty, po vyčerpaní krokov opustí appku', async ({ page }) => {
     const errors = await openApp(page);
     const zaciatok = await page.evaluate(() => history.length);
 
-    await page.locator('#nav-predpoved').click();
-    await page.locator('#day-btn-tomorrow').click();
-    await page.locator('#day-btn-today').click();
-    await expect(page.locator('#day-btn-today')).toHaveAttribute('aria-selected', 'true');
+    // Prelistovanie odporúčaní na tretiu stránku je výber vnútri karty, nie krok navigácie.
+    await page.locator('#verdict-dots [data-verdict-page="2"]').click();
+    await expect(page.locator('#verdict-dots .pager-dot').nth(2)).toHaveClass(/active/);
+    await page.locator('#nav-7dni').click();
     expect(await page.evaluate(() => history.length), 'do histórie pribudlo len prepnutie karty').toBe(zaciatok + 1);
 
     // Jediný krok späť je teda návrat na prvú kartu; ďalší už z appky odchádza (v nainštalovanej
@@ -953,12 +964,12 @@ test.describe('listovanie kariet prstom', () => {
 
         // Doľava sa ide dopredu v poradí navigácie, doprava späť.
         await swipe(page, '#dial-hero', { dx: -120 });
-        await ocakavajKartu(page, 'predpoved');
-        await swipe(page, '#forecast-sub', { dx: -120 });
+        await ocakavajKartu(page, '7dni');
+        await swipe(page, '#week-sub', { dx: -120 });
+        await ocakavajKartu(page, 'zdielat');
+        await swipe(page, '#qrcode', { dx: 120 });
         await ocakavajKartu(page, '7dni');
         await swipe(page, '#week-sub', { dx: 120 });
-        await ocakavajKartu(page, 'predpoved');
-        await swipe(page, '#forecast-sub', { dx: 120 });
         await ocakavajKartu(page, 'terazky');
 
         // Pred prvou kartou už nič nie je - listovanie sa nezacyklí.
@@ -985,37 +996,37 @@ test.describe('listovanie kariet prstom', () => {
 
     test('nad grafom prepne kartu švihnutie, pomalé sledovanie krivky nie', async ({ page }) => {
         const errors = await openApp(page);
-        await page.locator('#nav-predpoved').click();
+        await otvorDetailDna(page);
 
         // Ťahaním po krivke sa graf prezerá (tooltip ide za prstom) - to nie je listovanie.
-        await swipe(page, '#forecast-chart-wrap', { dx: -120, ms: 500 });
-        await ocakavajKartu(page, 'predpoved');
-        await expect(page.locator('#forecast-tooltip')).toHaveClass(/visible/);
+        await swipe(page, '#week-curve-wrap', { dx: -120, ms: 500 });
+        await ocakavajKartu(page, '7dni');
+        await expect(page.locator('#week-curve-tooltip')).toHaveClass(/visible/);
 
         // Rýchle švihnutie ponad ten istý graf kartu prepne a tooltip po sebe upratá.
-        await swipe(page, '#forecast-chart-wrap', { dx: -120 });
-        await ocakavajKartu(page, '7dni');
-        await expect(page.locator('#forecast-tooltip')).not.toHaveClass(/visible/);
+        await swipe(page, '#week-curve-wrap', { dx: -120 });
+        await ocakavajKartu(page, 'zdielat');
+        await expect(page.locator('#week-curve-tooltip')).not.toHaveClass(/visible/);
         expect(errors).toEqual([]);
     });
 
     test('pri švihnutí ponad graf tooltip ani neprebliskne, ťuknutie ho ukáže', async ({ page }) => {
         const errors = await openApp(page);
-        await page.locator('#nav-predpoved').click();
+        await otvorDetailDna(page);
 
-        await sledujTooltip(page, 'forecast-tooltip');
-        await swipe(page, '#forecast-chart-wrap', { dx: -120 });
-        await ocakavajKartu(page, '7dni');
+        await sledujTooltip(page, 'week-curve-tooltip');
+        await swipe(page, '#week-curve-wrap', { dx: -120 });
+        await ocakavajKartu(page, 'zdielat');
         expect(await boloVidno(page), 'tooltip preblikol počas švihnutia').toBe(false);
 
         // Ťuknutie na graf ho naopak ukázať musí - inak by sa hodnota nedala prečítať.
         // Aj tu sa pozerá na sledovanú triedu, nie na stav po chvíli: tooltip sa sám zatvára
         // po TOOLTIP_HOLD_MS a na zaťaženom stroji by sa kontrola trafila až za ten čas.
-        await page.locator('#nav-predpoved').click();
-        await sledujTooltip(page, 'forecast-tooltip');
-        await swipe(page, '#forecast-chart-wrap', { dx: 0 });
+        await otvorDetailDna(page);
+        await sledujTooltip(page, 'week-curve-tooltip');
+        await swipe(page, '#week-curve-wrap', { dx: 0 });
         expect(await boloVidno(page), 'ťuknutie na graf neukázalo tooltip').toBe(true);
-        await ocakavajKartu(page, 'predpoved');
+        await ocakavajKartu(page, '7dni');
         expect(errors).toEqual([]);
     });
 
@@ -1027,24 +1038,24 @@ test.describe('listovanie kariet prstom', () => {
         // testy, sa každá karta zmestí celá a scrollovať nie je kam.
         await page.setViewportSize({ width: 375, height: 667 });
         const errors = await openApp(page);
-        await page.locator('#nav-predpoved').click();
+        await otvorDetailDna(page);
         expect(
             await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
             'karta sa celá zmestí na displej, nie je kam scrollovať - test by nič nemeral',
         ).toBeGreaterThan(0);
 
-        await sledujTooltip(page, 'forecast-tooltip');
-        await swipe(page, '#forecast-chart-wrap', { dx: 0, dy: -120, ms: 400 });
+        await sledujTooltip(page, 'week-curve-tooltip');
+        await swipe(page, '#week-curve-wrap', { dx: 0, dy: -120, ms: 400 });
         expect(await boloVidno(page), 'tooltip preblikol pri posúvaní stránky').toBe(false);
         expect(await page.evaluate(() => window.scrollY), 'stránka sa cez graf neposunula').toBeGreaterThan(0);
 
         // Aj krátky scroll je scroll: prst prešiel menej, než je hranica švihnutia, takže na
         // dĺžku vyzerá ako ťuknutie - rozhoduje to, že sa stránka posunula.
         await page.evaluate(() => window.scrollTo(0, 0));
-        await sledujTooltip(page, 'forecast-tooltip');
-        await swipe(page, '#forecast-chart-wrap', { dx: 0, dy: -40, ms: 400 });
+        await sledujTooltip(page, 'week-curve-tooltip');
+        await swipe(page, '#week-curve-wrap', { dx: 0, dy: -40, ms: 400 });
         expect(await boloVidno(page), 'tooltip sa ukázal po krátkom posunutí stránky').toBe(false);
-        await ocakavajKartu(page, 'predpoved');
+        await ocakavajKartu(page, '7dni');
         expect(errors).toEqual([]);
     });
 
@@ -1055,17 +1066,17 @@ test.describe('listovanie kariet prstom', () => {
      * po chvíli ešte stále je. */
     test('ťuknutie na graf bez pohybu prsta ukáže tooltip a ten ostane', async ({ page }) => {
         const errors = await openApp(page);
-        await page.locator('#nav-predpoved').click();
-        const graf = await page.locator('#forecast-chart-wrap').boundingBox();
-        if (!graf) throw new Error('graf predpovede nie je vidno');
+        await otvorDetailDna(page);
+        const graf = await page.locator('#week-curve-wrap').boundingBox();
+        if (!graf) throw new Error('graf priebehu dňa nie je vidno');
 
-        await sledujTooltip(page, 'forecast-tooltip');
+        await sledujTooltip(page, 'week-curve-tooltip');
         await tuknutieBezPohybu(page, graf.x + graf.width / 2, graf.y + graf.height / 2);
         expect(await boloVidno(page), 'ťuknutie bez pohybu prsta neukázalo tooltip').toBe(true);
         // Polovica času, po ktorom sa tooltip zatvára sám - dovtedy musí byť vidno.
         await page.waitForTimeout(TOOLTIP_HOLD_MS / 2);
         expect(
-            await page.evaluate(() => document.getElementById('forecast-tooltip')?.classList.contains('visible')),
+            await page.evaluate(() => document.getElementById('week-curve-tooltip')?.classList.contains('visible')),
             'tooltip po ťuknutí hneď zhasol',
         ).toBe(true);
         expect(errors).toEqual([]);
@@ -1096,7 +1107,7 @@ test.describe('listovanie kariet prstom', () => {
         // Na ľavom kraji už tabuľka doprava nemá kam ísť, tam gesto prevezme karta.
         await page.evaluate(() => document.querySelector('.week-tbl-wrap')?.scrollTo({ left: 0 }));
         await swipe(page, '#week-tbody', { dx: 120 });
-        await ocakavajKartu(page, 'predpoved');
+        await ocakavajKartu(page, 'terazky');
         expect(errors).toEqual([]);
     });
 
@@ -1111,7 +1122,7 @@ test.describe('listovanie kariet prstom', () => {
         await expect(page.locator('#dial-grip')).toHaveClass(/at-now/);
 
         await swipe(page, '#dial-wrap', { dx: -120 });
-        await ocakavajKartu(page, 'predpoved');
+        await ocakavajKartu(page, '7dni');
         await page.locator('#nav-terazky').click();
         await expect(page.locator('#dial-grip')).toHaveClass(/at-now/);
 
@@ -1184,15 +1195,17 @@ test.describe('otočenie displeja', () => {
     test('po otočení na výšku stránka nepretečie do strán', async ({ page }) => {
         await page.setViewportSize({ width: 844, height: 390 });
         const errors = await openApp(page);
-        await page.locator('#nav-predpoved').click();
-        const wrap = page.locator('#forecast-chart-wrap');
+        // Na šírku je displej široký (768 px a viac), takže karta 7 dní ukazuje všetky bloky
+        // naraz a graf priebehu je vidno bez otvárania detailu dňa.
+        await page.locator('#nav-7dni').click();
+        const wrap = page.locator('#week-curve-wrap');
         await wrap.scrollIntoViewIfNeeded();
         const graf = await wrap.boundingBox();
-        if (!graf) throw new Error('graf predpovede nie je vidno');
+        if (!graf) throw new Error('graf priebehu dňa nie je vidno');
 
         // Ťuknutie čo najbližšie k pravému okraju grafu - tam má tooltip najväčšie súradnice.
         await tuknutie(page, Math.min(graf.x + graf.width - 3, 842), Math.min(Math.max(graf.y + graf.height / 2, 2), 388));
-        await expect(page.locator('#forecast-tooltip')).toHaveClass(/visible/);
+        await expect(page.locator('#week-curve-tooltip')).toHaveClass(/visible/);
         await page.waitForTimeout(TOOLTIP_HOLD_MS + TOOLTIP_FADE_MS + 100);
 
         await page.setViewportSize({ width: 390, height: 844 });

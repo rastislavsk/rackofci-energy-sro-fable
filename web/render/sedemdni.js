@@ -2,15 +2,27 @@
 // Na mobile je to rozdelené na dve obrazovky - prehľad dní a detail vybraného dňa (weekDetail
 // v stave); na širokej obrazovke je miesta dosť a vidno všetko naraz.
 
-import { forecastChartModel, usePct, weekBarsModel, weekHeatModel, weekStatsModel } from '../../shared/chart-model.js';
+import { chartDims, fillDims, forecastChartModel, usePct, weekBarsModel, weekHeatModel, weekStatsModel } from '../../shared/chart-model.js';
 import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
 import { escapeHtml, fmt1, hourLabel, pad2, weekDateLabel, weekDayLong, weekDayShort } from '../../shared/format.js';
 import { EMPTY_MESSAGES, weekMessage } from '../../shared/messages.js';
 import { ICON_CLOUD, ICON_PARTLY, ICON_SUN } from '../icons.js';
-import { dimsFor } from './predpoved.js';
 import { forecastChartSvg, weekBarsSvg, weekHeatSvg } from '../svg.js';
 
 /** @typedef {import('../../shared/solar.js').ForecastDay} ForecastDay */
+
+/**
+ * Plátno grafu: keď poznáme skutočný rozmer karty, kreslíme presne naň (viewBox potom sedí
+ * s pixelmi 1:1, takže sa nič neskresľuje ani nezostáva prázdne). Kým rozmer nepoznáme,
+ * platí pevné plátno podľa šírky okna.
+ * @param {import('../state.js').AppState} state @param {string} key
+ */
+function dimsFor(state, key) {
+    // Len na širokej karte: fillDims berie okraje zo širokého plátna (os Y, väčšie odsadenie),
+    // na mobile by tým prepísalo úmyselne úspornejšie rozloženie z chartDims(false).
+    const size = state.wide ? state.chartSizes[key] : null;
+    return size ? fillDims(size.w, size.h) : chartDims(state.wide);
+}
 
 /** Vstup grafu priebehu vybraného dňa - zdieľaný s tooltipom. Dnešok tu ukazuje nameranú
  * krivku rovnako ako graf na karte Dnes-Zajtra; ostatné dni zatiaľ merané nemajú.
