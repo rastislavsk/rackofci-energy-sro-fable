@@ -31,11 +31,13 @@ function initNavigation(store, dom) {
         // v grafoch. Prehľad dní a bubliny navyše otvoria detail dňa (na mobile; na širokej
         // obrazovke sa stav neprejaví) - obe sú prehľadom, z ktorého sa ide do detailu,
         // kým výber v grafoch a v prepínači len prepína, čo je na nich vidno.
+        const totalBtn = target.closest('[data-week-detail]');
+        if (totalBtn instanceof HTMLElement) store.setState({ weekDetail: 'week' });
         const weekBtn = target.closest('[data-day-index]');
         if (weekBtn instanceof Element && dom.panels['7dni'].contains(weekBtn)) {
             const weekSelDay = Number(weekBtn.getAttribute('data-day-index'));
             const doDetailu = dom.weekTbody.contains(weekBtn) || dom.weekTrio.contains(weekBtn);
-            store.setState(doDetailu ? { weekSelDay, weekDetail: true } : { weekSelDay });
+            store.setState(doDetailu ? { weekSelDay, weekDetail: 'day' } : { weekSelDay });
         }
         // Bodka len posunie pás; stránka sa dopočíta z výslednej pozície ako pri prste. Cieľ je
         // samotná stránka (scrollIntoView), nie index krát clientWidth - ten je celočíselný, kým
@@ -49,7 +51,7 @@ function initNavigation(store, dom) {
         }
     });
     dom.previewReset.addEventListener('click', () => store.setState({ previewMinutes: null, isDragging: false }));
-    dom.weekDayBack.addEventListener('click', () => store.setState({ weekDetail: false }));
+    dom.weekDayBack.addEventListener('click', () => store.setState({ weekDetail: null }));
 }
 
 /** Uhol bodu voči stredu ciferníka -> minúta dňa. @param {Dom} dom @param {number} clientX @param {number} clientY */

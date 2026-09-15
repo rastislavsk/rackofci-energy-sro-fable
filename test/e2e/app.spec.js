@@ -340,24 +340,24 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
     for (const [i, day] of forecast.days.entries())
         await expect(page.locator(`#week-tbody tr[data-day-index="${i}"] td:nth-child(4)`)).toHaveClass(`mid${useTier(usePct(day))}`);
 
-    // Klik na deň otvorí jeho detail.
+    // Klik na deň otvorí jeho detail: priebeh toho dňa a jeho riadok z mapy výroby.
     await page.locator('#week-tbody tr[data-day-index="5"]').click();
     await expect(page.locator('#week-day-title')).toHaveText(weekDayLong(forecast.days[5].date, 5));
     await expect(page.locator('#week-trio')).toBeHidden();
     await expect(page.locator('#week-day-tabs')).toBeHidden();
-    expect(await viditelneBloky(page)).toEqual(['week-block-bars', 'week-block-curve', 'week-block-heat']);
+    expect(await viditelneBloky(page)).toEqual(['week-block-curve', 'week-block-heat']);
 
-    // Všetky tri grafy ukazujú ten istý deň: zvýraznený stĺpec, jeho krivka a riadok mapy.
-    await expect(page.locator('#week-bars rect.bar.sel')).toHaveCount(1);
+    // Oba ukazujú ten istý deň: jeho krivka a jediný riadok mapy, ktorý mu patrí.
     await expect(page.locator('#week-curve-stat')).toContainText(`${fmt1(forecast.days[5].kwhTotal)} kWh`);
-    await expect(page.locator('#week-heat .day-label.sel')).toHaveAttribute('data-day-index', '5');
+    await expect(page.locator('#week-heat .day-label')).toHaveCount(1);
+    await expect(page.locator('#week-heat .day-label')).toHaveAttribute('data-day-index', '5');
 
     // Z detailu vedie späť jedine šípka vľavo hore. Atribút data-panel nesie aj #page, takže
     // klik kdekoľvek v stránke sa kedysi tváril ako prepnutie karty a detail zavrel.
     await page.locator('#week-curve-stat').click();
     await page.locator('#week-block-heat .chart-top').click();
     await expect(page.locator('#week-day-head')).toBeVisible();
-    expect(await viditelneBloky(page)).toEqual(['week-block-bars', 'week-block-curve', 'week-block-heat']);
+    expect(await viditelneBloky(page)).toEqual(['week-block-curve', 'week-block-heat']);
 
     // Späť sa vraciame na prehľad, výber dňa v ňom ostáva.
     await page.locator('#week-day-back').click();
@@ -392,10 +392,28 @@ test('7 dní na mobile: bubliny Dnes a Zajtra otvárajú detail toho dňa', asyn
     await page.locator('#week-day-back').click();
     await expect(page.locator('#week-tbody tr.sel')).toHaveAttribute('data-day-index', '1');
 
-    // Súčtová bublina nie je tlačidlo a detail neotvára.
-    await expect(page.locator('#week-trio .stat:not([data-day-index])')).toHaveCount(1);
-    await page.locator('#week-trio .stat:not([data-day-index])').click();
+    expect(errors).toEqual([]);
+});
+
+/**
+ * Bublina "7 dní spolu" nepatrí k dňu, ale k celému týždňu - otvára preto detail týždňa:
+ * dennú výrobu a mapu výroby, bez krivky jedného dňa.
+ */
+test('7 dní na mobile: bublina 7 dní spolu otvára detail týždňa', async ({ page }) => {
+    const errors = await openApp(page);
+    await page.locator('#nav-7dni').click();
+    await page.locator('#week-trio .stat[data-week-detail]').click();
+
+    await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
+    expect(await viditelneBloky(page)).toEqual(['week-block-bars', 'week-block-heat']);
+    // Mapa ukazuje celý týždeň, nie jeden riadok.
+    await expect(page.locator('#week-heat .day-label')).toHaveCount(7);
+    await expect(page.locator('#week-bars-stat')).toContainText(`${fmt1(forecast.days.reduce((a, d) => a + d.kwhTotal, 0))} kWh`);
+
+    // Späť vedie na prehľad dní rovnako ako z detailu dňa.
+    await page.locator('#week-day-back').click();
     await expect(page.locator('#week-day-head')).toBeHidden();
+    expect(await viditelneBloky(page)).toEqual(['week-block-table']);
     expect(errors).toEqual([]);
 });
 
@@ -752,7 +770,7 @@ test('7 dní - strop jasnej oblohy: na desktope zmizne aj s legendou, na mobile 
 
     // Na mobile žijú stĺpce v detaile dňa - strop aj jeho legenda sa kontrolujú tam.
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.locator('#week-tbody tr[data-day-index="0"]').click();
+    await page.locator('#week-trio .stat[data-week-detail]').click();
     await expect(page.locator('#week-bars .clear-cap')).toHaveCount(7);
     await expect(page.locator('#week-bars-clear-legend')).toBeVisible();
     expect(errors).toEqual([]);
@@ -977,7 +995,7 @@ test('Späť nepočíta výber vnútri karty, po vyčerpaní krokov opustí appk
     await page.goBack();
     await ocakavajKartu(page, 'terazky');
     expect(await page.evaluate(() => history.state), 'na prvej karte už appka v histórii nič nedrží').toEqual({
-        step: { panel: 'terazky', weekDetail: false },
+        step: { panel: 'terazky', weekDetail: null },
     });
     expect(errors).toEqual([]);
 });
@@ -1057,30 +1075,34 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    /** Krivka ide po vodorovnej osi, takže zvislý ťah nie je prezeranie grafu, ale posúvanie
+    /** Grafy sa čítajú po vodorovnej osi, takže zvislý ťah nie je ich prezeranie, ale posúvanie
      * stránky - a to patrí prehliadaču (`.chart-wrap { touch-action: pan-y }`). Test drží obe
-     * polovice: že sa stránka cez graf naozaj posunie, aj že pritom tooltip ani nepreblikne. */
+     * polovice: že sa stránka cez graf naozaj posunie, aj že pritom tooltip ani nepreblikne.
+     * Ide cez detail týždňa: tam sú dva grafy pod sebou, takže je kam scrollovať (v detaile
+     * dňa sa obsah na displej zmestí a test by nemeral nič). */
     test('zvislý ťah cez graf posúva stránku a tooltip neukáže', async ({ page }) => {
         // Nižší displej (375x667, veľkosť menšieho telefónu): na tom, z ktorého sú ostatné
-        // testy, sa každá karta zmestí celá a scrollovať nie je kam.
+        // testy, sa karta zmestí celá.
         await page.setViewportSize({ width: 375, height: 667 });
         const errors = await openApp(page);
-        await otvorDetailDna(page);
+        await page.locator('#nav-7dni').click();
+        await page.locator('#week-trio .stat[data-week-detail]').click();
+        await expect(page.locator('#week-bars-wrap')).toBeVisible();
         expect(
             await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
             'karta sa celá zmestí na displej, nie je kam scrollovať - test by nič nemeral',
         ).toBeGreaterThan(0);
 
-        await sledujTooltip(page, 'week-curve-tooltip');
-        await swipe(page, '#week-curve-wrap', { dx: 0, dy: -120, ms: 400 });
+        await sledujTooltip(page, 'week-bars-tooltip');
+        await swipe(page, '#week-bars-wrap', { dx: 0, dy: -120, ms: 400 });
         expect(await boloVidno(page), 'tooltip preblikol pri posúvaní stránky').toBe(false);
         expect(await page.evaluate(() => window.scrollY), 'stránka sa cez graf neposunula').toBeGreaterThan(0);
 
         // Aj krátky scroll je scroll: prst prešiel menej, než je hranica švihnutia, takže na
         // dĺžku vyzerá ako ťuknutie - rozhoduje to, že sa stránka posunula.
         await page.evaluate(() => window.scrollTo(0, 0));
-        await sledujTooltip(page, 'week-curve-tooltip');
-        await swipe(page, '#week-curve-wrap', { dx: 0, dy: -40, ms: 400 });
+        await sledujTooltip(page, 'week-bars-tooltip');
+        await swipe(page, '#week-bars-wrap', { dx: 0, dy: -40, ms: 400 });
         expect(await boloVidno(page), 'tooltip sa ukázal po krátkom posunutí stránky').toBe(false);
         await ocakavajKartu(page, '7dni');
         expect(errors).toEqual([]);

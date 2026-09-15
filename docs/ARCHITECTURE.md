@@ -125,12 +125,18 @@ kým sa človek dostal k tomu, čo ho zaujímalo. Je preto rozdelená na dve obr
 
 - **Prehľad dní** – tri kartičky (Dnes, Zajtra, 7 dní spolu), tabuľka a správa
   „Najsilnejší deň“. Zmestí sa takmer celá na jednu obrazovku.
-- **Detail dňa** – otvorí ho klik na riadok v tabuľke: denná výroba, priebeh výroby
-  a mapa výroby so zvýrazneným dňom, plus hlavička so šípkou späť.
+- **Detail dňa** – otvorí ho klik na riadok v tabuľke alebo na bublinu Dnes/Zajtra:
+  priebeh výroby toho dňa, čísla o ňom a jeho jediný riadok z mapy výroby.
+- **Detail týždňa** – otvorí ho klik na bublinu „7 dní spolu“: denná výroba a mapa výroby
+  hodina × deň.
 
-Rozhoduje o tom jediné pole v stave (`weekDetail`), prepínajú sa len triedy `.hidden` –
-žiadny presun prvkov v DOM. Poradie na detaile robí jedno pravidlo `order` v CSS, lebo
-mapa výroby je v HTML prvá, ale na detaile má ísť posledná.
+Obe obrazovky majú hlavičku so šípkou späť. Rozhoduje o tom jediné pole v stave
+(`weekDetail`: `'day' | 'week' | null`), prepínajú sa len triedy `.hidden` – žiadny presun
+prvkov v DOM. Poradie na detaile robí jedno pravidlo `order` v CSS, lebo mapa výroby je
+v HTML prvá, ale na oboch detailoch má ísť posledná.
+
+Mapa výroby je v detaile dňa tá istá funkcia (`weekHeatModel`) s prepínačom „jeden deň“:
+mierka farieb ostáva z celého týždňa, inak by aj najslabší deň vyzeral sám o sebe ako plný.
 
 Od 768 px je detail vypnutý: tam je na celú kartu miesto naraz a klik na deň ho, ako
 doteraz, len vyberie vo všetkých grafoch. Rozhoduje o tom podmienka `!state.wide`

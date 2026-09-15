@@ -1397,8 +1397,9 @@ b {
     .week-block:nth-child(4) {
         order: -1;
     }
-    /* Detail dňa ide od čísla dňa k jeho priebehu a až potom k mape celého týždňa; mapa je
-       v HTML prvá, tak ju poradie posunie na koniec. Zvyšné bloky idú v poradí z HTML. */
+    /* Detail ide od čísel a krivky (deň), resp. od dennej výroby (týždeň) až potom k mape
+       výroby; mapa je v HTML prvá, tak ju poradie posunie na koniec. Zvyšné bloky idú
+       v poradí z HTML. */
     #panel-7dni.detail #week-block-heat {
         order: 1;
     }

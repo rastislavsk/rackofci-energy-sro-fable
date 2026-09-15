@@ -26,10 +26,12 @@ jej QR kód kreslí knižnica z CDN.
   strán alebo klikom na bodky. Ciferník sa číta aj ako 24-hodinový: vonkajší prstenec je
   deň s farebnými tarifnými pásmami, biela bodka na ňom je „teraz“. Potiahnutím jazdca po
   prstenci alebo ťuknutím naň si pozrieš, ako to bude vyzerať v inom čase.
-- **7 dní** – prehľad dní v tabuľke a súhrn za dnes, zajtra a celý týždeň. Klik na deň
-  otvorí jeho detail: dennú výrobu, priebeh výroby s oblačnosťou (pri dnešku aj so skutočnou
-  nameranou krivkou a značkou „teraz“) a mapu výroby hodina × deň so zvýrazneným dňom.
-  Na širokej obrazovke je vidno všetko naraz.
+- **7 dní** – prehľad dní v tabuľke a súhrn za dnes, zajtra a celý týždeň. Klik otvorí
+  detail: na deň (v tabuľke aj v bubline Dnes/Zajtra) jeho priebeh výroby s oblačnosťou,
+  čísla dňa a jeho riadok z mapy výroby; pri dnešku je v grafe aj skutočná nameraná krivka
+  so značkou „teraz“ a koľko už z predpovede nabehlo. Klik na „7 dní spolu“ otvorí detail
+  celého týždňa: dennú výrobu a mapu výroby hodina × deň. Na širokej obrazovke je vidno
+  všetko naraz.
 - **Zdieľať** – QR kód, odkaz na appku a tlačidlo na poslanie cez WhatsApp.
 
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v

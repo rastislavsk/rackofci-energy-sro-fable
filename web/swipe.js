@@ -50,7 +50,7 @@ function pansInner(from, dx) {
 function targetFor(state, dx) {
     // V detaile dňa je ťah doprava to isté ako tlačidlo Späť. Na širokej obrazovke detail
     // neexistuje (viď renderSedemdni), tam sa ťahom rovno prepína karta.
-    if (state.panel === '7dni' && state.weekDetail && !state.wide && dx > 0) return { weekDetail: false };
+    if (state.panel === '7dni' && state.weekDetail && !state.wide && dx > 0) return { weekDetail: null };
     const panel = nextPanel(state.panel, dx < 0 ? 1 : -1);
     return panel ? panelChange(state.panel, panel) : null;
 }
