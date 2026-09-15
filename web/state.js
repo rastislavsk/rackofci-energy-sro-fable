@@ -16,14 +16,14 @@ import { PANELS } from './dom.js';
  *   source: 'worker' | 'legacy' | null,
  *   dataError: boolean,
  *   weekSelDay: number,
- *   weekDetail: boolean,
+ *   weekDetail: 'day' | 'week' | null,
  *   verdictPage: number,
  *   previewMinutes: number | null,
  *   isDragging: boolean,
  *   wide: boolean,
  *   chartSizes: Record<string, { w: number, h: number }>,
  * }} AppState
- * @typedef {{ panel: Panel, weekDetail: boolean }} NavStep krok navigácie pre tlačidlo Späť
+ * @typedef {{ panel: Panel, weekDetail: 'day' | 'week' | null }} NavStep krok navigácie pre tlačidlo Späť
  */
 
 /** @param {Date} now @param {Season} season @param {{ wide: boolean }} layout @returns {AppState} */
@@ -42,7 +42,7 @@ export function initialState(now, season, layout) {
         weekSelDay: 0,
         // Karta 7 dní má na mobile dve obrazovky: prehľad dní a detail vybraného dňa.
         // Na širokej obrazovke je na všetko miesto naraz a toto pole sa neprejaví.
-        weekDetail: false,
+        weekDetail: null,
         verdictPage: 0,
         previewMinutes: null,
         isDragging: false,
@@ -99,7 +99,7 @@ export function nextPanel(panel, dir) {
  * @param {Panel} from @param {Panel} to
  */
 export function panelChange(from, to) {
-    return { panel: to, panelDir: /** @type {1 | -1} */ (PANELS.indexOf(to) < PANELS.indexOf(from) ? -1 : 1), weekDetail: false };
+    return { panel: to, panelDir: /** @type {1 | -1} */ (PANELS.indexOf(to) < PANELS.indexOf(from) ? -1 : 1), weekDetail: null };
 }
 
 /**
@@ -138,6 +138,6 @@ export function navStepFrom(raw) {
     const step = /** @type {{ step?: unknown }} */ (raw).step;
     if (!step || typeof step !== 'object') return null;
     const { panel, weekDetail } = /** @type {{ panel?: unknown, weekDetail?: unknown }} */ (step);
-    if (typeof weekDetail !== 'boolean' || !PANELS.some((p) => p === panel)) return null;
-    return { panel: /** @type {Panel} */ (panel), weekDetail };
+    if (!(weekDetail === null || weekDetail === 'day' || weekDetail === 'week') || !PANELS.some((p) => p === panel)) return null;
+    return { panel: /** @type {Panel} */ (panel), weekDetail: /** @type {'day' | 'week' | null} */ (weekDetail) };
 }

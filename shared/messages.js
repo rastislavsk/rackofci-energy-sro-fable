@@ -108,13 +108,39 @@ export function buildEyebrow(tier, powerKw, isNightSlot) {
     return sunPhrase ? `${tariffPhrase} · ${sunPhrase}` : tariffPhrase;
 }
 
+/** Špička dňa a okno, v ktorom výroba drží aspoň 60 % špičky - z toho sa skladajú obe
+ * správy o dni. @param {Array<{hour: number, kw: number}>} pts */
+function peakWindow(pts) {
+    const peak = pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0] || { hour: 0, kw: 0 });
+    const strongHours = pts.filter((p) => p.kw >= peak.kw * 0.6).map((p) => p.hour);
+    return { peak, rangeStart: Math.min(...strongHours), rangeEnd: Math.max(...strongHours) + 1 };
+}
+
+/**
+ * Správa v detaile dňa. O ktorý deň ide, hovorí hlavička nad ňou, takže text sám deň
+ * nepomenúva - inak by sa pre stredu musel prekladať do "v stredu" a pre štvrtok do
+ * "vo štvrtok". Dnes a Zajtra majú vlastné znenie vo forecastDayMessage nižšie.
+ * @param {Array<{hour: number, kw: number}>} pts @returns {{ title: string, body: string }}
+ */
+export function dayDetailMessage(pts) {
+    const { peak, rangeStart, rangeEnd } = peakWindow(pts);
+    if (peak.kw < 1.2) {
+        return { title: 'Slabý deň', body: 'Výroba bude celý deň nízka. Veľké spotrebiče si radšej naplánuj na iný deň.' };
+    }
+    const peakLabel = hourLabel(peak.hour);
+    return {
+        title: `Najsilnejšie slnko okolo ${peakLabel}`,
+        body: `Špička ~${peak.kw.toFixed(1)} kW. Veľké spotrebiče majú najviac zmysel medzi ${rangeStart}:00 a ${rangeEnd}:00.`,
+    };
+}
+
 /**
  * Správa pod grafom predpovede pre jeden deň.
  * @param {Array<{hour: number, kw: number}>} pts @param {boolean} isToday
  * @returns {{ title: string, body: string }}
  */
 export function forecastDayMessage(pts, isToday) {
-    const peak = pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0] || { hour: 0, kw: 0 });
+    const { peak, rangeStart, rangeEnd } = peakWindow(pts);
 
     if (peak.kw < 1.2) {
         return isToday
@@ -122,9 +148,6 @@ export function forecastDayMessage(pts, isToday) {
             : { title: 'Zajtra bude slabšie', body: 'Predpoveď počíta s nízkou výrobou. Ak to nie je súrne, počkaj na slnečnejší deň.' };
     }
 
-    const strongHours = pts.filter((p) => p.kw >= peak.kw * 0.6).map((p) => p.hour);
-    const rangeStart = Math.min(...strongHours);
-    const rangeEnd = Math.max(...strongHours) + 1;
     const peakLabel = hourLabel(peak.hour);
 
     if (isToday) {

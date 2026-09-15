@@ -86,6 +86,7 @@ function sedemdniDom() {
         weekTomorrowMeta: byId('week-tomorrow-meta'),
         weekTotal: byId('week-total'),
         weekTotalMeta: byId('week-total-meta'),
+        weekHeatLabel: byId('week-heat-label'),
         weekHeatScale: byId('week-heat-scale'),
         weekHeatWrap: byId('week-heat-wrap'),
         weekHeat: byId('week-heat'),

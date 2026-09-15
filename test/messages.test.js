@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildEyebrow, forecastDayMessage, getSlotMessage, SLOT_MESSAGES, weekMessage } from '../shared/messages.js';
+import { buildEyebrow, dayDetailMessage, forecastDayMessage, getSlotMessage, SLOT_MESSAGES, weekMessage } from '../shared/messages.js';
 
 test('getSlotMessage: každá kombinácia tarify × výroby má neprázdny nadpis aj text', () => {
     for (const tier of /** @type {const} */ (['red', 'amber', 'green'])) {
@@ -46,6 +46,26 @@ test('forecastDayMessage: slabý deň, dnes a zajtra', () => {
     assert.match(today.body, /medzi 11:00 a 16:00/);
     assert.match(forecastDayMessage(pts, false).body, /~6\.0 kW/);
     assert.equal(forecastDayMessage([], true).title, 'Dnes bude slabo');
+});
+
+/** Detail dňa má nad správou hlavičku s názvom dňa, takže text deň nepomenúva - inak by
+ * sa "Zajtra bude slabšie" ukázalo aj pri štvrtku. */
+test('dayDetailMessage: text platí pre ktorýkoľvek deň, lebo deň nepomenúva', () => {
+    assert.equal(dayDetailMessage([{ hour: 12, kw: 0.8 }]).title, 'Slabý deň');
+    assert.equal(dayDetailMessage([]).title, 'Slabý deň');
+    const pts = [
+        { hour: 8, kw: 1 },
+        { hour: 11, kw: 4 },
+        { hour: 13, kw: 6 },
+        { hour: 15, kw: 4.5 },
+        { hour: 18, kw: 1 },
+    ];
+    const msg = dayDetailMessage(pts);
+    assert.equal(msg.title, 'Najsilnejšie slnko okolo 13:00');
+    assert.match(msg.body, /~6\.0 kW/);
+    assert.match(msg.body, /medzi 11:00 a 16:00/);
+    // Žiadne "dnes" ani "zajtra" - správa sa ukazuje aj pri dňoch o päť dní ďalej.
+    assert.doesNotMatch(`${msg.title} ${msg.body}`, /dnes|zajtra/i);
 });
 
 test('weekMessage: najsilnejší a najslabší deň', () => {

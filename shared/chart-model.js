@@ -273,15 +273,20 @@ function heatBand(frac) {
  * na skutočný rozmer karty - vtedy sa riadky rozdelia o dostupnú výšku.
  * @param {ForecastDay[]} days @param {number} selDay @param {{ W: number, H: number } | null} [size]
  */
-export function weekHeatModel(days, selDay, size = null) {
-    const padL = 44;
+export function weekHeatModel(days, selDay, size = null, jedenDen = false) {
+    // Miesto vľavo je na skratky dní. V detaile dňa deň pomenúva hlavička nad mapou, takže
+    // skratka odpadá a riadok sa roztiahne na celú šírku.
+    const padL = jedenDen ? 4 : 44;
     const padT = 20;
     const padR = 4;
     const gap = 2;
+    // V detaile dňa sa kreslí jediný riadok, mierka farieb ale ostáva z celého týždňa -
+    // inak by aj najslabší deň vyzeral sám o sebe ako plný.
+    const riadky = jedenDen ? [selDay] : days.map((_, i) => i);
     const W = size ? size.W : 440;
-    const rh = size ? Math.max(gap + 1, (size.H - padT - 4) / days.length) : 24;
+    const rh = size ? Math.max(gap + 1, (size.H - padT - 4) / riadky.length) : 24;
     const cw = (W - padL - padR) / WEEK_HOURS.length;
-    const H = size ? size.H : padT + days.length * rh + 4;
+    const H = size ? size.H : padT + riadky.length * rh + 4;
     const maps = days.map(hourMap);
     let max = 0.4;
     maps.forEach((map) => WEEK_HOURS.forEach((h) => (max = Math.max(max, map[h] ? map[h].kw : 0))));
@@ -291,18 +296,20 @@ export function weekHeatModel(days, selDay, size = null) {
         y: padT - 8,
         label: String(h),
     }));
-    const dayLabels = days.map((d, ri) => ({
-        x: padL - 8,
-        y: padT + ri * rh + rh / 2 + 3.5,
-        label: weekDayShort(d.date, ri),
-        dayIndex: ri,
-        today: ri === 0,
-        sel: ri === selDay,
-    }));
+    const dayLabels = jedenDen
+        ? []
+        : riadky.map((di, ri) => ({
+              x: padL - 8,
+              y: padT + ri * rh + rh / 2 + 3.5,
+              label: weekDayShort(days[di].date, di),
+              dayIndex: di,
+              today: di === 0,
+              sel: di === selDay,
+          }));
     const cells = [];
-    days.forEach((d, ri) => {
+    riadky.forEach((di, ri) => {
         WEEK_HOURS.forEach((h, ci) => {
-            const cell = maps[ri][h];
+            const cell = maps[di][h];
             const v = cell ? cell.kw : 0;
             const frac = v / max;
             cells.push({
@@ -312,12 +319,13 @@ export function weekHeatModel(days, selDay, size = null) {
                 h: rh - gap,
                 frac,
                 tier: frac <= 0.02 ? null : heatBand(frac),
-                dayIndex: ri,
-                tip: v > 0.02 ? cellTip(d, ri, h, maps[ri]) : null,
+                dayIndex: di,
+                tip: v > 0.02 ? cellTip(days[di], di, h, maps[di]) : null,
             });
         });
     });
-    const selRect = { x: padL - 1, y: padT + selDay * rh, w: W - padL - padR + 2, h: rh - gap };
+    // Zvýraznenie riadka má zmysel len v mape celého týždňa - v jednom riadku niet čo odlíšiť.
+    const selRect = jedenDen ? null : { x: padL - 1, y: padT + selDay * rh, w: W - padL - padR + 2, h: rh - gap };
     const legend = Array.from({ length: 10 }, (_, i) => {
         const frac = i / 9;
         return { frac, tier: heatBand(frac) };

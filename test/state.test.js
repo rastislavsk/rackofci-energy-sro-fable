@@ -34,39 +34,45 @@ test('poradie kariet pri listovaní prstom: na kraji sa nezacyklí', () => {
 });
 
 test('smer prechodu ide podľa poradia v navigácii, nie podľa toho, ako sa prepínalo', () => {
-    assert.deepEqual(panelChange('terazky', '7dni'), { panel: '7dni', panelDir: 1, weekDetail: false });
-    assert.deepEqual(panelChange('zdielat', '7dni'), { panel: '7dni', panelDir: -1, weekDetail: false });
+    assert.deepEqual(panelChange('terazky', '7dni'), { panel: '7dni', panelDir: 1, weekDetail: null });
+    assert.deepEqual(panelChange('zdielat', '7dni'), { panel: '7dni', panelDir: -1, weekDetail: null });
     assert.equal(panelChange('terazky', 'zdielat').panelDir, 1);
     assert.equal(panelChange('zdielat', 'terazky').panelDir, -1);
 });
 
-test('krok navigácie pre tlačidlo Späť je karta a detail dňa, nič iné', () => {
+test('krok navigácie pre tlačidlo Späť je karta a otvorený detail, nič iné', () => {
     const state = initialState(new Date(), 'summer', { wide: false });
-    assert.deepEqual(navStep(state), { panel: 'terazky', weekDetail: false });
+    assert.deepEqual(navStep(state), { panel: 'terazky', weekDetail: null });
     // Vybraný deň ani stránka verdiktu nie sú miesto v appke - Späť sa na ne nevracia.
     assert.ok(sameNavStep(navStep(state), navStep({ ...state, weekSelDay: 4, verdictPage: 2 })));
     assert.ok(!sameNavStep(navStep(state), navStep({ ...state, panel: '7dni' })));
-    assert.ok(!sameNavStep(navStep(state), navStep({ ...state, weekDetail: true })));
+    assert.ok(!sameNavStep(navStep(state), navStep({ ...state, weekDetail: 'day' })));
+    // Detail dňa a detail týždňa sú dve rôzne miesta, nie jedno "otvorené".
+    assert.ok(!sameNavStep(navStep({ ...state, weekDetail: 'day' }), navStep({ ...state, weekDetail: 'week' })));
 });
 
-test('Späť obnoví kartu aj detail dňa, smer prechodu ide podľa poradia', () => {
-    assert.deepEqual(navChange('zdielat', { panel: '7dni', weekDetail: true }), {
+test('Späť obnoví kartu aj otvorený detail, smer prechodu ide podľa poradia', () => {
+    assert.deepEqual(navChange('zdielat', { panel: '7dni', weekDetail: 'day' }), {
         panel: '7dni',
         panelDir: -1,
-        weekDetail: true,
+        weekDetail: 'day',
     });
-    // Na rozdiel od panelChange sa detail dňa nezatvára, ale nastavuje na to, čo v kroku bolo.
-    assert.deepEqual(navChange('terazky', { panel: '7dni', weekDetail: false }), {
+    // Na rozdiel od panelChange sa detail nezatvára, ale nastavuje na to, čo v kroku bolo.
+    assert.deepEqual(navChange('terazky', { panel: '7dni', weekDetail: 'week' }), {
         panel: '7dni',
         panelDir: 1,
-        weekDetail: false,
+        weekDetail: 'week',
     });
 });
 
 test('položka histórie sa číta len ak naozaj nesie krok navigácie', () => {
-    assert.deepEqual(navStepFrom({ step: { panel: '7dni', weekDetail: true } }), { panel: '7dni', weekDetail: true });
+    assert.deepEqual(navStepFrom({ step: { panel: '7dni', weekDetail: 'day' } }), { panel: '7dni', weekDetail: 'day' });
+    assert.deepEqual(navStepFrom({ step: { panel: '7dni', weekDetail: 'week' } }), { panel: '7dni', weekDetail: 'week' });
+    assert.deepEqual(navStepFrom({ step: { panel: '7dni', weekDetail: null } }), { panel: '7dni', weekDetail: null });
     assert.equal(navStepFrom(null), null, 'cudzia položka bez stavu');
     assert.equal(navStepFrom({ scrollTop: 10 }), null, 'položka od niekoho iného');
-    assert.equal(navStepFrom({ step: { panel: 'neznama', weekDetail: false } }), null, 'karta, ktorá už neexistuje');
+    assert.equal(navStepFrom({ step: { panel: 'neznama', weekDetail: null } }), null, 'karta, ktorá už neexistuje');
     assert.equal(navStepFrom({ step: { panel: '7dni' } }), null, 'neúplný krok');
+    // Položka zo staršej verzie appky nesie true/false - tú už appka prečítať nevie.
+    assert.equal(navStepFrom({ step: { panel: '7dni', weekDetail: true } }), null, 'krok zo staršej verzie');
 });
