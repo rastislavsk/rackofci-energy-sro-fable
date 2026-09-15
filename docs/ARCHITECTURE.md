@@ -70,9 +70,11 @@ toho prepne `--tint-rgb` a z neho poskladá `--bg-page`. Atribút sedí na `<htm
 `<body>`, lebo `var()` vo vnútri custom property sa dosadzuje tam, kde je property zapísaná
 – `--bg-page` z `:root` by zmenu na `<body>` už nevidelo. Pozadie drží tarifu (`hero.tier`),
 nie „smart" farbu stavovej bodky (`hero.accent`, tá počíta aj so slnkom), takže hovorí to
-isté, čo prstenec na ciferníku: či je elektrina práve lacná. Náhľad iného času sa doň
-nepremieta – je to stav domu teraz. Že sa farba nerozíde s modelom, stráži e2e test pri
-štyroch pevných časoch, ktoré pokryjú všetky tri farby.
+isté, čo segment pod bežcom na dennom prstenci: či je elektrina v tej hodine lacná. Pri
+náhľade iného času ide pozadie s bežcom, kým bodka ostáva o stave teraz – preto sa model
+ráta dvakrát, ale len keď náhľad naozaj beží. Že sa farba nerozíde s modelom, strážia e2e
+testy: štyri pevné časy pokryjú všetky tri farby a ťuknutie na prstenec overí, že sa farba
+mení aj s bežcom a po zrušení náhľadu sa vráti.
 
 Medzi vstupmi stavu je aj `chartSizes` – skutočné rozmery plátien grafov v pixeloch.
 Napĺňa ich `ResizeObserver` v `interactions.js` a render z nich cez `fillDims` postaví
