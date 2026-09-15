@@ -76,6 +76,12 @@ modelom a tým, čo je naozaj v DOM.
 Predpoveď je zamknutá súborom `test/golden/forecast.json`. Zmenu výpočtu potvrď cez
 `UPDATE_GOLDEN=1 npm test` a popíš ju v pull requeste – inak ide o neúmyselnú regresiu.
 
+Keď meníš vzhľad, pusti `npm run screenshots` a pribalené obrázky daj do toho istého pull
+requestu – inak sa README rozíde s appkou. V CI to zámerne nebeží: generátor si ťahá písma
+z CDN a berie prehliadač z Playwrightu, takže by každá aktualizácia písma alebo Chromia
+sčervenala PR, ktorý sa vzhľadu ani netýka. Na jednom stroji sú obrázky bajtovo rovnaké,
+takže rozdiel v `git status` znamená naozajstnú zmenu vzhľadu.
+
 ## Proces
 
 Vetvy `claude/<téma>`, jeden pull request na tému, commit správy v štýle `feat: …`,
