@@ -15,6 +15,9 @@ export const PANELS = /** @type {const} */ (['terazky', 'predpoved', '7dni', 'zd
 
 function headerDom() {
     return {
+        // <html>, nie <body>: farba tarify sa zapisuje sem, lebo --bg-page je zložené
+        // z --tint-rgb a obe musia byť na tom istom prvku (viď :root v style.css).
+        root: document.documentElement,
         page: byId('page'),
         headerStatusDot: byId('header-status-dot'),
         currentTimeDisplay: byId('current-time-display'),

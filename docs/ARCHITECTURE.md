@@ -64,6 +64,16 @@ nič nereštartuje a JS o nej nevie. Posun je malý (24 px) a `.page` má `overf
 aby posunutá karta nešla poscrollovať do strany; stráži to e2e test, ktorý meria pretečenie
 počas celého prechodu, nie až po ňom.
 
+Rovnakou cestou ide aj farba pozadia. `renderHeader` zapíše tarifné okno, v ktorom sme
+práve teraz, ako `data-tier` na `<html>` a tým to preň končí; zvyšok je CSS, ktoré si podľa
+toho prepne `--tint-rgb` a z neho poskladá `--bg-page`. Atribút sedí na `<html>`, nie na
+`<body>`, lebo `var()` vo vnútri custom property sa dosadzuje tam, kde je property zapísaná
+– `--bg-page` z `:root` by zmenu na `<body>` už nevidelo. Pozadie drží tarifu (`hero.tier`),
+nie „smart" farbu stavovej bodky (`hero.accent`, tá počíta aj so slnkom), takže hovorí to
+isté, čo prstenec na ciferníku: či je elektrina práve lacná. Náhľad iného času sa doň
+nepremieta – je to stav domu teraz. Že sa farba nerozíde s modelom, stráži e2e test pri
+štyroch pevných časoch, ktoré pokryjú všetky tri farby.
+
 Medzi vstupmi stavu je aj `chartSizes` – skutočné rozmery plátien grafov v pixeloch.
 Napĺňa ich `ResizeObserver` v `interactions.js` a render z nich cez `fillDims` postaví
 plátno presne na kartu. Rozmer teda prichádza tou istou cestou ako každý iný vstup

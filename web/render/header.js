@@ -1,4 +1,5 @@
-// Hlavička: čas, stavová bodka (tarifa × výkon), riadok o aktuálnosti dát.
+// Hlavička: čas, stavová bodka (tarifa × výkon), riadok o aktuálnosti dát a farba tarify
+// pre pozadie celej stránky.
 
 import { STALE_PV_MS } from '../../shared/config.js';
 import { pad2 } from '../../shared/format.js';
@@ -19,6 +20,12 @@ export function updatedLine(state) {
 export function renderHeader(state, dom) {
     dom.currentTimeDisplay.textContent = `${pad2(state.now.getHours())}:${pad2(state.now.getMinutes())}`;
     dom.pvUpdated.textContent = updatedLine(state);
-    const tier = heroModel({ ...state, previewMinutes: null }).accent;
-    dom.headerStatusDot.className = `live-dot${tier === 'red' ? ' status-red' : tier === 'amber' ? ' status-amber' : ''}`;
+    const hero = heroModel({ ...state, previewMinutes: null });
+    const accent = hero.accent;
+    dom.headerStatusDot.className = `live-dot${accent === 'red' ? ' status-red' : accent === 'amber' ? ' status-amber' : ''}`;
+    // Pozadie stránky drží farbu tarifného okna (hero.tier), nie "smart" farbu bodky
+    // (hero.accent, tá počíta aj so slnkom). Pozadie tak hovorí to isté, čo prstenec na
+    // ciferníku: či je elektrina práve lacná. Náhľad iného času sa doň nepremieta - je to
+    // stav domu teraz, nie toho, na čo sa práve pozeráš.
+    dom.root.dataset.tier = hero.tier || '';
 }

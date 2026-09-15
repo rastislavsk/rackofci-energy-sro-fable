@@ -7,12 +7,18 @@
 /* ---- Tokeny ---------------------------------------------------------------- */
 :root {
     --bg: #0a0a0a;
-    /* Pozadie celej stránky. Je tu ako token, lebo ho okrem <body> maľuje aj hlavička -
-       obe s background-attachment: fixed, takže sa vrstvy kreslia voči výrezu okna
-       a prechod medzi hlavičkou a obsahom nie je vidieť. */
+    /* Pozadie celej stránky. Je tu ako token, lebo ho okrem <body> maľuje aj hlavička
+       a pás navigácie - všetky s background-attachment: fixed, takže sa vrstvy kreslia
+       voči výrezu okna a prechody medzi nimi nie sú vidieť.
+
+       Farbu berie z --tint-rgb, teda z tarifného okna, v ktorom sme práve teraz (zapisuje
+       ju renderHeader ako data-tier na <html>, viď nižšie). Musí byť na tom istom prvku
+       ako --tint-rgb: var() vo vnútri custom property sa dosadzuje tam, kde je property
+       zapísaná, nie tam, kde sa použije - keby data-tier sedelo na <body>, --bg-page
+       zdedené z :root by ho už nevidelo. */
     --bg-page:
-        radial-gradient(circle at 20% 0%, rgba(var(--amber-rgb), 0.14) 0%, rgba(var(--amber-rgb), 0) 42%),
-        radial-gradient(circle at 82% 5%, rgba(var(--green-rgb), 0.13) 0%, rgba(var(--green-rgb), 0) 46%), var(--bg);
+        radial-gradient(circle at 20% 0%, rgba(var(--tint-rgb), 0.14) 0%, rgba(var(--tint-rgb), 0) 42%),
+        radial-gradient(circle at 82% 5%, rgba(var(--tint-rgb), 0.13) 0%, rgba(var(--tint-rgb), 0) 46%), var(--bg);
     --card-bg: #151614;
     --ink: #f2f0ea;
     --ink-70: rgba(242, 240, 234, 0.94);
@@ -29,6 +35,10 @@
     --green-rgb: 158, 242, 91;
     --amber-rgb: 255, 194, 75;
     --red-rgb: 255, 107, 87;
+
+    /* Farba tarify pre pozadie stránky. Oranžová platí do prvého prekreslenia (kým appka
+       nevie, ktoré okno beží) - je to najčastejšie okno dňa aj pôvodná farba pozadia. */
+    --tint-rgb: var(--amber-rgb);
 
     --accent: var(--ink-20);
 
@@ -65,6 +75,18 @@
        pása, mení sa aj toto číslo o rovnaký počet pixelov, aby medzera medzi obsahom
        a pásom ostala rovnaká. */
     --nav-h: 59px;
+}
+
+/* Tarifné okno, v ktorom sme práve teraz. data-tier zapisuje renderHeader vo
+   web/render/header.js - jediné miesto, kde sa farba pozadia mení. */
+:root[data-tier='green'] {
+    --tint-rgb: var(--green-rgb);
+}
+:root[data-tier='amber'] {
+    --tint-rgb: var(--amber-rgb);
+}
+:root[data-tier='red'] {
+    --tint-rgb: var(--red-rgb);
 }
 
 /* ---- Základ ---------------------------------------------------------------- */
