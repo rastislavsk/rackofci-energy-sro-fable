@@ -5,7 +5,7 @@ import { PANELS } from './dom.js';
 
 /**
  * @typedef {import('../shared/config.js').Season} Season
- * @typedef {'terazky' | 'predpoved' | '7dni' | 'zdielat'} Panel
+ * @typedef {'terazky' | '7dni' | 'zdielat'} Panel
  * @typedef {{
  *   now: Date,
  *   season: Season,
@@ -15,20 +15,18 @@ import { PANELS } from './dom.js';
  *   forecast: import('../shared/solar.js').Forecast | null,
  *   source: 'worker' | 'legacy' | null,
  *   dataError: boolean,
- *   forecastDay: 'today' | 'tomorrow',
  *   weekSelDay: number,
  *   weekDetail: boolean,
  *   verdictPage: number,
  *   previewMinutes: number | null,
  *   isDragging: boolean,
  *   wide: boolean,
- *   desktop: boolean,
  *   chartSizes: Record<string, { w: number, h: number }>,
  * }} AppState
  * @typedef {{ panel: Panel, weekDetail: boolean }} NavStep krok navigácie pre tlačidlo Späť
  */
 
-/** @param {Date} now @param {Season} season @param {{ wide: boolean, desktop: boolean }} layout @returns {AppState} */
+/** @param {Date} now @param {Season} season @param {{ wide: boolean }} layout @returns {AppState} */
 export function initialState(now, season, layout) {
     return {
         now,
@@ -41,7 +39,6 @@ export function initialState(now, season, layout) {
         forecast: null,
         source: null,
         dataError: false,
-        forecastDay: 'today',
         weekSelDay: 0,
         // Karta 7 dní má na mobile dve obrazovky: prehľad dní a detail vybraného dňa.
         // Na širokej obrazovke je na všetko miesto naraz a toto pole sa neprejaví.
@@ -50,7 +47,6 @@ export function initialState(now, season, layout) {
         previewMinutes: null,
         isDragging: false,
         wide: layout.wide,
-        desktop: layout.desktop,
         // Skutočné rozmery plátien grafov. Napĺňa ich ResizeObserver v interactions.js;
         // kým sú prázdne, grafy sa kreslia na pevné plátno z chartDims.
         chartSizes: {},
@@ -87,22 +83,12 @@ export function createStore(initial) {
 
 /**
  * Susedná karta v poradí navigácie, alebo null na kraji - listovanie sa nezacyklí.
- * Na desktope Predpoveď nie je samostatná destinácia (splýva so Spotrebičmi, viď
- * effectivePanel vo web/render/index.js), takže v poradí nie je.
- * @param {Panel} panel karta, ktorá je práve vidno (effectivePanel, nie holý stav)
- * @param {boolean} desktop
- * @param {1 | -1} dir 1 = ďalšia, -1 = predchádzajúca
+ * @param {Panel} panel @param {1 | -1} dir 1 = ďalšia, -1 = predchádzajúca
  * @returns {Panel | null}
  */
-export function nextPanel(panel, desktop, dir) {
-    const order = panelOrder(desktop);
-    const i = order.indexOf(panel);
-    return i < 0 ? null : (order[i + dir] ?? null);
-}
-
-/** Poradie kariet v navigácii. @param {boolean} desktop */
-function panelOrder(desktop) {
-    return PANELS.filter((p) => !(desktop && p === 'predpoved'));
+export function nextPanel(panel, dir) {
+    const i = PANELS.indexOf(panel);
+    return i < 0 ? null : (PANELS[i + dir] ?? null);
 }
 
 /**
@@ -110,12 +96,10 @@ function panelOrder(desktop) {
  * v navigácii, nie z toho, či sa ťahalo alebo klikalo - prechod tak vyzerá rovnako pri
  * oboch. Detail dňa sa pritom zatvára: je to vec jedného pozretia, nie stav, do ktorého
  * by sa appka mala vrátiť o hodinu neskôr.
- * @param {Panel} from karta, ktorá je práve vidno (effectivePanel, nie holý stav)
- * @param {Panel} to @param {boolean} desktop
+ * @param {Panel} from @param {Panel} to
  */
-export function panelChange(from, to, desktop) {
-    const order = panelOrder(desktop);
-    return { panel: to, panelDir: /** @type {1 | -1} */ (order.indexOf(to) < order.indexOf(from) ? -1 : 1), weekDetail: false };
+export function panelChange(from, to) {
+    return { panel: to, panelDir: /** @type {1 | -1} */ (PANELS.indexOf(to) < PANELS.indexOf(from) ? -1 : 1), weekDetail: false };
 }
 
 /**
@@ -137,11 +121,10 @@ export function sameNavStep(a, b) {
  * Návrat na skorší krok navigácie (tlačidlo Späť). Od panelChange sa líši jediným:
  * detail dňa nezatvára, ale nastavuje na to, čo v tom kroku bolo - Späť má obnoviť,
  * čo používateľ videl, nie to upratať.
- * @param {Panel} from karta, ktorá je práve vidno (effectivePanel, nie holý stav)
- * @param {NavStep} step @param {boolean} desktop
+ * @param {Panel} from @param {NavStep} step
  */
-export function navChange(from, step, desktop) {
-    return { ...panelChange(from, step.panel, desktop), weekDetail: step.weekDetail };
+export function navChange(from, step) {
+    return { ...panelChange(from, step.panel), weekDetail: step.weekDetail };
 }
 
 /**

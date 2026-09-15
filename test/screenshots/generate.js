@@ -15,7 +15,6 @@ const VYSKA = 844;
 // naň by z nej bol prázdny biely rámik. Je to aj tak len QR kód a odkaz.
 const KARTY = [
     { subor: 'terazky.png', nav: 'nav-terazky' },
-    { subor: 'dnes-zajtra.png', nav: 'nav-predpoved' },
     { subor: '7dni.png', nav: 'nav-7dni' },
 ];
 

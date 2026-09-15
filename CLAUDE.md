@@ -65,7 +65,7 @@ musí tooltip ukázať a nechať svietiť, zvislý ťah cez graf musí posunúť
 
 ```bash
 npm run check     # lint, formát, typy, jednotkové testy s pokrytím
-npm run test:e2e  # Playwright: štyri karty, interakcie, prístupnosť
+npm run test:e2e  # Playwright: tri karty, interakcie, prístupnosť
 cd worker && npx wrangler deploy --dry-run --outdir dist
 ```
 

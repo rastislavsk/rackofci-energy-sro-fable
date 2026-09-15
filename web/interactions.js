@@ -6,8 +6,6 @@ import { MINUTES_PER_DAY, PAGER_SETTLE_MS, PREVIEW, REFRESH, SWIPE, TOOLTIP_FADE
 import { minutesOfDay } from '../shared/hero-model.js';
 import { loadData } from './data.js';
 import { initHistory } from './history.js';
-import { effectivePanel } from './render/index.js';
-import { forecastModel } from './render/predpoved.js';
 import { weekCurveModel } from './render/sedemdni.js';
 import { panelChange } from './state.js';
 import { initSwipe } from './swipe.js';
@@ -27,11 +25,8 @@ function initNavigation(store, dom) {
         // panelChange dopočíta aj smer prechodu (a zavrie detail dňa), takže sa karta prisunie
         // z tej istej strany ako pri ťahaní prstom.
         if (panelBtn instanceof HTMLElement && panelBtn.dataset.panel) {
-            const state = store.get();
-            store.setState(panelChange(effectivePanel(state), /** @type {Panel} */ (panelBtn.dataset.panel), state.desktop));
+            store.setState(panelChange(store.get().panel, /** @type {Panel} */ (panelBtn.dataset.panel)));
         }
-        const dayBtn = target.closest('[data-day]');
-        if (dayBtn instanceof HTMLElement) store.setState({ forecastDay: dayBtn.dataset.day === 'tomorrow' ? 'tomorrow' : 'today' });
         // Deň sa dá vybrať v tabuľke, v prepínači dní aj priamo v grafoch. Klik v tabuľke
         // navyše otvorí detail dňa (na mobile; na širokej obrazovke sa stav neprejaví).
         const weekBtn = target.closest('[data-day-index]');
@@ -317,7 +312,7 @@ function showTooltip(tooltip, time, text, pos) {
     tooltip.classList.add('visible');
 }
 
-/** Tooltip nad krivkou (interpolácia podľa X). @param {Store} store @param {HTMLElement} wrap @param {Element} svg @param {HTMLElement} tooltip @param {(s: import('./state.js').AppState) => ReturnType<typeof forecastModel>} modelFor */
+/** Tooltip nad krivkou (interpolácia podľa X). @param {Store} store @param {HTMLElement} wrap @param {Element} svg @param {HTMLElement} tooltip @param {(s: import('./state.js').AppState) => ReturnType<typeof weekCurveModel>} modelFor */
 function initCurveTooltip(store, wrap, svg, tooltip, modelFor) {
     bindPointer(wrap, tooltip, (clientX) => {
         const model = modelFor(store.get());
@@ -417,7 +412,6 @@ function initViewportZoomRealign() {
 function initChartSizes(store, dom) {
     /** @type {Array<[string, HTMLElement]>} */
     const wraps = [
-        ['forecast', dom.forecastChartWrap],
         ['weekHeat', dom.weekHeatWrap],
         ['weekBars', dom.weekBarsWrap],
         ['weekCurve', dom.weekCurveWrap],
@@ -444,7 +438,7 @@ function initChartSizes(store, dom) {
     measure();
 }
 
-/** Hodiny, obnova dát, návrat z pozadia a zmeny šírky okna. @param {Store} store @param {{ wide: MediaQueryList, desktop: MediaQueryList }} mq */
+/** Hodiny, obnova dát, návrat z pozadia a zmeny šírky okna. @param {Store} store @param {{ wide: MediaQueryList }} mq */
 function initTicks(store, mq) {
     const refresh = async () => {
         const result = await loadData();
@@ -460,11 +454,10 @@ function initTicks(store, mq) {
     setInterval(() => !document.hidden && refresh(), REFRESH.dataMs);
     document.addEventListener('visibilitychange', () => !document.hidden && refresh());
     mq.wide.addEventListener('change', (e) => store.setState({ wide: e.matches }));
-    mq.desktop.addEventListener('change', (e) => store.setState({ desktop: e.matches }));
     return refresh;
 }
 
-/** @param {Store} store @param {Dom} dom @param {{ wide: MediaQueryList, desktop: MediaQueryList }} mq */
+/** @param {Store} store @param {Dom} dom @param {{ wide: MediaQueryList }} mq */
 export function initInteractions(store, dom, mq) {
     initViewportZoomRealign();
     initNavigation(store, dom);
@@ -473,7 +466,6 @@ export function initInteractions(store, dom, mq) {
     initTimePreview(store, dom);
     initVerdictPager(store, dom);
     initTapTooltipClosing();
-    initCurveTooltip(store, dom.forecastChartWrap, dom.forecastChart, dom.forecastTooltip, forecastModel);
     initCurveTooltip(store, dom.weekCurveWrap, dom.weekCurve, dom.weekCurveTooltip, weekCurveModel);
     initRectTooltip(dom.weekHeatWrap, dom.weekHeatTooltip);
     initRectTooltip(dom.weekBarsWrap, dom.weekBarsTooltip);

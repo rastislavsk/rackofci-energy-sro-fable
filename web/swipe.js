@@ -2,7 +2,6 @@
 // na rade; zmenu robí setState ako všetko ostatné, takže sa to od kliku na navigáciu nelíši.
 
 import { SWIPE } from '../shared/config.js';
-import { effectivePanel } from './render/index.js';
 import { nextPanel, panelChange } from './state.js';
 
 /** @typedef {import('./state.js').Store} Store */
@@ -52,9 +51,8 @@ function targetFor(state, dx) {
     // V detaile dňa je ťah doprava to isté ako tlačidlo Späť. Na širokej obrazovke detail
     // neexistuje (viď renderSedemdni), tam sa ťahom rovno prepína karta.
     if (state.panel === '7dni' && state.weekDetail && !state.wide && dx > 0) return { weekDetail: false };
-    const from = effectivePanel(state);
-    const panel = nextPanel(from, state.desktop, dx < 0 ? 1 : -1);
-    return panel ? panelChange(from, panel, state.desktop) : null;
+    const panel = nextPanel(state.panel, dx < 0 ? 1 : -1);
+    return panel ? panelChange(state.panel, panel) : null;
 }
 
 /** @param {Store} store @param {Dom} dom @param {() => void} hideTooltips zavrie tooltipy grafov */
