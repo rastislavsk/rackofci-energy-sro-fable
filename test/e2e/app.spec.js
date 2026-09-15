@@ -7,7 +7,7 @@ import { LEGACY_SOURCES, PREVIEW, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS, WORKE
 import { heroModel } from '../../shared/hero-model.js';
 import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
 import { useTier } from '../../web/render/sedemdni.js';
-import { forecastDayMessage } from '../../shared/messages.js';
+import { dayDetailMessage, forecastDayMessage } from '../../shared/messages.js';
 import { FIXED_NOW, fixtureData } from '../helpers.js';
 
 const { pv, forecast } = fixtureData();
@@ -331,7 +331,8 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
     // Prehľad: bubliny a tabuľka, grafy sú až v detaile.
     await expect(page.locator('#week-tbody tr')).toHaveCount(7);
     await expect(page.locator('#week-today')).toHaveText(fmt1(forecast.days[0].kwhTotal));
-    await expect(page.locator('#week-msg-title')).toContainText('Najsilnejší deň');
+    // Správa patrí k tomu, čo je otvorené - v prehľade dní preto nie je.
+    await expect(page.locator('#week-msg-block')).toBeHidden();
     await expect(page.locator('#week-day-head')).toBeHidden();
     expect(await viditelneBloky(page)).toEqual(['week-block-table']);
 
@@ -347,7 +348,9 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
     await expect(page.locator('#week-day-tabs')).toBeHidden();
     expect(await viditelneBloky(page)).toEqual(['week-block-curve', 'week-block-heat']);
 
-    // Oba ukazujú ten istý deň: jeho krivka a jediný riadok mapy, ktorý mu patrí.
+    // Oba ukazujú ten istý deň: jeho krivka a jediný riadok mapy, ktorý mu patrí, a pod nimi
+    // správa o tom dni - očakávanie sa počíta tou istou funkciou ako v appke.
+    await expect(page.locator('#week-msg-title')).toHaveText(dayDetailMessage(visibleHours(forecast.days[5].hourly)).title);
     await expect(page.locator('#week-curve-stat')).toContainText(`${fmt1(forecast.days[5].kwhTotal)} kWh`);
     await expect(page.locator('#week-heat .day-label')).toHaveCount(1);
     await expect(page.locator('#week-heat .day-label')).toHaveAttribute('data-day-index', '5');
@@ -406,8 +409,9 @@ test('7 dní na mobile: bublina 7 dní spolu otvára detail týždňa', async ({
 
     await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
     expect(await viditelneBloky(page)).toEqual(['week-block-bars', 'week-block-heat']);
-    // Mapa ukazuje celý týždeň, nie jeden riadok.
+    // Mapa ukazuje celý týždeň, nie jeden riadok, a pod ňou je správa o najsilnejšom dni.
     await expect(page.locator('#week-heat .day-label')).toHaveCount(7);
+    await expect(page.locator('#week-msg-title')).toContainText('Najsilnejší deň');
     await expect(page.locator('#week-bars-stat')).toContainText(`${fmt1(forecast.days.reduce((a, d) => a + d.kwhTotal, 0))} kWh`);
 
     // Späť vedie na prehľad dní rovnako ako z detailu dňa.
@@ -777,13 +781,13 @@ test('7 dní - strop jasnej oblohy: na desktope zmizne aj s legendou, na mobile 
 });
 
 /**
- * Správa "Najsilnejší deň" (.msg-block) je v HTML naschvál posledným potomkom .week-grid,
- * hneď za kartou tabuľky - na mobile a tablete tak ostáva presne tam, kde bola predtým
- * (vlastná karta hneď za Prehľadom dní). Na desktope zdieľa s kartou tabuľky
- * (.week-block:nth-child(4)) tú istú bunku a align-self ju zospodu zasunie do voľného
- * miesta pod siedmimi riadkami - nesmie prekryť ani posunúť samotnú tabuľku.
+ * Správa "Najsilnejší deň" (.msg-block) je v HTML posledným potomkom .week-grid, hneď za
+ * kartou tabuľky. Na desktope zdieľa s kartou tabuľky (.week-block:nth-child(4)) tú istú
+ * bunku a align-self ju zospodu zasunie do voľného miesta pod siedmimi riadkami - nesmie
+ * prekryť ani posunúť samotnú tabuľku. Na mobile patrí k detailu týždňa a ide v ňom
+ * posledná, až za mapou výroby.
  */
-test('7 dní - správa "Najsilnejší deň": na desktope pod tabuľkou v tej istej karte, na mobile za ňou', async ({ page }) => {
+test('7 dní - správa "Najsilnejší deň": na desktope pod tabuľkou, na mobile v detaile týždňa', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 768 });
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
@@ -809,11 +813,13 @@ test('7 dní - správa "Najsilnejší deň": na desktope pod tabuľkou v tej ist
     expect(desktop.rowCount).toBe(7);
 
     await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.locator('#week-msg-block')).toBeHidden();
+    await page.locator('#week-trio .stat[data-week-detail]').click();
     const mobile = await page.evaluate(() => ({
         msgTop: document.querySelector('#panel-7dni .msg-block').getBoundingClientRect().top,
-        tableBottom: document.querySelector('#panel-7dni .week-block:nth-child(4)').getBoundingClientRect().bottom,
+        heatBottom: document.querySelector('#week-block-heat').getBoundingClientRect().bottom,
     }));
-    expect(mobile.msgTop).toBeGreaterThanOrEqual(mobile.tableBottom - 1);
+    expect(mobile.msgTop, 'správa nie je až za mapou výroby').toBeGreaterThanOrEqual(mobile.heatBottom - 1);
     expect(errors).toEqual([]);
 });
 

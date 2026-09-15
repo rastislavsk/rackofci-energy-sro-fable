@@ -1016,9 +1016,10 @@ b {
 .stat.hi {
     border-color: color-mix(in srgb, var(--green) 30%, transparent);
 }
-/* Bubliny Dnes a Zajtra sú tlačidlá (otvárajú detail dňa), takže potrebujú späť zarovnanie
-   a šírku, ktoré si tlačidlo inak určí samo. */
-.stat[data-day-index] {
+/* Všetky tri bubliny sú tlačidlá (Dnes a Zajtra otvárajú detail dňa, 7 dní spolu detail
+   týždňa), takže potrebujú späť zarovnanie a šírku, ktoré si tlačidlo inak určí samo. */
+.stat[data-day-index],
+.stat[data-week-detail] {
     text-align: left;
     width: 100%;
 }
@@ -1398,10 +1399,13 @@ b {
         order: -1;
     }
     /* Detail ide od čísel a krivky (deň), resp. od dennej výroby (týždeň) až potom k mape
-       výroby; mapa je v HTML prvá, tak ju poradie posunie na koniec. Zvyšné bloky idú
-       v poradí z HTML. */
+       výroby a správe; mapa aj správa sú v HTML skôr, tak ich poradie posunie na koniec.
+       Zvyšné bloky idú v poradí z HTML. */
     #panel-7dni.detail #week-block-heat {
         order: 1;
+    }
+    #panel-7dni.detail .msg-block {
+        order: 2;
     }
 }
 
@@ -1425,7 +1429,8 @@ b {
         font-size: var(--fs-md);
         line-height: 1;
     }
-    .stat[data-day-index] .stat-top .lbl::after {
+    .stat[data-day-index] .stat-top .lbl::after,
+    .stat[data-week-detail] .stat-top .lbl::after {
         content: ' ›';
         color: var(--ink-35);
     }
@@ -1467,14 +1472,6 @@ b {
     font-weight: 600;
     letter-spacing: -0.01em;
 }
-.day-head-sub {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-35);
-}
-
 .week-tbl-wrap {
     overflow-x: auto;
     border: 1px solid var(--ink-08);

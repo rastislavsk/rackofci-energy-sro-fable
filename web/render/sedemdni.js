@@ -2,10 +2,19 @@
 // Na mobile je to rozdelené na dve obrazovky - prehľad dní a detail vybraného dňa (weekDetail
 // v stave); na širokej obrazovke je miesta dosť a vidno všetko naraz.
 
-import { chartDims, fillDims, forecastChartModel, usePct, weekBarsModel, weekHeatModel, weekStatsModel } from '../../shared/chart-model.js';
+import {
+    chartDims,
+    fillDims,
+    forecastChartModel,
+    usePct,
+    visibleHours,
+    weekBarsModel,
+    weekHeatModel,
+    weekStatsModel,
+} from '../../shared/chart-model.js';
 import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
 import { escapeHtml, fmt1, hourLabel, pad2, weekDateLabel, weekDayLong, weekDayShort } from '../../shared/format.js';
-import { EMPTY_MESSAGES, weekMessage } from '../../shared/messages.js';
+import { dayDetailMessage, EMPTY_MESSAGES, weekMessage } from '../../shared/messages.js';
 import { ICON_CLOUD, ICON_PARTLY, ICON_SUN } from '../icons.js';
 import { forecastChartSvg, weekBarsSvg, weekHeatSvg } from '../svg.js';
 
@@ -165,7 +174,10 @@ function renderCurve(state, day, dom) {
  */
 function renderView(detail, narrow, dom) {
     dom.panels['7dni'].classList.toggle('detail', !!detail);
-    for (const el of [dom.weekHead, dom.weekTrio, dom.weekBlockTable, dom.weekMsgBlock]) el.classList.toggle('hidden', !!detail);
+    for (const el of [dom.weekHead, dom.weekTrio, dom.weekBlockTable]) el.classList.toggle('hidden', !!detail);
+    // Správa patrí k tomu, čo je otvorené: v prehľade dní preto nie je vôbec, v detaile dňa
+    // hovorí o tom dni a v detaile týždňa o najsilnejšom dni týždňa.
+    dom.weekMsgBlock.classList.toggle('hidden', narrow && !detail);
     const vidno = detail === 'day' ? ['weekBlockCurve', 'weekBlockHeat'] : detail === 'week' ? ['weekBlockBars', 'weekBlockHeat'] : [];
     for (const key of ['weekBlockHeat', 'weekBlockBars', 'weekBlockCurve'])
         dom[key].classList.toggle('hidden', detail ? !vidno.includes(key) : narrow);
@@ -174,11 +186,10 @@ function renderView(detail, narrow, dom) {
     dom.weekDayTabs.classList.toggle('hidden', !!detail);
 }
 
-/** Hlavička obrazovky detailu: čo je otvorené a odkiaľ sa vraciame.
+/** Hlavička obrazovky detailu: čo je otvorené. Odkiaľ sa vraciame, hovorí šípka vedľa nej.
  * @param {'day' | 'week' | null} detail @param {ForecastDay} day @param {number} sel @param {import('../dom.js').Dom} dom */
 function renderDayHead(detail, day, sel, dom) {
     dom.weekDayTitle.textContent = detail === 'week' ? 'Celý týždeň' : weekDayLong(day.date, sel);
-    dom.weekDaySub.textContent = detail === 'week' ? 'Detail týždňa' : 'Detail dňa';
 }
 
 /** Mapa výroby: v prehľade a v detaile týždňa celý týždeň, v detaile dňa jediný riadok
@@ -256,7 +267,7 @@ export function renderSedemdni(state, dom) {
 
     renderTableAndTabs(days, sel, dom);
     renderCurve(state, days[sel], dom);
-    const msg = weekMessage(days);
+    const msg = detail === 'day' ? dayDetailMessage(visibleHours(days[sel].hourly)) : weekMessage(days);
     dom.weekMsgTitle.textContent = msg.title;
     dom.weekMsgBody.textContent = msg.body;
 }

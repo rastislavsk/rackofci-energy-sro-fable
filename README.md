@@ -28,10 +28,10 @@ jej QR kód kreslí knižnica z CDN.
   prstenci alebo ťuknutím naň si pozrieš, ako to bude vyzerať v inom čase.
 - **7 dní** – prehľad dní v tabuľke a súhrn za dnes, zajtra a celý týždeň. Klik otvorí
   detail: na deň (v tabuľke aj v bubline Dnes/Zajtra) jeho priebeh výroby s oblačnosťou,
-  čísla dňa a jeho riadok z mapy výroby; pri dnešku je v grafe aj skutočná nameraná krivka
-  so značkou „teraz“ a koľko už z predpovede nabehlo. Klik na „7 dní spolu“ otvorí detail
-  celého týždňa: dennú výrobu a mapu výroby hodina × deň. Na širokej obrazovke je vidno
-  všetko naraz.
+  čísla dňa, jeho riadok z mapy výroby a hlášku o tom dni; pri dnešku je v grafe aj skutočná
+  nameraná krivka so značkou „teraz“ a koľko už z predpovede nabehlo. Klik na „7 dní spolu“
+  otvorí detail celého týždňa: dennú výrobu, mapu výroby hodina × deň a hlášku o najsilnejšom
+  dni. Na širokej obrazovke je vidno všetko naraz.
 - **Zdieľať** – QR kód, odkaz na appku a tlačidlo na poslanie cez WhatsApp.
 
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v

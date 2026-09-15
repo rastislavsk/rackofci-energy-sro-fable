@@ -123,12 +123,16 @@ plátno presne na kartu. Rozmer teda prichádza tou istou cestou ako každý in�
 Na telefóne mala karta štyri grafy a tabuľku pod sebou – pätnásť obrazoviek scrollovania,
 kým sa človek dostal k tomu, čo ho zaujímalo. Je preto rozdelená na dve obrazovky:
 
-- **Prehľad dní** – tri kartičky (Dnes, Zajtra, 7 dní spolu), tabuľka a správa
-  „Najsilnejší deň“. Zmestí sa takmer celá na jednu obrazovku.
+- **Prehľad dní** – tri kartičky (Dnes, Zajtra, 7 dní spolu) a tabuľka. Zmestí sa takmer
+  celá na jednu obrazovku.
 - **Detail dňa** – otvorí ho klik na riadok v tabuľke alebo na bublinu Dnes/Zajtra:
-  priebeh výroby toho dňa, čísla o ňom a jeho jediný riadok z mapy výroby.
-- **Detail týždňa** – otvorí ho klik na bublinu „7 dní spolu“: denná výroba a mapa výroby
-  hodina × deň.
+  priebeh výroby toho dňa, čísla o ňom, jeho jediný riadok z mapy výroby a správa o tom dni.
+- **Detail týždňa** – otvorí ho klik na bublinu „7 dní spolu“: denná výroba, mapa výroby
+  hodina × deň a správa „Najsilnejší deň“.
+
+Správa je jeden prvok pre obe obrazovky: v detaile dňa v ňom stojí `dayDetailMessage`,
+v detaile týždňa `weekMessage`. Text v detaile dňa deň naschvál nepomenúva – hovorí to
+hlavička nad ním, a inak by sa „zajtra“ ukázalo aj pri štvrtku.
 
 Obe obrazovky majú hlavičku so šípkou späť. Rozhoduje o tom jediné pole v stave
 (`weekDetail`: `'day' | 'week' | null`), prepínajú sa len triedy `.hidden` – žiadny presun
