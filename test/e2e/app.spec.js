@@ -91,6 +91,8 @@ test('hlavná karta o 13:00 zodpovedá modelu', async ({ page }) => {
     // Správa o predpovedi dňa je tu v pageri (karta Predpoveď je na mobile teraz skrytá).
     await expect(page.locator('#verdict-forecast-title')).toHaveText(todayForecastMsg.title);
     await expect(page.locator('#verdict-forecast-body')).toHaveText(todayForecastMsg.body);
+    // Zelené okno prefarbí pozadie celej stránky dozelena.
+    await expect(page.locator('html')).toHaveAttribute('data-tier', 'green');
     expect(errors).toEqual([]);
 });
 
@@ -186,6 +188,9 @@ for (const [hm, label] of [
         const expected = modelAt(wall);
         await expect(page.locator('#verdict-headline')).toHaveText(expected.message.headline);
         await expect(page.locator('#verdict-page-eyebrow')).toContainText(expected.eyebrow);
+        // Pozadie stránky drží farbu tarifného okna. Tieto tri časy pokryjú všetky tri
+        // farby (08:00 červená, 19:30 aj 02:00 oranžová), 13:00 zelenú v teste vyššie.
+        await expect(page.locator('html')).toHaveAttribute('data-tier', expected.tier || '');
         expect(errors).toEqual([]);
     });
 }
