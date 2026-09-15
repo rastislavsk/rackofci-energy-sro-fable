@@ -1152,12 +1152,31 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    test('na úzkom displeji si posuvná tabuľka 7 dní ťahanie necháva', async ({ page }) => {
-        // Do ~360 px tabuľka pretečie a dá sa posúvať do strán. Kým má kam ísť, patrí gesto
-        // jej - inak by sa posledný stĺpec na takom telefóne nedal pozrieť.
-        await page.setViewportSize({ width: 320, height: 844 });
+    test('na bežnom telefóne (360 px) sa tabuľka 7 dní zmestí a ťah rovno prepne kartu', async ({ page }) => {
+        // Najužší bežný displej (Galaxy S22 a spol.) má 360 px. Kým sa tabuľka nezmestila,
+        // prvý ťah do strán posunul ju a kartu prelistoval až ten druhý - z pohľadu človeka
+        // "swipe nefunguje". Šírku drží odsadenie buniek v style.css.
+        await page.setViewportSize({ width: 360, height: 844 });
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
+        const wrap = page.locator('.week-tbl-wrap');
+        expect(await wrap.evaluate((el) => el.scrollWidth - el.clientWidth), 'tabuľka pretekala do strán').toBeLessThanOrEqual(0);
+
+        await swipe(page, '#week-tbody', { dx: -120 });
+        await ocakavajKartu(page, 'zdielat');
+        expect(errors).toEqual([]);
+    });
+
+    test('na úzkom displeji si posuvná tabuľka 7 dní ťahanie necháva', async ({ page }) => {
+        // Pod 360 px (tu vonkajší displej skladačky) tabuľka aj tak pretečie a dá sa posúvať
+        // do strán. Kým má kam ísť, patrí gesto jej - inak by sa posledný stĺpec na takom
+        // telefóne nedal pozrieť.
+        await page.setViewportSize({ width: 280, height: 844 });
+        const errors = await openApp(page);
+        await page.locator('#nav-7dni').click();
+        const wrap = page.locator('.week-tbl-wrap');
+        expect(await wrap.evaluate((el) => el.scrollWidth - el.clientWidth), 'tabuľka sa mala kam posúvať').toBeGreaterThan(0);
+
         await swipe(page, '#week-tbody', { dx: -120 });
         await ocakavajKartu(page, '7dni');
 
