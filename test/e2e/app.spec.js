@@ -213,11 +213,15 @@ test('náhľad iného času ťuknutím na prstenec a návrat na teraz', async ({
     await expect(page.locator('#dial-when')).toHaveText(/^0[56]:\d{2}$/);
     await expect(page.locator('#pv-power-unit')).toContainText('kW (');
     await expect(page.locator('#preview-reset')).toBeVisible();
+    // Pozadie sleduje bežca: o 06:00 beží lacný nočný prúd, teda oranžová namiesto zelenej.
+    await expect(page.locator('html')).toHaveAttribute('data-tier', 'amber');
     await page.locator('#preview-reset').click();
     await expect(page.locator('#dial-grip')).toHaveClass(/at-now/);
     await expect(page.locator('#preview-reset')).toBeHidden();
     await expect(page.locator('#pv-power-unit')).toHaveText('kW teraz');
     await expect(page.locator('#dial-when')).toHaveText(APP_NOW.hm);
+    // Zrušenie náhľadu vráti pozadie do farby okna, ktoré beží teraz.
+    await expect(page.locator('html')).toHaveAttribute('data-tier', 'green');
 });
 
 test('ťahanie jazdca: denný prstenec sa nemení, dotiahnutie na "teraz" náhľad zruší', async ({ page }) => {
