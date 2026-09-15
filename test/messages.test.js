@@ -23,7 +23,7 @@ test('getSlotMessage: override pri silnejšom slnku, green podľa zajtrajška', 
 });
 
 test('buildEyebrow: tarifa a slnko, v noci bez slnka', () => {
-    assert.equal(buildEyebrow('green', 6, false), "IT'S GREENTIME 🙂 · silné slnko");
+    assert.equal(buildEyebrow('green', 6, false), 'Suntime · silné slnko');
     assert.equal(buildEyebrow('amber', 3, false), 'Lacná elektrina · mierne slnko');
     assert.equal(buildEyebrow('red', 0.5, false), 'Drahá elektrina · slnko je slabé');
     assert.equal(buildEyebrow('red', NaN, false), 'Drahá elektrina');

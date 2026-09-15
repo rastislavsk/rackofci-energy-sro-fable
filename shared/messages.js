@@ -101,7 +101,7 @@ export function getSlotMessage(tier, powerKw, forecast) {
  * @param {Tier} tier @param {number} powerKw @param {boolean} isNightSlot
  */
 export function buildEyebrow(tier, powerKw, isNightSlot) {
-    const tariffPhrase = tier === 'green' ? "IT'S GREENTIME 🙂" : tier === 'amber' ? 'Lacná elektrina' : 'Drahá elektrina';
+    const tariffPhrase = tier === 'green' ? 'Suntime' : tier === 'amber' ? 'Lacná elektrina' : 'Drahá elektrina';
     if (isNightSlot) return `${tariffPhrase} · noc`;
     const level = productionLevel(powerKw);
     const sunPhrase = level === 'vys' ? 'silné slnko' : level === 'str' ? 'mierne slnko' : level === 'niz' ? 'slnko je slabé' : null;
