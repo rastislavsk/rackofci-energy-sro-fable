@@ -331,7 +331,12 @@
                         </div>
                     </section>
                     <section class="week-block" id="week-block-curve">
-                        <div class="chart-top"><span class="lbl">Priebeh výroby</span></div>
+                        <div class="chart-top">
+                            <span class="lbl">Priebeh výroby</span>
+                            <span id="week-curve-now-badge" class="chart-now hidden"
+                                ><span class="live-dot"></span><span id="week-curve-now-time">teraz</span></span
+                            >
+                        </div>
                         <div class="utabs" id="week-day-tabs" role="tablist"></div>
                         <div class="stat-line" id="week-curve-stat"></div>
                         <div class="chart-card">
@@ -351,7 +356,8 @@
                         </div>
                         <div class="chart-footer">
                             <div class="chart-legend">
-                                <span><i class="leg-line"></i>predpoveď</span><span><i class="leg-dash"></i>oblačnosť</span>
+                                <span><i class="leg-line"></i>predpoveď</span><span><i class="leg-dash"></i>oblačnosť</span
+                                ><span id="week-curve-live-legend" class="hidden"><i class="leg-line-real"></i>skutočná výroba</span>
                             </div>
                         </div>
                     </section>
