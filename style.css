@@ -7,6 +7,12 @@
 /* ---- Tokeny ---------------------------------------------------------------- */
 :root {
     --bg: #0a0a0a;
+    /* Pozadie celej stránky. Je tu ako token, lebo ho okrem <body> maľuje aj hlavička -
+       obe s background-attachment: fixed, takže sa vrstvy kreslia voči výrezu okna
+       a prechod medzi hlavičkou a obsahom nie je vidieť. */
+    --bg-page:
+        radial-gradient(circle at 20% 0%, rgba(var(--amber-rgb), 0.14) 0%, rgba(var(--amber-rgb), 0) 42%),
+        radial-gradient(circle at 82% 5%, rgba(var(--green-rgb), 0.13) 0%, rgba(var(--green-rgb), 0) 46%), var(--bg);
     --card-bg: #151614;
     --ink: #f2f0ea;
     --ink-70: rgba(242, 240, 234, 0.94);
@@ -71,9 +77,7 @@ html {
 }
 body {
     margin: 0;
-    background:
-        radial-gradient(circle at 20% 0%, rgba(var(--amber-rgb), 0.14) 0%, rgba(var(--amber-rgb), 0) 42%),
-        radial-gradient(circle at 82% 5%, rgba(var(--green-rgb), 0.13) 0%, rgba(var(--green-rgb), 0) 46%), var(--bg);
+    background: var(--bg-page);
     background-attachment: fixed;
     color: var(--ink);
     font-family: var(--font-body);
@@ -130,8 +134,8 @@ b {
     position: sticky;
     top: 0;
     z-index: 30;
-    background: var(--bg);
-    border-bottom: 1px solid var(--ink-08);
+    background: var(--bg-page);
+    background-attachment: fixed;
 }
 .appbar-inner {
     max-width: var(--page-max);
