@@ -373,6 +373,33 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
 });
 
 /**
+ * Bubliny Dnes a Zajtra sú druhá cesta do detailu dňa - majú robiť presne to, čo klik na
+ * ten istý deň v Prehľade dní. Bublina "7 dní spolu" k dňu nepatrí, tá nikam nevedie.
+ */
+test('7 dní na mobile: bubliny Dnes a Zajtra otvárajú detail toho dňa', async ({ page }) => {
+    const errors = await openApp(page);
+    await page.locator('#nav-7dni').click();
+
+    await page.locator('#week-trio .stat[data-day-index="0"]').click();
+    await expect(page.locator('#week-day-title')).toHaveText(weekDayLong(forecast.days[0].date, 0));
+    await expect(page.locator('#week-curve-stat')).toContainText(`${fmt1(forecast.days[0].kwhTotal)} kWh`);
+    await page.locator('#week-day-back').click();
+
+    await page.locator('#week-trio .stat[data-day-index="1"]').click();
+    await expect(page.locator('#week-day-title')).toHaveText(weekDayLong(forecast.days[1].date, 1));
+    await expect(page.locator('#week-curve-stat')).toContainText(`${fmt1(forecast.days[1].kwhTotal)} kWh`);
+    // Výber sa prenáša do celej karty rovnako ako z tabuľky.
+    await page.locator('#week-day-back').click();
+    await expect(page.locator('#week-tbody tr.sel')).toHaveAttribute('data-day-index', '1');
+
+    // Súčtová bublina nie je tlačidlo a detail neotvára.
+    await expect(page.locator('#week-trio .stat:not([data-day-index])')).toHaveCount(1);
+    await page.locator('#week-trio .stat:not([data-day-index])').click();
+    await expect(page.locator('#week-day-head')).toBeHidden();
+    expect(errors).toEqual([]);
+});
+
+/**
  * Priebeh výroby na karte 7 dní ukazuje dnešok rovnako ako graf na karte Dnes-Zajtra:
  * nameraná krivka, značka "teraz" a položka v legende. Iný deň nameraný nie je, takže
  * z neho musí zmiznúť aj krivka, aj značka, aj legenda.

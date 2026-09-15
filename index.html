@@ -184,7 +184,9 @@
                     <div class="section-sub" id="week-sub"></div>
                 </div>
                 <div class="stat-trio" id="week-trio">
-                    <div class="stat hi">
+                    <!-- Bubliny Dnes a Zajtra sú tlačidlá: otvárajú detail toho dňa presne tak, ako klik
+                         na jeho riadok v Prehľade dní (viď data-day-index v web/interactions.js). -->
+                    <button type="button" class="stat hi" data-day-index="0">
                         <div class="stat-top"><span class="lbl">Dnes</span><span class="stat-badge" id="week-today-badge"></span></div>
                         <div class="stat-num-row"><span class="num" id="week-today">–</span><span class="u">kWh</span></div>
                         <div class="stat-meta" id="week-today-meta"></div>
@@ -194,15 +196,15 @@
                                 <span id="week-today-progress-txt"></span><span id="week-today-progress-pct"></span>
                             </div>
                         </div>
-                    </div>
-                    <div class="stat">
+                    </button>
+                    <button type="button" class="stat" data-day-index="1">
                         <div class="stat-top"><span class="lbl">Zajtra</span><span class="stat-badge" id="week-tomorrow-badge"></span></div>
                         <div class="stat-num-row">
                             <span class="num" id="week-tomorrow">–</span><span class="u">kWh</span
                             ><span class="trend" id="week-tomorrow-trend"></span>
                         </div>
                         <div class="stat-meta" id="week-tomorrow-meta"></div>
-                    </div>
+                    </button>
                     <div class="stat">
                         <div class="stat-top"><span class="lbl">7 dní spolu</span></div>
                         <div class="stat-num-row"><span class="num" id="week-total">–</span><span class="u">kWh</span></div>
