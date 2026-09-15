@@ -81,10 +81,13 @@
                     <div class="dial-wrap" id="dial-wrap">
                         <svg class="dial-svg" viewBox="0 0 240 240" aria-hidden="true">
                             <g id="day-ring"></g>
-                            <text class="dial-hour" x="120" y="14">0</text>
-                            <text class="dial-hour" x="226" y="120">6</text>
-                            <text class="dial-hour" x="120" y="226">12</text>
-                            <text class="dial-hour" x="14" y="120">18</text>
+                            <!-- Hodiny sedia v medzere medzi prstencami (polomer 93 z 240 viewBoxu):
+                                 vonkajší prstenec zaberá 102-110, vnútorný 71-85. Na samotnom
+                                 prstenci predtým prekrývali tarifné pásma. -->
+                            <text class="dial-hour" x="120" y="27">0</text>
+                            <text class="dial-hour" x="213" y="120">6</text>
+                            <text class="dial-hour" x="120" y="213">12</text>
+                            <text class="dial-hour" x="27" y="120">18</text>
                             <circle class="dial-track" cx="120" cy="120" r="78" />
                             <circle id="dial-ring" class="dial-ring" cx="120" cy="120" r="78" transform="rotate(-90 120 120)" />
                         </svg>
