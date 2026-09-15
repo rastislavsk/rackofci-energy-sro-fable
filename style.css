@@ -216,7 +216,6 @@ b {
     z-index: 30;
     background: rgba(10, 10, 10, 0.92);
     backdrop-filter: blur(12px);
-    border-top: 1px solid var(--ink-08);
     padding-bottom: env(safe-area-inset-bottom);
 }
 .bottomnav-inner {
@@ -1623,9 +1622,12 @@ b {
     .bottomnav {
         position: sticky;
         bottom: auto;
-        border-top: 0;
-        border-bottom: 1px solid var(--ink-08);
-        background: var(--bg);
+        /* Pás tu nie je na spodku obrazovky, ale hneď pod hlavičkou - teda v mieste, kde sú
+           prechody z --bg-page najsilnejšie. S plnou čiernou bol medzi hlavičkou a obsahom
+           vidieť tmavý pruh. Rovnaké pozadie s background-attachment: fixed ho zaradí do
+           tej istej plochy ako hlavičku (viď .appbar vyššie). */
+        background: var(--bg-page);
+        background-attachment: fixed;
     }
     .bottomnav-inner {
         max-width: var(--page-max);
