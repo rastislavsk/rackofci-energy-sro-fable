@@ -1317,8 +1317,7 @@ b {
 }
 .leg-line,
 .leg-line-real,
-.leg-dash,
-.leg-dash-green {
+.leg-dash {
     width: 14px;
     height: 0;
     border-top: 2px solid var(--ink);
@@ -1330,10 +1329,6 @@ b {
 .leg-dash {
     border-top-style: dashed;
     border-color: var(--ink-45);
-}
-.leg-dash-green {
-    border-top-style: dashed;
-    border-color: var(--green);
 }
 .leg-sq {
     width: 8px;
