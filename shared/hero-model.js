@@ -1,10 +1,10 @@
-// Model hlavnej karty (ciferník, odznak, verdikt, spotrebiče) pre daný čas dňa.
+// Model hlavnej karty (ciferník, verdikt, spotrebiče) pre daný čas dňa.
 // Rovnaká logika pre živé "teraz" aj pre náhľad iného času; líši sa len zdroj výkonu.
 
 import { INSTALLED_PV_KW } from './config.js';
 import { dayKwAt, realCurveBoundary } from './chart-model.js';
 import { minutesToTimeStr, pad2 } from './format.js';
-import { buildEyebrow, getSlotMessage } from './messages.js';
+import { getSlotMessage } from './messages.js';
 import { autoTier, deviceStates, productionLevel, smartTier, windowAt, windowsFor } from './tariff.js';
 
 /**
@@ -64,7 +64,6 @@ export function heroModel(state) {
         tier,
         accent: smartTier(tier, power),
         isNight,
-        eyebrow: buildEyebrow(tier, power, isNight),
         message,
         devices: deviceStates(minutes, state.season).map((d) => ({
             ...d,

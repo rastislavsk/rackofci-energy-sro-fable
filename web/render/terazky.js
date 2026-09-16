@@ -29,22 +29,16 @@ function devicesHtml(devices) {
         .join('');
 }
 
-/** Listovanie verdiktu: prvé štyri stránky (tarifa a slnko - defaultne prvá, teraz, spotrebiče,
- * predpoveď dňa) sú vždy, piata ("lepšie bude") len keď model pozná čas čakania. Pozíciu posunu
- * drží prehliadač; sem sa zapisuje obsah a bodky. @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
+/** Listovanie verdiktu: prvé tri stránky (teraz - defaultne prvá, spotrebiče, predpoveď dňa)
+ * sú vždy, štvrtá ("lepšie bude") len keď model pozná čas čakania. Pozíciu posunu drží
+ * prehliadač; sem sa zapisuje obsah a bodky. @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
 function renderVerdictPager(state, m, dom) {
-    const pages = m.waitTime ? 5 : 4;
+    const pages = m.waitTime ? 4 : 3;
     const page = Math.min(state.verdictPage, pages - 1);
     dom.verdictWaitTime.textContent = m.waitTime || '--:--';
     dom.verdictPageWait.classList.toggle('hidden', !m.waitTime);
     dom.verdictDotWait.classList.toggle('hidden', !m.waitTime);
     dom.verdictDotButtons.forEach((dot, i) => dot.classList.toggle('active', i === page));
-}
-
-/** Odznak s tarifou žije len vo vlastnej stránke pageru (na žiadnej šírke sa neduplikuje
- * nad ciferníkom). @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
-function renderEyebrowBadge(m, dom) {
-    dom.verdictEyebrowPage.textContent = m.eyebrow;
 }
 
 /** Správa o dnešnej predpovedi - tá istá, čo je v karte Predpoveď, len vždy pre dnešok
@@ -71,8 +65,8 @@ function syncPagerClones(dom) {
     // Do kľúča patrí aj trieda, lebo mirrorPage kopíruje oboje - inak by zmena samotnej
     // triedy zdroja klon nedobehla.
     if (changedKeys('clone-start', [lastPage.className, lastPage.innerHTML])) mirrorPage(lastPage, dom.verdictPageCloneStart);
-    const eyebrow = dom.verdictPageEyebrow;
-    if (changedKeys('clone-end', [eyebrow.className, eyebrow.innerHTML])) mirrorPage(eyebrow, dom.verdictPageCloneEnd);
+    const firstPage = dom.verdictPageNow;
+    if (changedKeys('clone-end', [firstPage.className, firstPage.innerHTML])) mirrorPage(firstPage, dom.verdictPageCloneEnd);
 }
 
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
@@ -88,7 +82,6 @@ function renderHero(state, m, dom) {
     // Pri nulovej výrobe by guľatý koniec oblúka nechal na vrchu prstenca bodku, hoci
     // nie je čo ukázať. Trieda ho na ten čas zrovná (viď .dial-ring.empty v style.css).
     dom.dialRing.classList.toggle('empty', !(m.dial.fraction > 0));
-    renderEyebrowBadge(m, dom);
     dom.verdictHeadline.textContent = m.message.headline;
     dom.verdictBody.textContent = m.message.body;
     writeHtml(dom.verdictGoRow, devicesHtml(m.devices), 'devices');

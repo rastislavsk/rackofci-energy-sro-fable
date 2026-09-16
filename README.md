@@ -20,12 +20,12 @@ Snímky sú z testovacích dát a pevného času (13:00), nie zo živej elektrá
 sú syntetické. Prekresliť ich vie `npm run screenshots`. Karta Zdieľať na obrázku nie je,
 jej QR kód kreslí knižnica z CDN.
 
-- **Terazky** – aktuálny výkon na ciferníku a pod ním kolotoč odporúčaní: tarifné okno so
-  stavom slnka, jednovetné odporúčanie („Najlepší čas dňa — zapni všetko“), stav piatich
-  spotrebičov, predpoveď dňa a prípadne čas, kedy bude lepšie. Listuje sa potiahnutím do
-  strán alebo klikom na bodky. Ciferník sa číta aj ako 24-hodinový: vonkajší prstenec je
-  deň s farebnými tarifnými pásmami, biela bodka na ňom je „teraz“. Potiahnutím jazdca po
-  prstenci alebo ťuknutím naň si pozrieš, ako to bude vyzerať v inom čase.
+- **Terazky** – aktuálny výkon na ciferníku a pod ním kolotoč odporúčaní: jednovetné
+  odporúčanie („Najlepší čas dňa — zapni všetko“), stav piatich spotrebičov, predpoveď dňa
+  a prípadne čas, kedy bude lepšie. Listuje sa potiahnutím do strán alebo klikom na bodky.
+  Ciferník sa číta aj ako 24-hodinový: vonkajší prstenec je deň s farebnými tarifnými
+  pásmami, biela bodka na ňom je „teraz“. Potiahnutím jazdca po prstenci alebo ťuknutím
+  naň si pozrieš, ako to bude vyzerať v inom čase.
 - **7 dní** – prehľad dní: na telefóne rebríček, kde má každý deň pásik dlhý podľa výroby
   voči najsilnejšiemu dňu v týždni, a nad ním jediné veľké číslo za celý týždeň; na širokej
   obrazovke bubliny (Dnes, Zajtra, 7 dní spolu) a tabuľka so všetkými stĺpcami. Klik otvorí

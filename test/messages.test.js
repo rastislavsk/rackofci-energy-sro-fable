@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildEyebrow, dayDetailMessage, forecastDayMessage, getSlotMessage, SLOT_MESSAGES, weekMessage } from '../shared/messages.js';
+import { dayDetailMessage, forecastDayMessage, getSlotMessage, SLOT_MESSAGES, weekMessage } from '../shared/messages.js';
 
 test('getSlotMessage: každá kombinácia tarify × výroby má neprázdny nadpis aj text', () => {
     for (const tier of /** @type {const} */ (['red', 'amber', 'green'])) {
@@ -20,14 +20,6 @@ test('getSlotMessage: override pri silnejšom slnku, green podľa zajtrajška', 
     assert.equal(getSlotMessage('red', 6, forecast)?.headline, SLOT_MESSAGES.red.vys.h, 'vysoká výroba nemá override');
     assert.match(getSlotMessage('green', 0.5, forecast)?.body || '', /Zajtra bude slnečno/);
     assert.match(getSlotMessage('green', 0.5, { tomorrowSunny: false })?.body || '', /slnečno nebude/);
-});
-
-test('buildEyebrow: tarifa a slnko, v noci bez slnka', () => {
-    assert.equal(buildEyebrow('green', 6, false), 'Suntime · silné slnko');
-    assert.equal(buildEyebrow('amber', 3, false), 'Lacná elektrina · mierne slnko');
-    assert.equal(buildEyebrow('red', 0.5, false), 'Drahá elektrina · slnko je slabé');
-    assert.equal(buildEyebrow('red', NaN, false), 'Drahá elektrina');
-    assert.equal(buildEyebrow('amber', 0, true), 'Lacná elektrina · noc');
 });
 
 test('forecastDayMessage: slabý deň, dnes a zajtra', () => {

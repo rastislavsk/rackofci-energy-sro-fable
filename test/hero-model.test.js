@@ -20,7 +20,6 @@ test('13:00 v lete so 6,4 kW: zelené okno, všetky spotrebiče go, žiadne čak
     const m = heroModel({ ...base, now: at('13:00') });
     assert.equal(m.tier, 'green');
     assert.equal(m.accent, 'green');
-    assert.equal(m.eyebrow, 'Suntime · silné slnko');
     assert.equal(m.message.headline, 'Najlepší čas dňa — zapni všetko');
     assert.ok(m.devices.every((d) => d.state === 'go' && d.tier === 'green'));
     assert.equal(m.waitTime, null);
@@ -29,11 +28,10 @@ test('13:00 v lete so 6,4 kW: zelené okno, všetky spotrebiče go, žiadne čak
     assert.equal(m.dial.tier, 'green');
 });
 
-test('02:00 nočný slot: text z okna, odznak s nocou, auto oranžové', () => {
+test('02:00 nočný slot: text z okna, auto oranžové', () => {
     const m = heroModel({ ...base, now: at('02:00'), pv: { ...pv, realTimePowerKw: 0 } });
     assert.ok(m.isNight);
     assert.equal(m.message.headline, 'Lacný nočný prúd');
-    assert.equal(m.eyebrow, 'Lacná elektrina · noc');
     assert.equal(m.devices.find((d) => d.name === 'Auto')?.tier, 'amber');
     assert.equal(m.dial.tier, 'red');
 });
@@ -42,7 +40,6 @@ test('08:00 drahý slot bez dát: farba podľa tarify, číslo pomlčka', () => 
     const m = heroModel({ ...base, now: at('08:00'), pv: null, forecast: null });
     assert.equal(m.accent, 'red');
     assert.equal(m.powerText, '–');
-    assert.equal(m.eyebrow, 'Drahá elektrina');
     assert.equal(m.message.headline, 'Najdrahšia sieť');
 });
 
