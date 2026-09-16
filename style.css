@@ -1158,17 +1158,6 @@ b {
     gap: var(--sp-2);
     margin-bottom: var(--sp-2);
 }
-.chart-now {
-    /* Bodka v tomto štítku je len značka "teraz" na krivke výroby, nie stav tarify -
-       preto si drží zelenú a nejde s --live-rgb. */
-    --live-rgb: var(--green-rgb);
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    color: var(--ink-45);
-}
 /* pan-y, nie none: zvislé posúvanie stránky patrí prehliadaču, aj keď prst začne na grafe -
    inak sa cez graf nedá scrollovať vôbec. Vodorovnú zložku si necháva JS (listovanie kariet
    vo web/swipe.js, tooltip vo web/interactions.js), rovnako ako pri páse dňa vyššie. */
