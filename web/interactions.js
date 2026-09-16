@@ -42,11 +42,14 @@ function initNavigation(store, dom) {
         // Bodka len posunie pás; stránka sa dopočíta z výslednej pozície ako pri prste. Cieľ je
         // samotná stránka (scrollIntoView), nie index krát clientWidth - ten je celočíselný, kým
         // skutočná šírka stránky býva desatinná, čo na desktope (klik na bodku, nie prstom) nechávalo
-        // pás o pár pixelov mimo prichytenia a cez okraj presvital kúsok susednej stránky. +1, lebo
-        // pred prvou reálnou stránkou je klon poslednej (kolotoč, viď initVerdictPager).
-        const pageBtn = target.closest('[data-verdict-page]');
-        if (pageBtn instanceof HTMLElement) {
-            const pageEl = dom.verdictPager.children[Number(pageBtn.dataset.verdictPage) + 1];
+        // pás o pár pixelov mimo prichytenia a cez okraj presvital kúsok susednej stránky. Bodku
+        // hľadá poradie v zozname bodiek, nie atribút s číslom stránky: zoznam je ten istý, ktorý
+        // bodky rozsvecuje, takže si obe strany nemajú ako rozísť. +1, lebo pred prvou reálnou
+        // stránkou je klon poslednej (kolotoč, viď initVerdictPager).
+        const dotBtn = target.closest('.pager-dot');
+        const dotIndex = dotBtn instanceof HTMLElement ? dom.verdictDotButtons.indexOf(dotBtn) : -1;
+        if (dotIndex >= 0) {
+            const pageEl = dom.verdictPager.children[dotIndex + 1];
             if (pageEl instanceof HTMLElement) pageEl.scrollIntoView({ inline: 'start', block: 'nearest' });
         }
     });
@@ -130,7 +133,7 @@ function initTimePreview(store, dom) {
  * koncom tok (klon) sa pre zobrazenie pripne na najbližší reálny okraj. @param {HTMLElement} pager @param {Dom} dom */
 function currentFlowPage(pager, dom) {
     const width = pager.clientWidth || 1;
-    const realPages = dom.verdictPageWait.classList.contains('hidden') ? 4 : 5;
+    const realPages = dom.verdictPageWait.classList.contains('hidden') ? 3 : 4;
     const flowIndex = Math.round(pager.scrollLeft / width);
     return { realPages, flowIndex, logical: Math.min(Math.max(flowIndex - 1, 0), realPages - 1) };
 }

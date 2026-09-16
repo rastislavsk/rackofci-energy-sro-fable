@@ -96,18 +96,6 @@ export function getSlotMessage(tier, powerKw, forecast) {
     return { headline: entry.h, body: /** @type {string} */ (entry.p) };
 }
 
-/**
- * Krátky odznak nad ciferníkom: tarifa · slnko.
- * @param {Tier} tier @param {number} powerKw @param {boolean} isNightSlot
- */
-export function buildEyebrow(tier, powerKw, isNightSlot) {
-    const tariffPhrase = tier === 'green' ? 'Suntime' : tier === 'amber' ? 'Lacná elektrina' : 'Drahá elektrina';
-    if (isNightSlot) return `${tariffPhrase} · noc`;
-    const level = productionLevel(powerKw);
-    const sunPhrase = level === 'vys' ? 'silné slnko' : level === 'str' ? 'mierne slnko' : level === 'niz' ? 'slnko je slabé' : null;
-    return sunPhrase ? `${tariffPhrase} · ${sunPhrase}` : tariffPhrase;
-}
-
 /** Špička dňa a okno, v ktorom výroba drží aspoň 60 % špičky - z toho sa skladajú obe
  * správy o dni. @param {Array<{hour: number, kw: number}>} pts */
 function peakWindow(pts) {
