@@ -1,0 +1,1083 @@
+<!doctype html>
+<html lang="sk">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Karta 7 dní - farebná logika výroby po dňoch</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        />
+
+        <style>
+            /* ============================================================================
+   Náhľad k otázke "akou logikou zafarbiť výrobu po dňoch". Farby, písma a rozmery
+   sú prevzaté 1:1 z style.css appky, telefón je v mierke 375 px. Appka je zámerne
+   len tmavá, preto aj tento náhľad.
+
+   Dáta sú zmrazená vzorka (septembrový a decembrový týždeň), nie živá predpoveď.
+   Riadky aj stĺpce kreslí skript dole z jedného poľa, aby všetky varianty ukazovali
+   presne tie isté čísla a líšili sa len farbou.
+   ============================================================================ */
+            :root {
+                /* Tokeny appky */
+                --bg: #0a0a0a;
+                --card-bg: #151614;
+                --ink: #f2f0ea;
+                --ink-70: rgba(242, 240, 234, 0.94);
+                --ink-45: rgba(242, 240, 234, 0.64);
+                --ink-35: rgba(242, 240, 234, 0.54);
+                --ink-20: rgba(242, 240, 234, 0.26);
+                --ink-12: rgba(242, 240, 234, 0.16);
+                --ink-08: rgba(242, 240, 234, 0.1);
+                --ink-05: rgba(242, 240, 234, 0.06);
+                --green: #9ef25b;
+                --amber: #ffc24b;
+                --red: #ff6b57;
+                --green-rgb: 158, 242, 91;
+                --amber-rgb: 255, 194, 75;
+                --red-rgb: 255, 107, 87;
+
+                --font-body: 'Space Grotesk', -apple-system, 'Segoe UI', Arial, sans-serif;
+                --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+                --radius-sm: 6px;
+                --radius-md: 12px;
+                --radius-lg: 18px;
+
+                /* Chrome náhľadu - o chlp chladnejšia čierna než appka, aby bolo vidno,
+                   kde končí stránka a kde začína mock. */
+                --page-bg: #0e0f11;
+                --page-panel: #131417;
+                --page-line: rgba(242, 240, 234, 0.11);
+
+                --mock-w: 375px;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                background: var(--page-bg);
+                color: var(--ink);
+                font-family: var(--font-body);
+                font-size: 15px;
+                line-height: 1.55;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            .wrap {
+                max-width: 1180px;
+                margin: 0 auto;
+                padding-inline: 20px;
+                padding-block: 40px 72px;
+            }
+
+            /* ---- Hlavička stránky ------------------------------------------------------- */
+            .eyebrow {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+                color: var(--ink-35);
+                margin: 0 0 10px;
+            }
+            h1 {
+                font-size: clamp(26px, 4.4vw, 38px);
+                font-weight: 600;
+                letter-spacing: -0.02em;
+                line-height: 1.12;
+                margin: 0 0 14px;
+                text-wrap: balance;
+            }
+            .lede {
+                max-width: 66ch;
+                color: var(--ink-45);
+                margin: 0 0 8px;
+            }
+            .lede b {
+                color: var(--ink-70);
+                font-weight: 600;
+            }
+
+            .kriteria {
+                margin: 26px 0 0;
+                padding: 18px 20px;
+                border: 1px solid var(--page-line);
+                border-radius: var(--radius-md);
+                background: var(--page-panel);
+                max-width: 76ch;
+            }
+            .kriteria h2 {
+                font-size: 13px;
+                font-family: var(--font-mono);
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--ink-35);
+                font-weight: 600;
+                margin: 0 0 10px;
+            }
+            .kriteria ul {
+                margin: 0;
+                padding-left: 18px;
+                color: var(--ink-45);
+                font-size: 14px;
+            }
+            .kriteria li + li {
+                margin-top: 5px;
+            }
+            .kriteria b {
+                color: var(--ink-70);
+                font-weight: 600;
+            }
+            .kriteria code,
+            .poznamky code {
+                font-family: var(--font-mono);
+                font-size: 12.5px;
+                color: var(--ink-70);
+                background: var(--ink-05);
+                border-radius: 4px;
+                padding: 1px 5px;
+            }
+
+            /* ---- Sekcia jedného návrhu -------------------------------------------------- */
+            .navrh {
+                margin-top: 56px;
+                padding-top: 32px;
+                border-top: 1px solid var(--page-line);
+            }
+            .navrh-head {
+                display: flex;
+                align-items: baseline;
+                gap: 12px;
+                flex-wrap: wrap;
+                margin-bottom: 6px;
+            }
+            .navrh-znacka {
+                font-family: var(--font-mono);
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.12em;
+                color: var(--bg);
+                background: var(--ink-70);
+                border-radius: var(--radius-sm);
+                padding: 3px 8px;
+            }
+            .navrh h2 {
+                font-size: 24px;
+                font-weight: 600;
+                letter-spacing: -0.015em;
+                margin: 0;
+            }
+            .navrh-podnadpis {
+                color: var(--ink-35);
+                font-size: 14px;
+                margin: 0 0 24px;
+                max-width: 72ch;
+            }
+
+            .stlpce {
+                display: flex;
+                gap: 40px;
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+            .poznamky {
+                flex: 1 1 340px;
+                min-width: 300px;
+            }
+            .poznamky h3 {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--ink-35);
+                font-weight: 600;
+                margin: 0 0 8px;
+            }
+            .poznamky h3 + * {
+                margin-top: 0;
+            }
+            .poznamky ul {
+                margin: 0 0 22px;
+                padding-left: 18px;
+                color: var(--ink-45);
+                font-size: 14px;
+            }
+            .poznamky li + li {
+                margin-top: 4px;
+            }
+            .poznamky b {
+                color: var(--ink-70);
+                font-weight: 600;
+            }
+            .poznamky p {
+                margin: 0 0 22px;
+                color: var(--ink-45);
+                font-size: 14px;
+            }
+            .vystraha {
+                border-left: 2px solid var(--amber);
+                padding-left: 12px;
+                color: var(--ink-45);
+                font-size: 13.5px;
+            }
+            .plus {
+                border-left: 2px solid var(--green);
+                padding-left: 12px;
+                color: var(--ink-45);
+                font-size: 13.5px;
+            }
+
+            /* ---- Rám telefónu ----------------------------------------------------------- */
+            .telefony {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+            }
+            .telefon {
+                flex: 0 0 var(--mock-w);
+                width: var(--mock-w);
+            }
+            .telefon-popis {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--ink-35);
+                margin: 0 0 8px;
+                text-align: center;
+            }
+            .ramik {
+                border: 1px solid var(--page-line);
+                border-radius: 26px;
+                padding: 8px;
+                background: #000;
+            }
+            .obrazovka {
+                border-radius: 19px;
+                overflow: hidden;
+                background:
+                    radial-gradient(circle at 20% 0%, rgba(var(--amber-rgb), 0.14) 0%, rgba(var(--amber-rgb), 0) 42%),
+                    radial-gradient(circle at 82% 5%, rgba(var(--amber-rgb), 0.13) 0%, rgba(var(--amber-rgb), 0) 46%), var(--bg);
+                padding: 14px 16px 0;
+            }
+
+            /* ---- Spoločné prvky appky v mocku ------------------------------------------- */
+            .mock-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                letter-spacing: 0.14em;
+                color: var(--ink-35);
+                text-transform: uppercase;
+                padding-bottom: 12px;
+            }
+            .mock-head .zivo {
+                color: var(--green);
+                letter-spacing: 0.06em;
+            }
+            .mock-head .zivo i {
+                display: inline-block;
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--green);
+                margin-right: 6px;
+                vertical-align: 1px;
+            }
+            .mock-title {
+                font-size: 26px;
+                font-weight: 600;
+                letter-spacing: -0.015em;
+                margin: 0;
+            }
+            .mock-sub {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--ink-35);
+                margin: 2px 0 16px;
+            }
+            .lbl {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--ink-35);
+            }
+            .sipka {
+                color: var(--ink-35);
+            }
+            .num {
+                font-family: var(--font-mono);
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                line-height: 1;
+            }
+            .u {
+                font-family: var(--font-mono);
+                font-size: 12px;
+                color: var(--ink-35);
+                margin-left: 4px;
+            }
+            .ikona {
+                width: 15px;
+                height: 15px;
+                display: inline-block;
+                vertical-align: -3px;
+            }
+            .ikona svg {
+                width: 100%;
+                height: 100%;
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 1.7;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+            .i-sun {
+                color: var(--amber);
+            }
+            .i-partly {
+                color: var(--ink-45);
+            }
+            .i-cloud {
+                color: var(--ink-35);
+            }
+            .mock-nav {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                border-top: 1px solid var(--ink-08);
+                margin: 14px -16px 0;
+                background: rgba(10, 10, 10, 0.7);
+            }
+            .mock-nav span {
+                text-align: center;
+                padding: 9px 0 11px;
+                font-family: var(--font-mono);
+                font-size: 9px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--ink-20);
+            }
+            .mock-nav span.on {
+                color: var(--ink-70);
+                box-shadow: inset 0 2px 0 var(--green);
+            }
+
+            /* ---- Bublina so súčtom a rebríček dní --------------------------------------- */
+            .hero {
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                gap: 12px;
+                margin-bottom: 8px;
+                padding: 12px;
+                background: var(--card-bg);
+                border: 1px solid var(--ink-08);
+                border-radius: var(--radius-md);
+            }
+            .hero .lbl {
+                display: block;
+                margin-bottom: 6px;
+            }
+            .hero .num {
+                font-size: 44px;
+            }
+            .hero-meta {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                color: var(--ink-35);
+                text-align: right;
+                line-height: 1.6;
+                white-space: nowrap;
+            }
+            .hero-meta b {
+                color: var(--ink);
+                display: block;
+                font-size: 12px;
+            }
+            .karta {
+                background: var(--card-bg);
+                border: 1px solid var(--ink-08);
+                border-radius: var(--radius-md);
+                padding: 12px;
+            }
+            .zoznam {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .den {
+                display: grid;
+                grid-template-columns: 70px 16px 1fr auto 10px;
+                align-items: center;
+                gap: 8px;
+                padding: 9px 4px;
+                border-radius: var(--radius-sm);
+            }
+            .den::after {
+                content: '›';
+                color: var(--ink-35);
+                font-size: 14px;
+                text-align: right;
+            }
+            .den .meno {
+                font-size: 13.5px;
+                font-weight: 600;
+                color: var(--ink);
+                line-height: 1.15;
+            }
+            .den .datum {
+                display: block;
+                font-family: var(--font-mono);
+                font-size: 9px;
+                color: var(--ink-35);
+                font-weight: 400;
+                letter-spacing: 0.06em;
+            }
+            .pas {
+                height: 22px;
+                border-radius: var(--radius-sm);
+                background: var(--ink-05);
+                overflow: hidden;
+            }
+            .pas i {
+                display: block;
+                height: 100%;
+                border-radius: var(--radius-sm);
+                /* Dnešný stav: jedna zelená pre všetkých sedem dní. Varianty ju prepíšu
+                   inline štýlom zo skriptu. */
+                background: color-mix(in srgb, var(--green) 45%, transparent);
+            }
+            .kwh {
+                font-family: var(--font-mono);
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--ink);
+                min-width: 42px;
+                text-align: right;
+                white-space: nowrap;
+            }
+            .kwh span {
+                font-size: 9px;
+                color: var(--ink-35);
+                font-weight: 400;
+                margin-left: 2px;
+            }
+
+            /* ---- Detail týždňa: stĺpce a heatmapa --------------------------------------- */
+            .detail-bloky {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+            }
+            .detail-blok {
+                flex: 0 0 340px;
+                width: 340px;
+            }
+            .blok-popis {
+                font-family: var(--font-mono);
+                font-size: 10px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--ink-35);
+                margin: 0 0 8px;
+                text-align: center;
+            }
+            .graf {
+                display: flex;
+                align-items: flex-end;
+                gap: 6px;
+                height: 150px;
+                padding: 0 2px;
+                border-bottom: 1px solid var(--ink-12);
+            }
+            .graf .stlp {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                align-items: center;
+                height: 100%;
+                gap: 4px;
+            }
+            .graf .hodnota {
+                font-family: var(--font-mono);
+                font-size: 9.5px;
+                color: var(--ink-45);
+            }
+            .graf .telo {
+                width: 60%;
+                border-radius: 3px;
+                /* Dnešný stav: všetky stĺpce jednou sivou (--ink-45 ako v appke). */
+                background: var(--ink-45);
+            }
+            .graf-popisky {
+                display: flex;
+                gap: 6px;
+                padding: 6px 2px 0;
+            }
+            .graf-popisky span {
+                flex: 1;
+                text-align: center;
+                font-family: var(--font-mono);
+                font-size: 10px;
+                color: var(--ink-45);
+            }
+            .heat {
+                display: grid;
+                grid-template-columns: 26px 1fr;
+                gap: 3px 6px;
+                align-items: center;
+                margin-top: 14px;
+            }
+            .heat .den-skratka {
+                font-family: var(--font-mono);
+                font-size: 9px;
+                color: var(--ink-45);
+                text-align: right;
+            }
+            .heat .riadok {
+                display: grid;
+                grid-template-columns: repeat(13, 1fr);
+                gap: 2px;
+            }
+            .heat .bunka {
+                height: 13px;
+                border-radius: 2px;
+            }
+
+            /* ---- Porovnanie dvoch týždňov ----------------------------------------------- */
+            .tabulka {
+                width: 100%;
+                max-width: 860px;
+                border-collapse: collapse;
+                font-size: 13.5px;
+                margin-top: 8px;
+            }
+            .tabulka th,
+            .tabulka td {
+                text-align: left;
+                padding: 7px 10px;
+                border-bottom: 1px solid var(--ink-08);
+            }
+            .tabulka th {
+                font-family: var(--font-mono);
+                font-size: 9.5px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--ink-35);
+                font-weight: 600;
+            }
+            .tabulka td.cislo {
+                font-family: var(--font-mono);
+            }
+            .bodka {
+                display: inline-block;
+                width: 9px;
+                height: 9px;
+                border-radius: 2px;
+                margin-right: 7px;
+                vertical-align: 0;
+            }
+            .rozdiel {
+                color: var(--amber);
+            }
+
+            /* ---- Záver ------------------------------------------------------------------ */
+            .zaver {
+                margin-top: 56px;
+                padding: 22px 24px;
+                border: 1px solid var(--page-line);
+                border-radius: var(--radius-md);
+                background: var(--page-panel);
+                max-width: 80ch;
+            }
+            .zaver h2 {
+                font-size: 20px;
+                font-weight: 600;
+                margin: 0 0 12px;
+            }
+            .zaver p,
+            .zaver li {
+                color: var(--ink-45);
+                font-size: 14px;
+            }
+            .zaver b {
+                color: var(--ink-70);
+                font-weight: 600;
+            }
+            .zaver ul {
+                padding-left: 18px;
+            }
+            .zaver li + li {
+                margin-top: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <p class="eyebrow">Karta 7 dní · návrh</p>
+            <h1>Farebná logika výroby po dňoch</h1>
+            <p class="lede">
+                Heatmapa má tri pásma podľa podielu z najsilnejšej hodiny v týždni: <b>červená</b> pod tretinou, <b>jantárová</b> do dvoch
+                tretín, <b>zelená</b> nad nimi. K tomu priehľadnosť <code>0,12 + podiel × 0,8</code>, takže slabá bunka je tmavšia než
+                silná.
+            </p>
+            <p class="lede">
+                Výroba po dňoch tú logiku zatiaľ nemá. V rebríčku na mobile sú všetky pásiky rovnako zelené, v grafe Denná výroba sú všetky
+                stĺpce rovnako sivé – veľkosť dňa hovorí iba dĺžka pásika a číslo vedľa neho. Nižšie sú tri spôsoby, ako do nich farbu
+                dostať, na tej istej zmrazenej vzorke.
+            </p>
+
+            <div class="kriteria">
+                <h2>Podľa čoho sa rozhodnúť</h2>
+                <ul>
+                    <li><b>Odpovedá farba na otázku, ktorú človek má?</b> V prehľade je to „ktorý deň z týchto siedmich stojí za to“.</li>
+                    <li>
+                        <b>Nehádže sa farba s heatmapou?</b> V detaile týždňa sú stĺpce a heatmapa na jednej obrazovke pod sebou. Keď každá
+                        počíta farbu inak, vyzerá to ako chyba.
+                    </li>
+                    <li>
+                        <b>Nesie farba niečo navyše?</b> Dĺžku pásika už vidno a číslo je vedľa. Ak farba zopakuje to isté, je to len ozdoba
+                        – nie zlá, ale ani dôvod meniť kód.
+                    </li>
+                    <li>
+                        <b>Drží to aj v zlom týždni?</b> December vyrobí pätinu septembra. Farba sa nesmie tváriť, že je všetko v poriadku,
+                        ani že je všetko zlé.
+                    </li>
+                </ul>
+            </div>
+
+            <!-- ============================ DNEŠNÝ STAV ============================ -->
+            <section class="navrh">
+                <div class="navrh-head">
+                    <span class="navrh-znacka">DNES</span>
+                    <h2>Ako to vyzerá teraz</h2>
+                </div>
+                <p class="navrh-podnadpis">Jedna zelená na všetkých sedem pásikov, jedna sivá na všetkých sedem stĺpcov.</p>
+                <div class="stlpce">
+                    <div class="telefon">
+                        <p class="telefon-popis">Prehľad dní · 375 px</p>
+                        <div class="ramik">
+                            <div class="obrazovka" data-mock="dnes" data-tyzden="september"></div>
+                        </div>
+                    </div>
+                    <div class="poznamky">
+                        <h3>Čo to hovorí</h3>
+                        <ul>
+                            <li>Pásik je jediný nosič veľkosti dňa, farba je konštanta.</li>
+                            <li>
+                                Zelená pri každom dni je trochu zavádzajúca: aj pondelok so <b>27 kWh</b> je zelený, lebo iná farba v
+                                rebríčku neexistuje.
+                            </li>
+                            <li>Graf Denná výroba používa sivú <code>--ink-45</code> a zvýrazňuje len vybraný deň.</li>
+                        </ul>
+                        <p class="vystraha">Žiadny z variantov nižšie nemení čísla ani dĺžky pásikov – mení sa výhradne farba výplne.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================ VARIANT A ============================ -->
+            <section class="navrh">
+                <div class="navrh-head">
+                    <span class="navrh-znacka">A</span>
+                    <h2>Podiel z najsilnejšieho dňa v týždni</h2>
+                </div>
+                <p class="navrh-podnadpis">
+                    Presne to, čo robí heatmapa, len o úroveň vyššie: namiesto hodiny sa porovnáva celý deň.
+                    <code>podiel = kWh dňa / kWh najlepšieho dňa</code>, pásma 1/3 a 2/3 ostávajú.
+                </p>
+                <div class="stlpce">
+                    <div class="telefony">
+                        <div class="telefon">
+                            <p class="telefon-popis">A · farba na pásiku</p>
+                            <div class="ramik">
+                                <div class="obrazovka" data-mock="A" data-tyzden="september"></div>
+                            </div>
+                        </div>
+                        <div class="telefon">
+                            <p class="telefon-popis">A2 · farba aj na čísle</p>
+                            <div class="ramik">
+                                <div class="obrazovka" data-mock="A2" data-tyzden="september"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="poznamky">
+                        <h3>Pre</h3>
+                        <ul>
+                            <li>Rovnaká mierka ako heatmapa, takže obe grafiky v detaile týždňa hovoria to isté.</li>
+                            <li>Odpovedá na otázku prehľadu: <b>ktorý deň z týchto siedmich</b>.</li>
+                            <li>Zmena je malá – jedno pole v modeli (<code>tier</code>) a jedno pravidlo v CSS.</li>
+                        </ul>
+                        <h3>Proti</h3>
+                        <ul>
+                            <li>Farba opakuje to, čo už povedala dĺžka pásika. Je to zdôraznenie, nie nová informácia.</li>
+                            <li>
+                                V slušnom týždni nie je červená takmer nikdy – deň musí spadnúť pod tretinu najlepšieho dňa. Vo vzorke nie
+                                je ani jedna.
+                            </li>
+                            <li>Cez týždne sa porovnávať nedá: najlepší deň je zelený vždy, aj keď má 19 kWh.</li>
+                        </ul>
+                        <p class="plus">
+                            Priehľadnosť z heatmapy sa neprenáša. Tam je jediným nosičom veľkosti, tu je ňou dĺžka – slabý deň by bol krátky
+                            <em>aj</em> vyblednutý a prakticky by zmizol. Vo variantoch drží pásik pevných 55 %, stĺpec 80 %.
+                        </p>
+                        <p class="vystraha">
+                            A2 farbí aj číslo. Vyzerá to rozhodnejšie, ale zelených 61 kWh vedľa jantárových 41 kWh už začína pripomínať
+                            tarifné farby z karty Dnes – tam zelená znamená lacný prúd, nie veľa slnka.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================ VARIANT B ============================ -->
+            <section class="navrh">
+                <div class="navrh-head">
+                    <span class="navrh-znacka">B</span>
+                    <h2>Podiel zo stropu jasnej oblohy (využitie)</h2>
+                </div>
+                <p class="navrh-podnadpis">
+                    Farba hovorí, koľko z možného deň naozaj dal: <code>podiel = kWh / strop jasnej oblohy</code>. To isté číslo je dnes v
+                    tabuľke v stĺpci Využitie.
+                </p>
+                <div class="stlpce">
+                    <div class="telefon">
+                        <p class="telefon-popis">B · farba podľa využitia</p>
+                        <div class="ramik">
+                            <div class="obrazovka" data-mock="B" data-tyzden="september"></div>
+                        </div>
+                    </div>
+                    <div class="poznamky">
+                        <h3>Pre</h3>
+                        <ul>
+                            <li>Farba nesie <b>niečo iné</b> než dĺžka: dĺžka je koľko, farba je koľko z možného.</li>
+                            <li>Porovnateľné cez celý rok – jasný decembrový deň je zelený, hoci dá pätinu septembra.</li>
+                            <li>
+                                Sedí s tabuľkou na širokej obrazovke, kde sa využitie už farbí (<code>use-hi</code>, <code>use-lo</code>).
+                            </li>
+                        </ul>
+                        <h3>Proti</h3>
+                        <ul>
+                            <li>
+                                Rozchádza sa s heatmapou pod ňou. V detaile týždňa by vedľa seba stáli dve červeno-zelené grafiky s dvoma
+                                rôznymi mierkami.
+                            </li>
+                            <li>Odpovedá na otázku, ktorú v prehľade nikto nemá. „Koľko ubrali mraky“ patrí do detailu dňa, kde už je.</li>
+                            <li>Zelený deň so 14 kWh je pre plánovanie práčky zlá rada.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================ VARIANT C ============================ -->
+            <section class="navrh">
+                <div class="navrh-head">
+                    <span class="navrh-znacka">C</span>
+                    <h2>Jeden odtieň, mení sa len sýtosť</h2>
+                </div>
+                <p class="navrh-podnadpis">
+                    Bez troch pásiem: zelená ostáva zelenou, slabší deň je len bledší (<code>0,2 + podiel × 0,6</code>). Mierka je ako v A,
+                    z najlepšieho dňa v týždni.
+                </p>
+                <div class="stlpce">
+                    <div class="telefon">
+                        <p class="telefon-popis">C · sýtosť namiesto pásiem</p>
+                        <div class="ramik">
+                            <div class="obrazovka" data-mock="C" data-tyzden="september"></div>
+                        </div>
+                    </div>
+                    <div class="poznamky">
+                        <h3>Pre</h3>
+                        <ul>
+                            <li>Žiadna nová sémantika. Červená v tejto appke znamená drahú tarifu – tu by znamenala mraky.</li>
+                            <li>Plynulé, bez skoku na hranici 2/3, kde dnes 41 kWh spadne do jantárovej a 42 kWh už nie.</li>
+                            <li>Prehľad ostáva pokojný; rebríček je prvá obrazovka karty.</li>
+                        </ul>
+                        <h3>Proti</h3>
+                        <ul>
+                            <li>Nie je to „ako na heatmape“ – z nej si berie len polovicu (sýtosť), pásma zahadzuje.</li>
+                            <li>Bledozelená na tmavom pozadí sa od <code>--ink-05</code> podkladu pásika odlišuje horšie.</li>
+                            <li>Rozdiel medzi dobrým a priemerným dňom je vidieť menej než v A.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================ DETAIL TÝŽDŇA ============================ -->
+            <section class="navrh">
+                <div class="navrh-head">
+                    <span class="navrh-znacka">SPOLU</span>
+                    <h2>Detail týždňa: stĺpce a heatmapa pod sebou</h2>
+                </div>
+                <p class="navrh-podnadpis">
+                    Tu sa rozhoduje. Obe grafiky sú na jednej obrazovke, takže je vidno, či si farby odpovedajú, alebo si protirečia.
+                    Heatmapa je v každom stĺpci tá istá – mení sa len farba stĺpcov nad ňou. Na septembrovej vzorke vychádzajú A a B
+                    rovnako, lebo strop jasnej oblohy je celý týždeň skoro rovnaký; rozdiel medzi nimi je vidno až na decembrovom týždni
+                    nižšie.
+                </p>
+                <div class="detail-bloky">
+                    <div class="detail-blok">
+                        <p class="blok-popis">Dnes · sivé stĺpce</p>
+                        <div class="karta" data-detail="dnes" data-tyzden="september"></div>
+                    </div>
+                    <div class="detail-blok">
+                        <p class="blok-popis">A · mierka z najlepšieho dňa</p>
+                        <div class="karta" data-detail="A" data-tyzden="september"></div>
+                    </div>
+                    <div class="detail-blok">
+                        <p class="blok-popis">B · mierka z jasnej oblohy</p>
+                        <div class="karta" data-detail="B" data-tyzden="september"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================ ZLÝ TÝŽDEŇ ============================ -->
+            <section class="navrh">
+                <div class="navrh-head">
+                    <span class="navrh-znacka">TEST</span>
+                    <h2>Skúška na decembrovom týždni</h2>
+                </div>
+                <p class="navrh-podnadpis">
+                    Ten istý mechanizmus na týždni, kde sa vyrobí pätina septembra. Rozdiel medzi A a B je vidno až tu – stĺpec „rozdiel“
+                    ukazuje dni, kde si varianty protirečia.
+                </p>
+                <div class="stlpce">
+                    <div class="telefony">
+                        <div class="telefon">
+                            <p class="telefon-popis">December · variant A</p>
+                            <div class="ramik">
+                                <div class="obrazovka" data-mock="A" data-tyzden="december"></div>
+                            </div>
+                        </div>
+                        <div class="telefon">
+                            <p class="telefon-popis">December · variant B</p>
+                            <div class="ramik">
+                                <div class="obrazovka" data-mock="B" data-tyzden="december"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="poznamky">
+                        <h3>Čo sa stalo</h3>
+                        <div data-porovnanie="december"></div>
+                        <p class="vystraha">
+                            Utorok je v oboch variantoch zelený, hoci dá <b>19 kWh</b> – v septembri by bol červený. Farba z toho nikdy
+                            nespraví číslo; robí len poradie v rámci obrazovky, ktorú má človek pred sebou.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="zaver">
+                <h2>Odporúčanie</h2>
+                <p>
+                    <b>Variant A, farba len na pásiku a na stĺpci</b> (nie na čísle). Je to doslovné „ako na heatmape“, obe grafiky v
+                    detaile týždňa počítajú z tej istej mierky a v modeli pribudne jedno pole. Cena je, že farba nehovorí nič, čo by dĺžka
+                    nepovedala – je to zvýraznenie, nie nová informácia.
+                </p>
+                <p>
+                    Ak má farba niesť niečo navyše, je to <b>B</b> – ale potom sa treba zmieriť s tým, že stĺpce a heatmapa pod nimi merajú
+                    každá inou mierkou, alebo prefarbiť podľa využitia aj heatmapu (to je väčšia zmena a týka sa aj hodinových buniek, kde
+                    strop jasnej oblohy zatiaľ nepočítame).
+                </p>
+                <h2 style="margin-top: 20px">Otvorené otázky</h2>
+                <ul>
+                    <li>Má farba ísť aj do tabuľky Prehľad dní na širokej obrazovke, alebo len do dvoch grafík?</li>
+                    <li>
+                        Vybraný deň má dnes v rebríčku podklad <code>--ink-05</code> a v grafe plnú sivú. Pri farebných pásikoch treba pre
+                        výber iný signál – rámček okolo riadka?
+                    </li>
+                    <li>Ostáva legenda pod heatmapou jediná, alebo bude aj nad stĺpcami?</li>
+                </ul>
+            </div>
+        </div>
+
+        <script>
+            // ------------------------------------------------------------------------
+            // Zmrazené vzorky. `strop` je výroba pri jasnej oblohe (clearKwhTotal
+            // v appke), z nej sa počíta využitie pre variant B.
+            // ------------------------------------------------------------------------
+            const TYZDNE = {
+                september: {
+                    sucet: 327,
+                    priemer: '46,7 kWh',
+                    dni: [
+                        { meno: 'Dnes', skratka: 'So', datum: '6.9.', obloha: 'sun', kwh: 61, strop: 66 },
+                        { meno: 'Zajtra', skratka: 'Ne', datum: '7.9.', obloha: 'sun', kwh: 49, strop: 65 },
+                        { meno: 'Pondelok', skratka: 'Po', datum: '8.9.', obloha: 'cloud', kwh: 27, strop: 65 },
+                        { meno: 'Utorok', skratka: 'Ut', datum: '9.9.', obloha: 'partly', kwh: 54, strop: 64 },
+                        { meno: 'Streda', skratka: 'St', datum: '10.9.', obloha: 'partly', kwh: 41, strop: 64 },
+                        { meno: 'Štvrtok', skratka: 'Št', datum: '11.9.', obloha: 'sun', kwh: 63, strop: 64 },
+                        { meno: 'Piatok', skratka: 'Pi', datum: '12.9.', obloha: 'partly', kwh: 32, strop: 63 },
+                    ],
+                },
+                december: {
+                    sucet: 64,
+                    priemer: '9,1 kWh',
+                    dni: [
+                        { meno: 'Dnes', skratka: 'So', datum: '6.12.', obloha: 'cloud', kwh: 7, strop: 22 },
+                        { meno: 'Zajtra', skratka: 'Ne', datum: '7.12.', obloha: 'partly', kwh: 12, strop: 22 },
+                        { meno: 'Pondelok', skratka: 'Po', datum: '8.12.', obloha: 'cloud', kwh: 5, strop: 21 },
+                        { meno: 'Utorok', skratka: 'Ut', datum: '9.12.', obloha: 'sun', kwh: 19, strop: 21 },
+                        { meno: 'Streda', skratka: 'St', datum: '10.12.', obloha: 'cloud', kwh: 6, strop: 21 },
+                        { meno: 'Štvrtok', skratka: 'Št', datum: '11.12.', obloha: 'partly', kwh: 11, strop: 20 },
+                        { meno: 'Piatok', skratka: 'Pi', datum: '12.12.', obloha: 'cloud', kwh: 4, strop: 20 },
+                    ],
+                },
+            };
+
+            const IKONY = {
+                sun: '<circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />',
+                partly: '<circle cx="15" cy="8" r="3" /><path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" /><path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" />',
+                cloud: '<path d="M17.5 19H6a4 4 0 1 1 .5-7.97A5.5 5.5 0 0 1 17 10a4 4 0 0 1 .5 9Z" />',
+            };
+            const RGB = { red: '255, 107, 87', amber: '255, 194, 75', green: '158, 242, 91' };
+
+            /** Pásmo heatmapy: pod tretinou červená, do dvoch tretín jantárová, nad nimi zelená. */
+            function pasmo(podiel) {
+                if (podiel < 1 / 3) return 'red';
+                if (podiel < 2 / 3) return 'amber';
+                return 'green';
+            }
+
+            /** Podiel dňa podľa variantu: A a C z najlepšieho dňa, B zo stropu jasnej oblohy. */
+            function podielDna(den, dni, variant) {
+                if (variant === 'B') return den.strop > 0 ? den.kwh / den.strop : 0;
+                const max = Math.max(...dni.map((d) => d.kwh));
+                return max > 0 ? den.kwh / max : 0;
+            }
+
+            /** Farba výplne. `alfa` je pevná, priehľadnosť z heatmapy sa neprenáša - viď poznámky
+             *  pri variante A. Variant C má jeden odtieň a mení práve tú priehľadnosť. */
+            function farba(den, dni, variant, alfa) {
+                if (variant === 'dnes') return null;
+                const p = podielDna(den, dni, variant);
+                if (variant === 'C') return `rgba(${RGB.green}, ${(0.2 + p * 0.6).toFixed(2)})`;
+                return `rgba(${RGB[pasmo(p)]}, ${alfa})`;
+            }
+
+            function ikona(obloha) {
+                const trieda = obloha === 'sun' ? 'i-sun' : obloha === 'partly' ? 'i-partly' : 'i-cloud';
+                return `<span class="ikona ${trieda}"><svg viewBox="0 0 24 24">${IKONY[obloha]}</svg></span>`;
+            }
+
+            /** Rebríček dní v telefóne. */
+            function mockTelefonu(el) {
+                const variant = el.dataset.mock;
+                const t = TYZDNE[el.dataset.tyzden];
+                const max = Math.max(...t.dni.map((d) => d.kwh));
+                const riadky = t.dni
+                    .map((d) => {
+                        const f = farba(d, t.dni, variant, 0.55);
+                        // A2 farbí aj číslo - plnou farbou pásma, nie priesvitnou.
+                        const cisloStyl = variant === 'A2' ? ` style="color:rgb(${RGB[pasmo(podielDna(d, t.dni, 'A'))]})"` : '';
+                        return (
+                            `<div class="den"><div class="meno">${d.meno}<span class="datum">${d.datum}</span></div>` +
+                            ikona(d.obloha) +
+                            `<div class="pas"><i style="width:${Math.round((100 * d.kwh) / max)}%${f ? `;background:${f}` : ''}"></i></div>` +
+                            `<div class="kwh"${cisloStyl}>${d.kwh}<span>kWh</span></div></div>`
+                        );
+                    })
+                    .join('');
+                el.innerHTML =
+                    `<div class="mock-head"><span>14:20</span><span class="zivo"><i></i>živé dáta</span></div>` +
+                    `<h2 class="mock-title">Predpoveď na 7 dní</h2>` +
+                    `<p class="mock-sub">Dvorany nad Nitrou · 10,4 kWp</p>` +
+                    `<div class="hero"><span><span class="lbl">Spolu za 7 dní <span class="sipka">›</span></span>` +
+                    `<span style="display:block"><span class="num">${t.sucet}</span><span class="u">kWh</span></span></span>` +
+                    `<span class="hero-meta">ø na deň<b>${t.priemer}</b></span></div>` +
+                    `<div class="karta"><div class="zoznam">${riadky}</div></div>` +
+                    `<div class="mock-nav"><span>Dnes</span><span class="on">7 dní</span><span>Zdieľať</span></div>`;
+            }
+
+            /** Hodinový profil dňa pre mini heatmapu: zvon okolo poludnia, plocha = kWh dňa.
+             *  Slúži len na to, aby heatmapa v náhľade vyzerala ako skutočná. */
+            function profil(kwh) {
+                const hodiny = [];
+                let suma = 0;
+                for (let h = 5; h <= 17; h++) {
+                    const v = Math.max(0, Math.cos(((h - 11.5) / 7) * Math.PI));
+                    hodiny.push(v);
+                    suma += v;
+                }
+                return hodiny.map((v) => (suma > 0 ? (kwh * v) / suma : 0));
+            }
+
+            /** Detail týždňa: stĺpce Dennej výroby a pod nimi heatmapa (tá je vždy rovnaká). */
+            function mockDetailu(el) {
+                const variant = el.dataset.detail;
+                const t = TYZDNE[el.dataset.tyzden];
+                const max = Math.max(...t.dni.map((d) => d.kwh));
+                const stlpce = t.dni
+                    .map((d) => {
+                        const f = farba(d, t.dni, variant, 0.8);
+                        const styl = f ? `;background:${f}` : '';
+                        return (
+                            `<div class="stlp"><span class="hodnota">${d.kwh}</span>` +
+                            `<div class="telo" style="height:${Math.round((88 * d.kwh) / max)}%${styl}"></div></div>`
+                        );
+                    })
+                    .join('');
+                const popisky = t.dni.map((d) => `<span>${d.skratka}</span>`).join('');
+
+                const profily = t.dni.map((d) => profil(d.kwh));
+                const maxKw = Math.max(...profily.flat());
+                const heat = t.dni
+                    .map((d, i) => {
+                        const bunky = profily[i]
+                            .map((kw) => {
+                                const p = maxKw > 0 ? kw / maxKw : 0;
+                                if (p <= 0.02) return `<span class="bunka" style="background:rgba(242,240,234,0.05)"></span>`;
+                                return `<span class="bunka" style="background:rgba(${RGB[pasmo(p)]}, ${(0.12 + p * 0.8).toFixed(2)})"></span>`;
+                            })
+                            .join('');
+                        return `<span class="den-skratka">${d.skratka}</span><span class="riadok">${bunky}</span>`;
+                    })
+                    .join('');
+
+                el.innerHTML =
+                    `<p class="lbl" style="display:block;margin-bottom:10px">Denná výroba (kWh)</p>` +
+                    `<div class="graf">${stlpce}</div><div class="graf-popisky">${popisky}</div>` +
+                    `<p class="lbl" style="display:block;margin:18px 0 0">Heatmapa (kW) · hodina × deň</p>` +
+                    `<div class="heat">${heat}</div>`;
+            }
+
+            /** Tabuľka A vs B pre zlý týždeň. */
+            function mockPorovnania(el) {
+                const t = TYZDNE[el.dataset.porovnanie];
+                const riadky = t.dni
+                    .map((d) => {
+                        const pA = podielDna(d, t.dni, 'A');
+                        const pB = podielDna(d, t.dni, 'B');
+                        const a = pasmo(pA);
+                        const b = pasmo(pB);
+                        const bodka = (p) => `<span class="bodka" style="background:rgb(${RGB[p]})"></span>`;
+                        return (
+                            `<tr><td>${d.meno}</td><td class="cislo">${d.kwh} kWh</td>` +
+                            `<td class="cislo">${Math.round(100 * pB)} %</td>` +
+                            `<td>${bodka(a)}${Math.round(100 * pA)} %</td><td>${bodka(b)}${Math.round(100 * pB)} %</td>` +
+                            `<td class="rozdiel">${a === b ? '' : 'iná farba'}</td></tr>`
+                        );
+                    })
+                    .join('');
+                el.innerHTML =
+                    `<table class="tabulka"><thead><tr><th>Deň</th><th>Výroba</th><th>Využitie</th>` +
+                    `<th>A · z najlepšieho dňa</th><th>B · z jasnej oblohy</th><th></th></tr></thead>` +
+                    `<tbody>${riadky}</tbody></table>`;
+            }
+
+            document.querySelectorAll('[data-mock]').forEach(mockTelefonu);
+            document.querySelectorAll('[data-detail]').forEach(mockDetailu);
+            document.querySelectorAll('[data-porovnanie]').forEach(mockPorovnania);
+        </script>
+    </body>
+</html>

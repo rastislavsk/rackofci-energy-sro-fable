@@ -1899,7 +1899,7 @@ b {
         grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
         gap: var(--sp-3);
     }
-    /* Mapa výroby a denná výroba boli v HTML aj v mriežke prvé, takže by auto-placement
+    /* Heatmapa a denná výroba boli v HTML aj v mriežke prvé, takže by auto-placement
        zaplnil nimi ľavý stĺpec skôr, než sa doň explicitne umiestni tabuľka - preto
        potrebujú vlastný, výslovný stĺpec (2 a 3), aj keď predtým stačilo auto-umiestnenie. */
     .week-block:nth-child(1) {
@@ -1956,7 +1956,7 @@ b {
        grafom - na mobile a tablete tak ostáva presne tam, kde bola. Na desktope ju
        flex poradie presunie nad graf, hneď pod nadpis, a .chart-card tak zostáva
        posledným potomkom - vyplní zvyšok karty a jeho spodný okraj sa zarovná so
-       susednou kartou Mapa výroby (tá pod grafom žiadnu pätu nemá). */
+       susednou kartou Heatmapa (tá pod grafom žiadnu pätu nemá). */
     .week-block:nth-child(2) .chart-footer.plain {
         order: 1;
         margin-bottom: var(--sp-2);

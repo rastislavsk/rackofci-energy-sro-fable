@@ -127,8 +127,8 @@ kým sa človek dostal k tomu, čo ho zaujímalo. Je preto rozdelená na dve obr
 - **Prehľad dní** – rebríček: bublina so súčtom za týždeň a pod ňou sedem riadkov
   s pásikmi. Zmestí sa celý na jednu obrazovku.
 - **Detail dňa** – otvorí ho klik na riadok rebríčka: priebeh výroby toho dňa, čísla o ňom,
-  jeho jediný riadok z mapy výroby a správa o tom dni.
-- **Detail týždňa** – otvorí ho klik na bublinu „Spolu za 7 dní“: denná výroba, mapa výroby
+  jeho jediný riadok z heatmapy a správa o tom dni.
+- **Detail týždňa** – otvorí ho klik na bublinu „Spolu za 7 dní“: denná výroba, heatmapa
   hodina × deň a správa „Najsilnejší deň“.
 
 Správa je jeden prvok pre obe obrazovky: v detaile dňa v ňom stojí `dayDetailMessage`,
@@ -137,10 +137,10 @@ hlavička nad ním, a inak by sa „zajtra“ ukázalo aj pri štvrtku.
 
 Obe obrazovky majú hlavičku so šípkou späť. Rozhoduje o tom jediné pole v stave
 (`weekDetail`: `'day' | 'week' | null`), prepínajú sa len triedy `.hidden` – žiadny presun
-prvkov v DOM. Poradie na detaile robí jedno pravidlo `order` v CSS, lebo mapa výroby je
+prvkov v DOM. Poradie na detaile robí jedno pravidlo `order` v CSS, lebo heatmapa je
 v HTML prvá, ale na oboch detailoch má ísť posledná.
 
-Mapa výroby je v detaile dňa tá istá funkcia (`weekHeatModel`) s prepínačom „jeden deň“:
+Heatmapa je v detaile dňa tá istá funkcia (`weekHeatModel`) s prepínačom „jeden deň“:
 mierka farieb ostáva z celého týždňa, inak by aj najslabší deň vyzeral sám o sebe ako plný.
 
 Od 768 px je detail vypnutý: tam je na celú kartu miesto naraz a klik na deň ho, ako

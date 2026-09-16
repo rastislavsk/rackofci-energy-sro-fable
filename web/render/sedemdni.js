@@ -1,4 +1,4 @@
-// Karta 7 dní: súhrn, mapa výroby, denné stĺpce, priebeh vybraného dňa, tabuľka, správa.
+// Karta 7 dní: súhrn, heatmapa, denné stĺpce, priebeh vybraného dňa, tabuľka, správa.
 // Na mobile je to rozdelené na dve obrazovky - prehľad dní a detail vybraného dňa (weekDetail
 // v stave); na širokej obrazovke je miesta dosť a vidno všetko naraz.
 //
@@ -261,7 +261,7 @@ function renderDayAnim(detail, sel, dir, dom) {
     }
 }
 
-/** Mapa výroby: v prehľade a v detaile týždňa celý týždeň, v detaile dňa jediný riadok
+/** Heatmapa: v prehľade a v detaile týždňa celý týždeň, v detaile dňa jediný riadok
  * vybraného dňa (mierka farieb ostáva z celého týždňa).
  * @param {import('../state.js').AppState} state @param {ForecastDay[]} days @param {number} sel
  * @param {'day' | 'week' | null} detail @param {import('../dom.js').Dom} dom */
@@ -271,7 +271,7 @@ function renderHeat(state, days, sel, detail, dom) {
     // riadku si plátno určí sama.
     const size = state.wide && !jedenDen ? state.chartSizes.weekHeat : null;
     const heat = weekHeatModel(days, sel, size ? { W: size.w, H: size.h } : null, jedenDen);
-    dom.weekHeatLabel.textContent = jedenDen ? 'Mapa výroby dňa (kW)' : 'Mapa výroby (kW) · hodina × deň';
+    dom.weekHeatLabel.textContent = jedenDen ? 'Heatmapa dňa (kW)' : 'Heatmapa (kW) · hodina × deň';
     dom.weekHeat.setAttribute('viewBox', `0 0 ${heat.W} ${heat.H}`);
     dom.weekHeat.setAttribute('height', String(heat.H));
     dom.weekHeat.innerHTML = weekHeatSvg(heat);

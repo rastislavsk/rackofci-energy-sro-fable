@@ -50,7 +50,7 @@ export function dayRingSvg(m) {
 /** @param {{ title: string, text: string } | null} tip */
 const tipAttrs = (tip) => (tip ? ` data-tip-title="${escapeHtml(tip.title)}" data-tip="${escapeHtml(tip.text)}"` : '');
 
-/** Mapa výroby hodina × deň. @param {ReturnType<typeof import('../shared/chart-model.js').weekHeatModel>} m */
+/** Heatmapa hodina × deň. @param {ReturnType<typeof import('../shared/chart-model.js').weekHeatModel>} m */
 export function weekHeatSvg(m) {
     let out = m.hourLabels.map((l) => `<text class="axis-label" x="${n(l.x)}" y="${l.y}" text-anchor="middle">${l.label}</text>`).join('');
     out += m.dayLabels
