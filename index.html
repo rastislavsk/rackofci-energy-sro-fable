@@ -289,6 +289,26 @@
                             </table>
                         </div>
                     </section>
+                    <!-- Rebríček dní: prehľad karty 7 dní na mobile. Musí ostať posledným .week-block
+                         v mriežke - desktop umiestňuje bloky cez .week-block:nth-child(1..4) v style.css
+                         a nový blok pred nimi by to poradie posunul. Na širokej obrazovke sa nekreslí,
+                         tam je na prehľad miesta dosť na bubliny aj tabuľku vyššie. -->
+                    <section class="week-block hidden" id="week-block-list">
+                        <div class="week-list-card">
+                            <!-- Hlavička je tlačidlo: otvára detail týždňa rovnako ako bublina "7 dní spolu". -->
+                            <button type="button" class="week-list-hero" data-week-detail>
+                                <span class="week-list-sum">
+                                    <span class="lbl">Spolu za 7 dní</span>
+                                    <span class="stat-num-row"
+                                        ><span class="num" id="week-list-total">–</span><span class="u">kWh</span></span
+                                    >
+                                </span>
+                                <span class="week-list-avg">ø na deň<b id="week-list-avg">–</b></span>
+                            </button>
+                            <div class="week-list" id="week-list"></div>
+                            <p class="week-list-hint">Ťuknite na deň pre podrobnosti</p>
+                        </div>
+                    </section>
                     <div class="msg-block" id="week-msg-block">
                         <h3 id="week-msg-title">Načítavam…</h3>
                         <p id="week-msg-body">Týždenná predpoveď sa načítava.</p>
