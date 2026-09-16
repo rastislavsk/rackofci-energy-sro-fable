@@ -120,18 +120,7 @@ function zdielatDom() {
     };
 }
 
-/** Prechodné, platí do ďalšieho nasadenia: stránka pageru s odznakom tarify zanikla, ale
- * z index.html zmizne až druhým krokom (viď „Nasadenie a cache" v CLAUDE.md). Do vtedy ju
- * appka aj s jej bodkou vyhodí z DOM, aby v pageri neostala prázdna stránka a bodka navyše.
- * Nie byId: po druhom nasadení tu už prvky nebudú a chýbať smú. S prvkami v HTML zmizne
- * aj táto funkcia. */
-function dropZrusenyOdznak() {
-    document.getElementById('verdict-page-eyebrow')?.remove();
-    document.querySelector('#verdict-dots [data-verdict-page="0"]')?.remove();
-}
-
 export function collectDom() {
-    dropZrusenyOdznak();
     return { ...headerDom(), ...terazkyDom(), ...sedemdniDom(), ...zdielatDom() };
 }
 

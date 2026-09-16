@@ -118,21 +118,20 @@
                 </div>
 
                 <div class="verdict card" id="verdict">
-                    <!-- Päť stránok na listovanie do strán: tarifa a slnko je defaultne prvá,
-                             za ňou čo robiť teraz, spotrebiče a predpoveď dňa - tie sú tam vždy;
-                             "kedy bude lepšie" je posledná a len keď ju model pozná. Odznak s tarifou
-                             žije už len tu, na žiadnej šírke sa neduplikuje nad ciferníkom - uvoľnené
-                             miesto tam využíva väčší ciferník (viď .dial-svg v style.css). Správa
-                             o predpovedi dňa žije už len tu - karta Dnes-Zajtra, kde bola aj druhýkrát,
-                             zanikla (jej dáta sú v karte 7 dní).
+                    <!-- Štyri stránky na listovanie do strán: čo robiť teraz je defaultne prvá,
+                             za ňou spotrebiče a predpoveď dňa - tie sú tam vždy; "kedy bude lepšie"
+                             je posledná a len keď ju model pozná. Odznak s tarifou (slnko a cena
+                             elektriny jednou vetou) mal vlastnú stránku pred nimi a zanikol - karta
+                             tak otvára rovno odporúčaním. Správa o predpovedi dňa žije už len tu -
+                             karta Dnes-Zajtra, kde bola aj druhýkrát, zanikla (jej dáta sú v karte
+                             7 dní).
                              Pred prvou a za poslednou reálnou stránkou je neviditeľný klon poslednej/
                              prvej (obsah dopĺňa JS, viď syncPagerClones v terazky.js) - vďaka nim
-                             listovanie pôsobí ako kolotoč (initVerdictPager v interactions.js). -->
+                             listovanie pôsobí ako kolotoč (initVerdictPager v interactions.js).
+                             Bodky nenesú číslo stránky: pás ich berie podľa poradia (viď initNavigation
+                             v interactions.js), takže číslovanie nemá ako zostarnúť. -->
                     <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán" tabindex="0">
                         <div class="pager-page" id="verdict-page-clone-start" aria-hidden="true"></div>
-                        <div class="pager-page pager-page-eyebrow" id="verdict-page-eyebrow">
-                            <span class="badge" id="verdict-eyebrow-page">—</span>
-                        </div>
                         <div class="pager-page">
                             <h1 id="verdict-headline">Načítavam…</h1>
                             <p class="body" id="verdict-body"></p>
@@ -161,17 +160,10 @@
                         <div class="pager-page" id="verdict-page-clone-end" aria-hidden="true"></div>
                     </div>
                     <div class="pager-dots" id="verdict-dots">
-                        <button class="pager-dot active" type="button" data-verdict-page="0" aria-label="Tarifa a slnko"></button>
-                        <button class="pager-dot" type="button" data-verdict-page="1" aria-label="Čo robiť teraz"></button>
-                        <button class="pager-dot" type="button" data-verdict-page="2" aria-label="Spotrebiče"></button>
-                        <button class="pager-dot" type="button" data-verdict-page="3" aria-label="Predpoveď dňa"></button>
-                        <button
-                            class="pager-dot hidden"
-                            type="button"
-                            data-verdict-page="4"
-                            id="verdict-dot-wait"
-                            aria-label="Kedy bude lepšie"
-                        ></button>
+                        <button class="pager-dot active" type="button" aria-label="Čo robiť teraz"></button>
+                        <button class="pager-dot" type="button" aria-label="Spotrebiče"></button>
+                        <button class="pager-dot" type="button" aria-label="Predpoveď dňa"></button>
+                        <button class="pager-dot hidden" type="button" id="verdict-dot-wait" aria-label="Kedy bude lepšie"></button>
                     </div>
                     <div class="chip-tooltip" id="verdict-chip-tooltip" aria-hidden="true"></div>
                 </div>
