@@ -441,8 +441,8 @@ test('7 dní na mobile: bublina 7 dní spolu otvára detail týždňa', async ({
 
 /**
  * Priebeh výroby na karte 7 dní ukazuje dnešok rovnako ako graf na karte Dnes-Zajtra:
- * nameraná krivka a položka v legende. Iný deň nameraný nie je, takže z neho musí
- * zmiznúť aj krivka, aj legenda.
+ * nameraná krivka, značka "teraz" a položka v legende. Iný deň nameraný nie je, takže
+ * z neho musí zmiznúť aj krivka, aj značka, aj legenda.
  */
 test('7 dní: priebeh dnešného dňa ukazuje nameranú výrobu', async ({ page }) => {
     const errors = await openApp(page);
@@ -450,11 +450,14 @@ test('7 dní: priebeh dnešného dňa ukazuje nameranú výrobu', async ({ page 
     await page.locator('#week-tbody tr[data-day-index="0"]').click();
     await expect(page.locator('#week-curve path.line-real')).toHaveCount(1);
     await expect(page.locator('#week-curve circle.dot-real')).toHaveCount(1);
+    await expect(page.locator('#week-curve-now-badge')).toBeVisible();
+    await expect(page.locator('#week-curve-now-time')).toHaveText(`teraz ${APP_NOW.hm}`);
     await expect(page.locator('#week-curve-live-legend')).toBeVisible();
 
     await page.locator('#week-day-back').click();
     await page.locator('#week-tbody tr[data-day-index="3"]').click();
     await expect(page.locator('#week-curve path.line-real')).toHaveCount(0);
+    await expect(page.locator('#week-curve-now-badge')).toBeHidden();
     await expect(page.locator('#week-curve-live-legend')).toBeHidden();
     expect(errors).toEqual([]);
 });
