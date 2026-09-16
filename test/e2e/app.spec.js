@@ -427,11 +427,11 @@ test('7 dní na mobile: riadky Dnes a Zajtra otvárajú detail toho dňa', async
 });
 
 /**
- * Hlavička rebríčka ("Spolu za 7 dní") nepatrí k dňu, ale k celému týždňu - otvára preto
+ * Bublina so súčtom ("Spolu za 7 dní") nepatrí k dňu, ale k celému týždňu - otvára preto
  * detail týždňa: dennú výrobu a mapu výroby, bez krivky jedného dňa. Je to tá istá cesta,
  * akou na širokej obrazovke vedie bublina "7 dní spolu".
  */
-test('7 dní na mobile: hlavička rebríčka otvára detail týždňa', async ({ page }) => {
+test('7 dní na mobile: bublina so súčtom otvára detail týždňa', async ({ page }) => {
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
     await page.locator('.week-list-hero').click();

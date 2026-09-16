@@ -1,0 +1,1170 @@
+<title>Karta 7 dní - čo s miestom po hinte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+/>
+
+<style>
+    /* ============================================================================
+   Dva návrhy prehľadu karty "7 dní" na mobile po tom, čo z nej odíde pätka
+   "Ťuknite na deň pre podrobnosti". Farby, písma a rozmery sú prevzaté 1:1
+   z style.css appky, mock je v mierke telefónu 375 px. Appka je zámerne len
+   tmavá, preto aj tento náhľad.
+   Dáta sú tá istá zmrazená vzorka ako v 7dni-mobil.html, nie živá predpoveď.
+   ============================================================================ */
+    :root {
+        /* Tokeny appky */
+        --bg: #0a0a0a;
+        --card-bg: #151614;
+        --ink: #f2f0ea;
+        --ink-70: rgba(242, 240, 234, 0.94);
+        --ink-45: rgba(242, 240, 234, 0.64);
+        --ink-35: rgba(242, 240, 234, 0.54);
+        --ink-20: rgba(242, 240, 234, 0.26);
+        --ink-12: rgba(242, 240, 234, 0.16);
+        --ink-08: rgba(242, 240, 234, 0.1);
+        --ink-05: rgba(242, 240, 234, 0.06);
+        --green: #9ef25b;
+        --amber: #ffc24b;
+        --red: #ff6b57;
+        --green-rgb: 158, 242, 91;
+        --amber-rgb: 255, 194, 75;
+
+        --font-body: 'Space Grotesk', -apple-system, 'Segoe UI', Arial, sans-serif;
+        --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+        --radius-sm: 6px;
+        --radius-md: 12px;
+        --radius-lg: 18px;
+        --radius-pill: 999px;
+
+        /* Chrome náhľadu - o chlp chladnejšia čierna než appka, aby bolo vidno,
+           kde končí stránka a kde začína mock. */
+        --page-bg: #0e0f11;
+        --page-panel: #131417;
+        --page-line: rgba(242, 240, 234, 0.11);
+
+        --mock-w: 375px;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: var(--page-bg);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding-inline: 20px;
+        padding-block: 40px 72px;
+    }
+
+    /* ---- Hlavička stránky ------------------------------------------------------- */
+    .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        margin: 0 0 10px;
+    }
+    h1 {
+        font-size: clamp(26px, 4.4vw, 38px);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.12;
+        margin: 0 0 14px;
+        text-wrap: balance;
+    }
+    .lede {
+        max-width: 66ch;
+        color: var(--ink-45);
+        margin: 0 0 8px;
+    }
+    .lede b {
+        color: var(--ink-70);
+        font-weight: 600;
+    }
+
+    .kriteria {
+        margin: 26px 0 0;
+        padding: 18px 20px;
+        border: 1px solid var(--page-line);
+        border-radius: var(--radius-md);
+        background: var(--page-panel);
+        max-width: 72ch;
+    }
+    .kriteria h2 {
+        font-size: 13px;
+        font-family: var(--font-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        font-weight: 600;
+        margin: 0 0 10px;
+    }
+    .kriteria ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--ink-45);
+        font-size: 14px;
+    }
+    .kriteria li + li {
+        margin-top: 5px;
+    }
+    .kriteria b {
+        color: var(--ink-70);
+        font-weight: 600;
+    }
+
+    /* ---- Sekcia jedného návrhu -------------------------------------------------- */
+    .navrh {
+        margin-top: 56px;
+        padding-top: 32px;
+        border-top: 1px solid var(--page-line);
+    }
+    .navrh-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+    }
+    .navrh-znacka {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: var(--bg);
+        background: var(--ink-70);
+        border-radius: var(--radius-sm);
+        padding: 3px 8px;
+    }
+    .navrh h2 {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        margin: 0;
+    }
+    .navrh-podnadpis {
+        color: var(--ink-35);
+        font-size: 14px;
+        margin: 0 0 24px;
+        max-width: 68ch;
+    }
+
+    .stlpce {
+        display: flex;
+        gap: 40px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    .poznamky {
+        flex: 1 1 340px;
+        min-width: 300px;
+    }
+    .poznamky h3 {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        font-weight: 600;
+        margin: 0 0 8px;
+    }
+    .poznamky h3 + * {
+        margin-top: 0;
+    }
+    .poznamky ul {
+        margin: 0 0 22px;
+        padding-left: 18px;
+        color: var(--ink-45);
+        font-size: 14px;
+    }
+    .poznamky li + li {
+        margin-top: 4px;
+    }
+    .poznamky b {
+        color: var(--ink-70);
+        font-weight: 600;
+    }
+    .poznamky p {
+        margin: 0 0 22px;
+        color: var(--ink-45);
+        font-size: 14px;
+    }
+    .vystraha {
+        border-left: 2px solid var(--amber);
+        padding-left: 12px;
+        color: var(--ink-45);
+        font-size: 13.5px;
+    }
+
+    /* ---- Rám telefónu ----------------------------------------------------------- */
+    .telefon {
+        flex: 0 0 var(--mock-w);
+        width: var(--mock-w);
+    }
+    .telefon-popis {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        margin: 0 0 8px;
+        text-align: center;
+    }
+    .ramik {
+        border: 1px solid var(--page-line);
+        border-radius: 26px;
+        padding: 8px;
+        background: #000;
+    }
+    .obrazovka {
+        border-radius: 19px;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 20% 0%, rgba(var(--amber-rgb), 0.14) 0%, rgba(var(--amber-rgb), 0) 42%),
+            radial-gradient(circle at 82% 5%, rgba(var(--amber-rgb), 0.13) 0%, rgba(var(--amber-rgb), 0) 46%), var(--bg);
+        padding: 14px 16px 0;
+    }
+
+    /* ---- Spoločné prvky appky v mocku ------------------------------------------- */
+    .mock-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        color: var(--ink-35);
+        text-transform: uppercase;
+        padding-bottom: 12px;
+    }
+    .mock-head .zivo {
+        color: var(--green);
+        letter-spacing: 0.06em;
+    }
+    .mock-head .zivo i {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        margin-right: 6px;
+        vertical-align: 1px;
+    }
+
+    .mock-title {
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        margin: 0;
+    }
+    .mock-sub {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        margin: 2px 0 16px;
+    }
+
+    .karta {
+        background: var(--card-bg);
+        border: 1px solid var(--ink-08);
+        border-radius: var(--radius-md);
+        padding: 12px;
+    }
+    .lbl {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+    }
+    .sipka {
+        color: var(--ink-35);
+    }
+    .num {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1;
+    }
+    .u {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--ink-35);
+        margin-left: 4px;
+    }
+
+    .ikona {
+        width: 15px;
+        height: 15px;
+        display: inline-block;
+        vertical-align: -3px;
+    }
+    .ikona svg {
+        width: 100%;
+        height: 100%;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .i-sun {
+        color: var(--amber);
+    }
+    .i-partly {
+        color: var(--ink-45);
+    }
+    .i-cloud {
+        color: var(--ink-35);
+    }
+
+    /* Spodný pás navigácie - kvôli mierke, aby bolo vidno, koľko miesta ostáva. */
+    .mock-nav {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border-top: 1px solid var(--ink-08);
+        margin: 14px -16px 0;
+        background: rgba(10, 10, 10, 0.7);
+    }
+    .mock-nav span {
+        text-align: center;
+        padding: 9px 0 11px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-20);
+    }
+    .mock-nav span.on {
+        color: var(--ink-70);
+        box-shadow: inset 0 2px 0 var(--green);
+    }
+
+    /* ---- Rebríček dní: spoločné pre dnešný stav aj oba návrhy -------------------- */
+    .zoznam {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .den {
+        display: grid;
+        grid-template-columns: 70px 16px 1fr auto;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 4px;
+        border-radius: var(--radius-sm);
+        border: 1px solid transparent;
+    }
+    /* Návrhy pridávajú piaty stĺpec so šípkou - tá nesie to, čo doteraz hovorila pätka. */
+    .so-sipkou .den {
+        grid-template-columns: 70px 16px 1fr auto 10px;
+    }
+    .den.dnes {
+        border-color: rgba(var(--green-rgb), 0.3);
+        background: rgba(var(--green-rgb), 0.06);
+    }
+    .den .meno {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--ink);
+        line-height: 1.15;
+    }
+    .den.dnes .meno {
+        color: var(--green);
+    }
+    .den .datum {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--ink-35);
+        font-weight: 400;
+        letter-spacing: 0.06em;
+    }
+    .den .sipka {
+        font-size: 13px;
+        text-align: right;
+    }
+    .pas {
+        height: 22px;
+        border-radius: var(--radius-sm);
+        background: var(--ink-05);
+        overflow: hidden;
+    }
+    .pas i {
+        display: block;
+        height: 100%;
+        border-radius: var(--radius-sm);
+        background: rgba(var(--green-rgb), 0.45);
+    }
+    .den.dnes .pas i {
+        background: var(--green);
+    }
+    .kwh {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+        min-width: 42px;
+        text-align: right;
+        white-space: nowrap;
+    }
+    .kwh span {
+        font-size: 9px;
+        color: var(--ink-35);
+        font-weight: 400;
+        margin-left: 2px;
+    }
+
+    /* ---- DNEŠNÝ STAV ------------------------------------------------------------ */
+    .hero {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 12px;
+    }
+    .hero .num {
+        font-size: 44px;
+    }
+    .hero .u {
+        font-size: 12px;
+    }
+    .hero-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-35);
+        text-align: right;
+        line-height: 1.6;
+        white-space: nowrap;
+    }
+    .hero-meta b {
+        color: var(--ink);
+        display: block;
+        font-size: 12px;
+    }
+    .pata {
+        margin: 12px 0 0;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        text-align: center;
+    }
+    /* Červené prečiarknutie prvku, ktorý ide von. Len v tomto náhľade. */
+    .ide-von {
+        position: relative;
+        outline: 1px dashed rgba(255, 107, 87, 0.5);
+        outline-offset: 3px;
+        border-radius: var(--radius-sm);
+    }
+    .ide-von::after {
+        content: 'ide von';
+        position: absolute;
+        top: -8px;
+        right: -4px;
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--red);
+        background: var(--bg);
+        padding: 0 4px;
+    }
+
+    /* ---- NÁVRH A: súčet ako samostatná bublina ---------------------------------- */
+    .a-sucet {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+        border-radius: var(--radius-lg);
+    }
+    .a-sucet .lbl {
+        display: block;
+        margin-bottom: 6px;
+    }
+    .a-sucet .num {
+        font-size: 44px;
+    }
+    .a-sucet .u {
+        font-size: 13px;
+    }
+    .a-vedla {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        text-align: right;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-35);
+        line-height: 1.3;
+    }
+    .a-vedla b {
+        display: block;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 2px;
+    }
+    .a-vedla .zelena {
+        color: var(--green);
+    }
+    /* Riadky ostávajú presne také, aké sú dnes: uvoľnených 28 px minie druhý rám
+       a medzera medzi kartami, na zväčšenie riadkov už nezvýši. */
+
+    /* ---- NÁVRH B: dni najprv, súčet ako pätka ----------------------------------- */
+    .b-zoznam .pas {
+        height: 28px;
+    }
+    .b-zoznam .den {
+        padding: 12px 4px;
+    }
+    .b-zoznam .den .meno {
+        font-size: 14.5px;
+    }
+    .b-zoznam .kwh {
+        font-size: 15px;
+    }
+    .b-sucet {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: baseline;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 12px;
+        border-top: 1px solid var(--ink-12);
+    }
+    .b-sucet .num {
+        font-size: 22px;
+    }
+    .b-sucet .u {
+        font-size: 11px;
+    }
+    .b-sucet .priemer {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-35);
+        white-space: nowrap;
+    }
+    .b-sucet .priemer b {
+        color: var(--ink);
+        font-size: 12px;
+        margin-left: 4px;
+    }
+
+    /* ---- Porovnanie ------------------------------------------------------------- */
+    .porovnanie {
+        margin-top: 56px;
+        padding-top: 32px;
+        border-top: 1px solid var(--page-line);
+    }
+    .tabulka {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        max-width: 860px;
+        margin-top: 18px;
+    }
+    .tabulka th {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-35);
+        text-align: left;
+        font-weight: 600;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--page-line);
+    }
+    .tabulka td {
+        padding: 10px;
+        border-bottom: 1px solid var(--ink-05);
+        color: var(--ink-45);
+        vertical-align: top;
+    }
+    .tabulka td:first-child {
+        color: var(--ink-70);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .odporucanie {
+        margin-top: 24px;
+        border-left: 2px solid var(--green);
+        padding: 2px 0 2px 14px;
+        max-width: 72ch;
+        color: var(--ink-45);
+        font-size: 14.5px;
+    }
+    .odporucanie b {
+        color: var(--ink-70);
+    }
+</style>
+
+<div class="wrap">
+    <p class="eyebrow">Račkofci Energy · návrh · 7 dní</p>
+    <h1>Karta 7 dní: čo s miestom po pätke „Ťuknite na deň“</h1>
+    <p class="lede">
+        Pätka <b>„Ťuknite na deň pre podrobnosti“</b> ide z prehľadu von. Uvoľní <b>28 px</b> na výšku (12 px odstup + 16 px riadok textu
+        pri písme 10 px). Otázka je, čo s nimi — a čím nahradiť to, čo tá veta hovorila.
+    </p>
+    <p class="lede">
+        Sú to dva návrhy, nie dve polovice jedného. <b>A</b> dá súčtu vlastnú bublinu a zvyšok karty nechá zoznamu. <b>B</b> otočí poradie:
+        dni hore, súčet dole ako pätka účtenky — a zoznam z toho dostane výrazne viac miesta. Čísla v texte sú odmerané v tomto súbore v
+        Chromiu pri šírke 375 px, nie odhadnuté.
+    </p>
+
+    <div class="kriteria">
+        <h2>Čo musí platiť v oboch</h2>
+        <ul>
+            <li>
+                <b>Ťuknuteľnosť sa nesmie stratiť.</b> Pätka bola jediné miesto, kde sa dalo prečítať, že riadky sú tlačidlá. Preto oba
+                návrhy pridávajú riadku šípku „›“ — tú istú, akú má dnes hlavička so súčtom.
+            </li>
+            <li>
+                <b>Prehľad nesmie narásť.</b> Dnešná obrazovka má v tomto mocku <b>621 px</b> (namerané v Chromiu pri šírke 375 px, aj s
+                dolným pásom navigácie). Návrh A má 627 px, návrh B 624 px — rozdiel je v rámci šumu, žiadny z nich nepridá posúvanie.
+            </li>
+            <li>
+                <b>Žiadne nové dáta.</b> Všetko, čo je na mockoch, appka už počíta (<code>weekStatsModel</code>,
+                <code>weekListModel</code>). Nič sa nedoťahuje navyše.
+            </li>
+            <li><b>Súčet ostáva tlačidlom</b> — otvára detail týždňa, rovnako ako dnes.</li>
+        </ul>
+    </div>
+
+    <!-- ===================== DNEŠNÝ STAV ===================== -->
+    <section class="navrh">
+        <div class="navrh-head">
+            <span class="navrh-znacka">0</span>
+            <h2>Dnešný stav</h2>
+        </div>
+        <p class="navrh-podnadpis">Jedna karta: hlavička so súčtom, sedem riadkov, pätka s návodom. Takto to vyzerá dnes.</p>
+
+        <div class="stlpce">
+            <div class="telefon">
+                <p class="telefon-popis">375 px · dnešný prehľad</p>
+                <div class="ramik">
+                    <div class="obrazovka">
+                        <div class="mock-head">
+                            <span>Račkofci Energy s.r.o.</span><span class="zivo"><i></i>13:00</span>
+                        </div>
+                        <h2 class="mock-title">Predpoveď na 7 dní</h2>
+                        <p class="mock-sub">Dvorany nad Nitrou · 10,4 kWp</p>
+
+                        <div class="karta">
+                            <div class="hero">
+                                <span>
+                                    <span class="lbl">Spolu za 7 dní <span class="sipka">›</span></span>
+                                    <span style="display: block"><span class="num">327</span><span class="u">kWh</span></span>
+                                </span>
+                                <span class="hero-meta">ø na deň<b>46,7 kWh</b></span>
+                            </div>
+                            <div class="zoznam">
+                                <div class="den dnes">
+                                    <div class="meno">Dnes<span class="datum">6.9.</span></div>
+                                    <span class="ikona i-sun"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="4" />
+                                            <path
+                                                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                                            /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 98%"></i></div>
+                                    <div class="kwh">61<span>kWh</span></div>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Zajtra<span class="datum">7.9.</span></div>
+                                    <span class="ikona i-sun"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="4" />
+                                            <path
+                                                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                                            /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 78%"></i></div>
+                                    <div class="kwh">49<span>kWh</span></div>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Pondelok<span class="datum">8.9.</span></div>
+                                    <span class="ikona i-cloud"
+                                        ><svg viewBox="0 0 24 24">
+                                            <path d="M17.5 19H6a4 4 0 1 1 .5-7.97A5.5 5.5 0 0 1 17 10a4 4 0 0 1 .5 9Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 44%"></i></div>
+                                    <div class="kwh">27<span>kWh</span></div>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Utorok<span class="datum">9.9.</span></div>
+                                    <span class="ikona i-partly"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="15" cy="8" r="3" />
+                                            <path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" />
+                                            <path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 86%"></i></div>
+                                    <div class="kwh">54<span>kWh</span></div>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Streda<span class="datum">10.9.</span></div>
+                                    <span class="ikona i-partly"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="15" cy="8" r="3" />
+                                            <path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" />
+                                            <path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 66%"></i></div>
+                                    <div class="kwh">41<span>kWh</span></div>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Štvrtok<span class="datum">11.9.</span></div>
+                                    <span class="ikona i-sun"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="4" />
+                                            <path
+                                                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                                            /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 100%"></i></div>
+                                    <div class="kwh">63<span>kWh</span></div>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Piatok<span class="datum">12.9.</span></div>
+                                    <span class="ikona i-partly"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="15" cy="8" r="3" />
+                                            <path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" />
+                                            <path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 52%"></i></div>
+                                    <div class="kwh">32<span>kWh</span></div>
+                                </div>
+                            </div>
+                            <p class="pata ide-von">Ťuknite na deň pre podrobnosti</p>
+                        </div>
+                        <div class="mock-nav"><span>Terazky</span><span class="on">7 dní</span><span>Zdieľať</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="poznamky">
+                <h3>Čo je na karte dnes</h3>
+                <ul>
+                    <li>Hlavička: <b>327 kWh</b> za týždeň, vedľa priemer na deň. Celá je tlačidlo do detailu týždňa.</li>
+                    <li>Sedem riadkov: meno dňa s dátumom, obloha, pásik, výroba v celých kWh.</li>
+                    <li>Pätka s návodom, ktorá ide von.</li>
+                </ul>
+
+                <h3>Čo na nej prekáža</h3>
+                <ul>
+                    <li>
+                        Súčet aj zoznam sú v <b>jednej krabici</b>, takže veľké číslo splýva s prvým riadkom (Dnes, 61) — dve čísla nad
+                        sebou, obe veľké, obe mono.
+                    </li>
+                    <li>Pätka <b>hovorí to, čo má ukázať vzhľad</b>. Šípka pri riadku to povie bez slov a bez miesta navyše.</li>
+                    <li>
+                        Riadky sú natesno: pásik 22 px, odstup 2 px. Na riadok pripadá 46 px — nie je to málo, ale pásiky sú tenké a na
+                        slnku sa zle porovnávajú.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== NÁVRH A ===================== -->
+    <section class="navrh">
+        <div class="navrh-head">
+            <span class="navrh-znacka">A</span>
+            <h2>Súčet do vlastnej bubliny</h2>
+        </div>
+        <p class="navrh-podnadpis">
+            Karta sa rozdelí na dve: hore bublina so súčtom týždňa, pod ňou samostatná karta so siedmimi dňami. Uvoľnených 28 px padne na
+            medzeru a druhý rám (prehľad narastie o 6 px, teda prakticky nič) — získava sa poriadok, nie miesto. Riadky ostávajú presne
+            také, aké sú dnes.
+        </p>
+
+        <div class="stlpce">
+            <div class="telefon">
+                <p class="telefon-popis">375 px · návrh A</p>
+                <div class="ramik">
+                    <div class="obrazovka">
+                        <div class="mock-head">
+                            <span>Račkofci Energy s.r.o.</span><span class="zivo"><i></i>13:00</span>
+                        </div>
+                        <h2 class="mock-title">Predpoveď na 7 dní</h2>
+                        <p class="mock-sub">Dvorany nad Nitrou · 10,4 kWp</p>
+
+                        <div class="karta a-sucet">
+                            <span>
+                                <span class="lbl">Spolu za 7 dní <span class="sipka">›</span></span>
+                                <span style="display: block"><span class="num">327</span><span class="u">kWh</span></span>
+                            </span>
+                            <span class="a-vedla">
+                                <span>ø na deň<b>46,7 kWh</b></span>
+                                <span>najviac<b class="zelena">Štv 63</b></span>
+                            </span>
+                        </div>
+
+                        <div class="karta so-sipkou a-zoznam">
+                            <div class="zoznam">
+                                <div class="den dnes">
+                                    <div class="meno">Dnes<span class="datum">6.9.</span></div>
+                                    <span class="ikona i-sun"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="4" />
+                                            <path
+                                                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                                            /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 98%"></i></div>
+                                    <div class="kwh">61<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Zajtra<span class="datum">7.9.</span></div>
+                                    <span class="ikona i-sun"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="4" />
+                                            <path
+                                                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                                            /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 78%"></i></div>
+                                    <div class="kwh">49<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Pondelok<span class="datum">8.9.</span></div>
+                                    <span class="ikona i-cloud"
+                                        ><svg viewBox="0 0 24 24">
+                                            <path d="M17.5 19H6a4 4 0 1 1 .5-7.97A5.5 5.5 0 0 1 17 10a4 4 0 0 1 .5 9Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 44%"></i></div>
+                                    <div class="kwh">27<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Utorok<span class="datum">9.9.</span></div>
+                                    <span class="ikona i-partly"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="15" cy="8" r="3" />
+                                            <path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" />
+                                            <path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 86%"></i></div>
+                                    <div class="kwh">54<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Streda<span class="datum">10.9.</span></div>
+                                    <span class="ikona i-partly"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="15" cy="8" r="3" />
+                                            <path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" />
+                                            <path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 66%"></i></div>
+                                    <div class="kwh">41<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Štvrtok<span class="datum">11.9.</span></div>
+                                    <span class="ikona i-sun"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="4" />
+                                            <path
+                                                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                                            /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 100%"></i></div>
+                                    <div class="kwh">63<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Piatok<span class="datum">12.9.</span></div>
+                                    <span class="ikona i-partly"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="15" cy="8" r="3" />
+                                            <path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" />
+                                            <path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 52%"></i></div>
+                                    <div class="kwh">32<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mock-nav"><span>Terazky</span><span class="on">7 dní</span><span>Zdieľať</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="poznamky">
+                <h3>Čo sa mení</h3>
+                <ul>
+                    <li>
+                        Súčet dostane <b>vlastnú kartu</b> — rovnaký útvar ako bubliny na karte Terazky, takže to appka už vie a vyzerá to
+                        tu doma.
+                    </li>
+                    <li>
+                        Vedľa priemeru pribudne <b>najsilnejší deň</b> („Štv 63“). Je to jediné číslo, ktoré človek z týždňa naozaj hľadá a
+                        dnes ho musí v pásikoch očami nájsť.
+                    </li>
+                    <li>
+                        Riadky sa <b>nemenia</b> — pásik ostáva 22 px, na riadok pripadá 46 px. Na ich zväčšenie už miesto nie je, minul ho
+                        druhý rám.
+                    </li>
+                    <li>Každý riadok má vpravo <b>„›“</b>. To je náhrada za pätku.</li>
+                </ul>
+
+                <h3>Prečo to takto</h3>
+                <p>
+                    Dnes stoja dve veľké mono čísla (327 a 61) v jednej krabici tesne nad sebou a oko nevie, ktoré je nadradené. Rám okolo
+                    súčtu ten vzťah povie bez jediného slova: toto je súhrn, dole sú dni.
+                </p>
+
+                <h3>Riziká</h3>
+                <p class="vystraha">
+                    Dva rámy sú viac čiar na obrazovke než jeden — karta môže pôsobiť rozdrobenejšie. A keďže sa 28 px minie na rám a
+                    medzeru, prehľad z toho nebude nižší; ak by sa v budúcnosti niečo na kartu pridávalo, miesto už nebude odkiaľ vziať.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== NÁVRH B ===================== -->
+    <section class="navrh">
+        <div class="navrh-head">
+            <span class="navrh-znacka">B</span>
+            <h2>Dni najprv, súčet ako pätka účtenky</h2>
+        </div>
+        <p class="navrh-podnadpis">
+            Jedna karta ostáva, len sa v nej otočí poradie: hore sedem dní, dole čiara a za ňou súčet týždňa. Uvoľnených 28 px plus to, čo
+            sa ušetrí na zmenšenej hlavičke, ide celé do riadkov — pásik <b>22 → 28 px</b>, riadok <b>46 → 54 px</b>, a prehľad je pritom
+            len o 3 px vyšší než dnes.
+        </p>
+
+        <div class="stlpce">
+            <div class="telefon">
+                <p class="telefon-popis">375 px · návrh B</p>
+                <div class="ramik">
+                    <div class="obrazovka">
+                        <div class="mock-head">
+                            <span>Račkofci Energy s.r.o.</span><span class="zivo"><i></i>13:00</span>
+                        </div>
+                        <h2 class="mock-title">Predpoveď na 7 dní</h2>
+                        <p class="mock-sub">Dvorany nad Nitrou · 10,4 kWp</p>
+
+                        <div class="karta so-sipkou b-zoznam">
+                            <div class="zoznam">
+                                <div class="den dnes">
+                                    <div class="meno">Dnes<span class="datum">6.9.</span></div>
+                                    <span class="ikona i-sun"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="4" />
+                                            <path
+                                                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                                            /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 98%"></i></div>
+                                    <div class="kwh">61<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Zajtra<span class="datum">7.9.</span></div>
+                                    <span class="ikona i-sun"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="4" />
+                                            <path
+                                                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                                            /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 78%"></i></div>
+                                    <div class="kwh">49<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Pondelok<span class="datum">8.9.</span></div>
+                                    <span class="ikona i-cloud"
+                                        ><svg viewBox="0 0 24 24">
+                                            <path d="M17.5 19H6a4 4 0 1 1 .5-7.97A5.5 5.5 0 0 1 17 10a4 4 0 0 1 .5 9Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 44%"></i></div>
+                                    <div class="kwh">27<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Utorok<span class="datum">9.9.</span></div>
+                                    <span class="ikona i-partly"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="15" cy="8" r="3" />
+                                            <path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" />
+                                            <path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 86%"></i></div>
+                                    <div class="kwh">54<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Streda<span class="datum">10.9.</span></div>
+                                    <span class="ikona i-partly"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="15" cy="8" r="3" />
+                                            <path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" />
+                                            <path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 66%"></i></div>
+                                    <div class="kwh">41<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Štvrtok<span class="datum">11.9.</span></div>
+                                    <span class="ikona i-sun"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="4" />
+                                            <path
+                                                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                                            /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 100%"></i></div>
+                                    <div class="kwh">63<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                                <div class="den">
+                                    <div class="meno">Piatok<span class="datum">12.9.</span></div>
+                                    <span class="ikona i-partly"
+                                        ><svg viewBox="0 0 24 24">
+                                            <circle cx="15" cy="8" r="3" />
+                                            <path d="M15 2v1.3M19.6 4.4l-.9.9M21 8h-1.3M9.4 4.4l.9.9" />
+                                            <path d="M16.5 19H7a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 9.7 2.02A4 4 0 0 1 16.5 19Z" /></svg
+                                    ></span>
+                                    <div class="pas"><i style="width: 52%"></i></div>
+                                    <div class="kwh">32<span>kWh</span></div>
+                                    <span class="sipka">›</span>
+                                </div>
+                            </div>
+                            <div class="b-sucet">
+                                <span class="lbl">Spolu za 7 dní <span class="sipka">›</span></span>
+                                <span class="priemer">ø na deň<b>46,7</b></span>
+                                <span><span class="num">327</span><span class="u">kWh</span></span>
+                            </div>
+                        </div>
+                        <div class="mock-nav"><span>Terazky</span><span class="on">7 dní</span><span>Zdieľať</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="poznamky">
+                <h3>Čo sa mení</h3>
+                <ul>
+                    <li>Zoznam začína hneď pod nadpisom karty — <b>prvé, čo oko uvidí, je dnešok</b>, nie súhrn.</li>
+                    <li>
+                        Súčet je dole za čiarou, ako na účtenke: <b>327 kWh</b> menším číslom (22 px namiesto 44 px), vedľa priemer. Stále
+                        tlačidlo do detailu týždňa.
+                    </li>
+                    <li>Riadky dostanú <b>28 px pásik a 12 px odsadenie</b> — na riadok pripadá 54 px, mená dní sú o bod väčšie.</li>
+                    <li>Šípka „›“ v riadku, rovnako ako v A.</li>
+                </ul>
+
+                <h3>Prečo to takto</h3>
+                <p>
+                    Na kartu sa chodí kvôli dňom, nie kvôli súčtu — súčet je odpoveď na otázku, ktorú si človek položí až potom. Pätka je
+                    preň prirodzené miesto a zoznam sa tým stane najväčšou vecou na obrazovke, čo aj má byť. Ako bonus: pásiky s výškou 28
+                    px sa dajú porovnávať aj na slnku, kde je tenký pásik prakticky neviditeľný.
+                </p>
+
+                <h3>Riziká</h3>
+                <p class="vystraha">
+                    Súčet stráca postavenie hlavného čísla. Kto sa na kartu pozerá kvôli týždňu ako celku, má to o krok ďalej — a vstup do
+                    detailu týždňa je dole, teda menej na očiach než dnes. Ak sa ukáže, že detail týždňa ľudia prestali otvárať, je to
+                    signál, že pätka bola zlé miesto.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== POROVNANIE ===================== -->
+    <section class="porovnanie">
+        <div class="navrh-head"><h2>Porovnanie</h2></div>
+        <table class="tabulka">
+            <thead>
+                <tr>
+                    <th>Kritérium</th>
+                    <th>Dnes</th>
+                    <th>A · bublina</th>
+                    <th>B · pätka</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Výška riadku</td>
+                    <td>46 px</td>
+                    <td>46 px</td>
+                    <td>54 px</td>
+                </tr>
+                <tr>
+                    <td>Výška pásika</td>
+                    <td>22 px</td>
+                    <td>22 px</td>
+                    <td>28 px</td>
+                </tr>
+                <tr>
+                    <td>Výška prehľadu</td>
+                    <td>621 px</td>
+                    <td>627 px</td>
+                    <td>624 px</td>
+                </tr>
+                <tr>
+                    <td>Súčet za týždeň</td>
+                    <td>44 px, hore</td>
+                    <td>44 px, vlastný rám</td>
+                    <td>22 px, dole</td>
+                </tr>
+                <tr>
+                    <td>Ťuknuteľnosť riadku</td>
+                    <td>veta v pätke</td>
+                    <td>šípka „›“</td>
+                    <td>šípka „›“</td>
+                </tr>
+                <tr>
+                    <td>Nové informácie</td>
+                    <td>—</td>
+                    <td>najsilnejší deň</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td>Zásah do kódu</td>
+                    <td>—</td>
+                    <td>nový blok v HTML + CSS; nasadenie v dvoch krokoch (pravidlo z CLAUDE.md)</td>
+                    <td>presun v rámci jednej karty; jedno nasadenie stačí</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="odporucanie">
+            <b>Odporúčanie: B.</b> Uvoľnené miesto sa naozaj premietne do toho, kvôli čomu na kartu ľudia chodia — do dní. A rieši poriadok,
+            ale získané miesto minie na vlastný rám, takže z 28 px neostane pre zoznam prakticky nič. B navyše nepridáva do HTML nový prvok,
+            takže sa nasadzuje naraz; A by musela ísť v dvoch krokoch kvôli cache GitHub Pages. <br /><br />
+            Ak by mal byť súčet za týždeň hlavné číslo karty, je to A — ale potom treba povedať nahlas, že zoznam ostáva taký tesný, aký je
+            dnes.
+        </p>
+    </section>
+</div>
