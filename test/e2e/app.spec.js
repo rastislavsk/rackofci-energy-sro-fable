@@ -195,6 +195,22 @@ for (const [hm, label] of [
     });
 }
 
+for (const [hm, label] of [
+    ['13:00', 'zelená'],
+    ['08:00', 'červená'],
+    ['02:00', 'oranžová'],
+]) {
+    test(`prúžok nad aktívnou kartou má rovnakú farbu ako stavová bodka (${hm}, ${label})`, async ({ page }) => {
+        const { instant, wall } = atTime(hm);
+        await openApp(page, { time: instant });
+        await expect(page.locator('html')).toHaveAttribute('data-accent', modelAt(wall).accent || '');
+        const dot = await page.locator('.appbar-clock .live-dot').evaluate((el) => getComputedStyle(el).backgroundColor);
+        const bar = await page.locator('.nav-item.active').evaluate((el) => getComputedStyle(el, '::after').backgroundColor);
+        expect(dot).toMatch(/^rgb\(/);
+        expect(bar).toBe(dot);
+    });
+}
+
 /** Bod na dennom prstenci ciferníka pre danú minútu dňa - ten istý výpočet, aký appka
  * používa na umiestnenie jazdca. @param {{x: number, y: number, width: number, height: number}} box @param {number} minutes */
 function ringXY(box, minutes) {

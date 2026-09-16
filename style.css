@@ -89,6 +89,20 @@
     --tint-rgb: var(--red-rgb);
 }
 
+/* Farba stavovej bodky pri čase (tarifa × výkon, teda "smart" farba - accent). data-accent
+   zapisuje renderHeader vo web/render/header.js, rovnako ako data-tier vyššie. Číta z nej
+   bodka aj prúžok nad aktívnou kartou v navigácii, aby obe hovorili tú istú farbu a mapovanie
+   farieb ostalo na jednom mieste. Zelená platí do prvého prekreslenia. */
+:root {
+    --live-rgb: var(--green-rgb);
+}
+:root[data-accent='amber'] {
+    --live-rgb: var(--amber-rgb);
+}
+:root[data-accent='red'] {
+    --live-rgb: var(--red-rgb);
+}
+
 /* ---- Základ ---------------------------------------------------------------- */
 * {
     box-sizing: border-box;
@@ -215,19 +229,11 @@ b {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 8px rgba(var(--green-rgb), 0.55);
+    background: rgb(var(--live-rgb));
+    box-shadow: 0 0 8px rgba(var(--live-rgb), 0.55);
     transition:
         background-color var(--dur),
         box-shadow var(--dur);
-}
-.live-dot.status-red {
-    background: var(--red);
-    box-shadow: 0 0 8px rgba(var(--red-rgb), 0.55);
-}
-.live-dot.status-amber {
-    background: var(--amber);
-    box-shadow: 0 0 8px rgba(var(--amber-rgb), 0.55);
 }
 
 .bottomnav {
@@ -290,8 +296,10 @@ b {
     left: 30%;
     right: 30%;
     height: 2px;
-    background: var(--green);
+    /* Tá istá farba ako stavová bodka pri čase - prúžok aj bodka hovoria o tom istom stave. */
+    background: rgb(var(--live-rgb));
     border-radius: 0 0 2px 2px;
+    transition: background-color var(--dur);
 }
 
 /* ---- Stránka a karty ------------------------------------------------------- */
@@ -1151,6 +1159,9 @@ b {
     margin-bottom: var(--sp-2);
 }
 .chart-now {
+    /* Bodka v tomto štítku je len značka "teraz" na krivke výroby, nie stav tarify -
+       preto si drží zelenú a nejde s --live-rgb. */
+    --live-rgb: var(--green-rgb);
     display: inline-flex;
     align-items: center;
     gap: 6px;

@@ -19,7 +19,6 @@ function headerDom() {
         // z --tint-rgb a obe musia byť na tom istom prvku (viď :root v style.css).
         root: document.documentElement,
         page: byId('page'),
-        headerStatusDot: byId('header-status-dot'),
         currentTimeDisplay: byId('current-time-display'),
         pvUpdated: byId('pv-updated'),
         panels: /** @type {Record<(typeof PANELS)[number], HTMLElement>} */ (
