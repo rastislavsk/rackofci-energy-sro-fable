@@ -1214,6 +1214,20 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
+    /** Značka "teraz" je na prstenci a okolo 06:00 stojí na pravom okraji ciferníka, kde jej
+     * 44 px široký štvorec presiahne kartu o necelé dva pixely. Karta má overflow-x: hidden,
+     * takže vidno to nie je - ale swipe.js to kedysi čítal ako vnútorný posuvný pás pod prstom
+     * a gesto mu odovzdal. Listovanie tak bolo v tú hodinu mŕtve. Test ide presne na ten čas;
+     * hranicu (vnútorný pás sa musí dať naozaj posúvať) drží pravidlo, nie zoznam výnimiek. */
+    test('ťah ponad ciferník prepne kartu aj o 06:00, keď značka "teraz" trčí cez okraj', async ({ page }) => {
+        const errors = await openApp(page, { time: atTime('06:00').instant });
+        await ocakavajKartu(page, 'terazky');
+
+        await swipe(page, '#dial-hero', { dx: -120 });
+        await ocakavajKartu(page, '7dni');
+        expect(errors).toEqual([]);
+    });
+
     test('ťah ponad ciferník prepne kartu a nenastaví náhľad iného času', async ({ page }) => {
         const errors = await openApp(page);
 

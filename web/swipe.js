@@ -19,17 +19,27 @@ const DRAG_HANDLE = '.dial-grip';
  * listovanie - kartu tam prepne len rýchle švihnutie (SWIPE.flickMs). */
 const CHART = '.chart-wrap';
 
+/** Posúvať do strán sa dá len `auto` a `scroll`. `hidden` a `clip` obsah navyše iba orežú -
+ * prehliadač s nimi prstom nepohne, takže gesto nad nimi nepatrí im. */
+const PANNABLE = /^(auto|scroll)$/;
+
 /**
  * Koľko miesta ostáva najbližšiemu vnútornému pásu pod prstom, ktorý sa dá posúvať do strán:
  * kolotoč odporúčaní na karte Terazky, na úzkych displejoch aj tabuľka 7 dní. Kým má taký pás
  * kam ísť, patrí gesto jemu a nie karte - rovnaké pravidlo, aké medzi sebou používajú vnorené
  * kolotoče. Menovať jednotlivé miesta netreba: pás sa pozná podľa toho, že sa naozaj má kam
- * posunúť. @param {EventTarget | null} target @param {HTMLElement} page
+ * posunúť - a že sa posunúť vôbec dá.
+ *
+ * Druhá podmienka tu nie je navyše. Stačilo, aby obsah presiahol orezaný prvok o dva pixely,
+ * a gesto dostal prvok, ktorý sa nikdy nepohne - listovanie tým celé zhaslo. Na karte Terazky
+ * sa to dialo okolo 06:00: značka "teraz" vtedy stojí na pravom okraji prstenca a jej štvorec
+ * presiahne kartu (overflow-x: hidden) o necelé dva pixely.
+ * @param {EventTarget | null} target @param {HTMLElement} page
  */
 function innerScrollRoom(target, page) {
     for (let el = target instanceof Element ? target : null; el && el !== page; el = el.parentElement) {
         const room = el.scrollWidth - el.clientWidth;
-        if (room > 1 && getComputedStyle(el).overflowX !== 'visible') return { left: el.scrollLeft, right: room - el.scrollLeft };
+        if (room > 1 && PANNABLE.test(getComputedStyle(el).overflowX)) return { left: el.scrollLeft, right: room - el.scrollLeft };
     }
     return null;
 }
