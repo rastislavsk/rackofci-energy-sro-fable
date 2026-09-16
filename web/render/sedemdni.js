@@ -13,7 +13,7 @@ import {
     weekStatsModel,
 } from '../../shared/chart-model.js';
 import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
-import { escapeHtml, fmt1, hourLabel, pad2, weekDateLabel, weekDayLong, weekDayShort } from '../../shared/format.js';
+import { escapeHtml, fmt1, hourLabel, weekDateLabel, weekDayLong, weekDayShort } from '../../shared/format.js';
 import { dayDetailMessage, EMPTY_MESSAGES, weekMessage } from '../../shared/messages.js';
 import { ICON_CLOUD, ICON_PARTLY, ICON_SUN } from '../icons.js';
 import { changed } from '../memo.js';
@@ -159,10 +159,8 @@ function renderCurve(state, day, dom) {
     const m = weekCurveModel(state);
     dom.weekCurve.innerHTML = m ? forecastChartSvg(m) : '';
     if (m) dom.weekCurve.setAttribute('viewBox', `0 0 ${m.dims.w} ${m.dims.h}`);
-    // Značka "teraz" patrí k dnešku, položka legendy ku krivke - keď sa krivka nekreslí,
-    // legenda by ohlasovala niečo, čo v grafe nie je.
-    dom.weekCurveNowBadge.classList.toggle('hidden', state.weekSelDay !== 0);
-    dom.weekCurveNowTime.textContent = `teraz ${pad2(state.now.getHours())}:${pad2(state.now.getMinutes())}`;
+    // Položka legendy patrí ku krivke - keď sa krivka nekreslí, legenda by ohlasovala
+    // niečo, čo v grafe nie je.
     dom.weekCurveLiveLegend.classList.toggle('hidden', !m || !m.real.length);
     dom.weekCurveStat.innerHTML = dayInfo(state, day);
 }
@@ -256,7 +254,6 @@ function renderEmpty(dom) {
     ])
         el.innerHTML = '';
     for (const el of [dom.weekToday, dom.weekTomorrow, dom.weekTotal]) el.textContent = '–';
-    dom.weekCurveNowBadge.classList.add('hidden');
     dom.weekCurveLiveLegend.classList.add('hidden');
     for (const el of [
         dom.weekTodayBadge,
