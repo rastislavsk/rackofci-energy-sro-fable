@@ -71,12 +71,20 @@ export function weekDayLabel(dateStr, index) {
     return `${weekDayShort(dateStr, index)} ${weekDateLabel(dateStr)}`;
 }
 
+/** "Dnes", "Zajtra", inak celé meno dňa ("Štvrtok") - bez dátumu. V rebríčku dní stojí
+ * dátum pod menom vo vlastnom riadku, takže ho meno nesmie niesť v sebe.
+ * @param {string} dateStr @param {number} index */
+export function weekDayName(dateStr, index) {
+    if (index < 2) return weekDayShort(dateStr, index);
+    return WEEK_DAYS_LONG[dateParts(dateStr).dow];
+}
+
 /** "Dnes", "Zajtra", inak "Štvrtok 10.9." - nadpis obrazovky s detailom dňa, kde je na
  * celé slovo miesto (v tabuľke a v grafoch ho na skratku tlačí šírka stĺpca).
  * @param {string} dateStr @param {number} index */
 export function weekDayLong(dateStr, index) {
     if (index < 2) return weekDayShort(dateStr, index);
-    return `${WEEK_DAYS_LONG[dateParts(dateStr).dow]} ${weekDateLabel(dateStr)}`;
+    return `${weekDayName(dateStr, index)} ${weekDateLabel(dateStr)}`;
 }
 
 /** Ošetrenie textu pred vložením do HTML/SVG reťazca. @param {unknown} value */

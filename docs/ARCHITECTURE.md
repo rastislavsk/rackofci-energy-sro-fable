@@ -124,11 +124,11 @@ plátno presne na kartu. Rozmer teda prichádza tou istou cestou ako každý in�
 Na telefóne mala karta štyri grafy a tabuľku pod sebou – pätnásť obrazoviek scrollovania,
 kým sa človek dostal k tomu, čo ho zaujímalo. Je preto rozdelená na dve obrazovky:
 
-- **Prehľad dní** – tri kartičky (Dnes, Zajtra, 7 dní spolu) a tabuľka. Zmestí sa takmer
-  celá na jednu obrazovku.
-- **Detail dňa** – otvorí ho klik na riadok v tabuľke alebo na bublinu Dnes/Zajtra:
-  priebeh výroby toho dňa, čísla o ňom, jeho jediný riadok z mapy výroby a správa o tom dni.
-- **Detail týždňa** – otvorí ho klik na bublinu „7 dní spolu“: denná výroba, mapa výroby
+- **Prehľad dní** – rebríček: jedno veľké číslo za týždeň a sedem riadkov s pásikmi.
+  Zmestí sa celý na jednu obrazovku.
+- **Detail dňa** – otvorí ho klik na riadok rebríčka: priebeh výroby toho dňa, čísla o ňom,
+  jeho jediný riadok z mapy výroby a správa o tom dni.
+- **Detail týždňa** – otvorí ho klik na hlavičku „Spolu za 7 dní“: denná výroba, mapa výroby
   hodina × deň a správa „Najsilnejší deň“.
 
 Správa je jeden prvok pre obe obrazovky: v detaile dňa v ňom stojí `dayDetailMessage`,
@@ -149,9 +149,30 @@ v `renderSedemdni`, a `wide` je `(min-width: 768px)` – nie desktopových 1024 
 poradia blokov žijú v `@media (max-width: 1023px)`, ale to je iná hranica a iná vec:
 riadia `order`, nie to, či detail vôbec existuje.
 
-Z tabuľky zmizol stĺpec „Oblačnosť“ – ten istý údaj hovoril aj stĺpec „Obloha“ a tabuľka
-sa kvôli nemu musela na telefóne posúvať do strán, takže šípku do detailu na konci riadku
-nebolo vidno.
+### Prečo rebríček namiesto bublín a tabuľky
+
+Prehľad mal na telefóne tri bubliny a päťstĺpcovú tabuľku, dokopy asi štyridsať čísel. Väčšina
+z nich (využitie v %, špička v kW a jej hodina) je pritom to isté, čo je o ťuknutie ďalej
+v detaile dňa – a tabuľka sa aj po zoškrtaní stĺpcov na telefóne posúvala do strán, takže
+prvý vodorovný ťah posunul ju a kartu prelistoval až ten druhý.
+
+Rebríček odpovedá na to, na čo sa človek na prehľade pýta: koľko toho bude a ktorý deň je
+najlepší. Dĺžka pásika je výroba dňa voči najsilnejšiemu dňu v týždni (`weekListModel`
+v `shared/chart-model.js`), takže sa dni porovnajú očami, bez čítania čísel. Škáluje sa
+zámerne voči týždňu, nie voči stropu jasnej oblohy: otázka je „ktorý z týchto siedmich“,
+nie „koľko ubrali mraky“ – to druhé hovorí využitie v detaile dňa. Znamená to, že aj
+v škaredom týždni má najsilnejší deň plný pásik; číslo vedľa neho to opravuje.
+
+Výroba je v rebríčku v celých kWh: pri predpovedi na týždeň je desatina falošná presnosť
+a v riadku zaberá miesto, ktoré patrí pásiku. Rebríček sa navyše vojde do každej šírky
+(pásik je pružný stĺpec mriežky), takže na mobile nezostal ani jeden vodorovne posuvný pás
+a ťah do strán prelistuje kartu hneď.
+
+Bubliny a tabuľka žijú ďalej, len od 768 px vyššie – tam je na ne miesto a majiteľ, ktorý
+ladí systém, má v tabuľke všetky stĺpce pohromade. Vidno vždy práve jednu podobu prehľadu;
+rozhoduje o tom `renderView` v `web/render/sedemdni.js`.
+
+Z tabuľky ešte predtým zmizol stĺpec „Oblačnosť“ – ten istý údaj hovoril aj stĺpec „Obloha“.
 
 ## Rozloženie na desktope
 
