@@ -143,6 +143,18 @@ v HTML prvá, ale na oboch detailoch má ísť posledná.
 Heatmapa je v detaile dňa tá istá funkcia (`weekHeatModel`) s prepínačom „jeden deň“:
 mierka farieb ostáva z celého týždňa, inak by aj najslabší deň vyzeral sám o sebe ako plný.
 
+Tie isté tri farby nesie aj výroba po dňoch – pásik a číslo v rebríčku, stĺpec a číslo nad
+ním v Dennej výrobe, číslo v stĺpci Výroba v tabuľke. Pásmo počíta jediná funkcia
+`weekDayTiers` v `shared/chart-model.js`: podiel z najsilnejšieho **dňa** v týždni s tými
+istými hranicami (1/3, 2/3) ako bunky heatmapy, takže obe grafiky na jednej obrazovke
+merajú rovnako. Deň bez výroby pásmo nemá (`null`) a ostáva nefarbený – inak by týždeň bez
+jedinej kWh vyšiel celý červený.
+
+Sýtosť sa z heatmapy nepreberá. Tam je jediným nosičom veľkosti, pri dňoch je ňou dĺžka
+pásika a výška stĺpca – slabý deň by bol krátky _aj_ vyblednutý a prakticky by zmizol.
+Vybraný deň sa preto v grafe neodlišuje inou farbou, ale plnou sýtosťou (`.bar.sel`).
+Legenda farieb je jedna, pod heatmapou.
+
 Od 768 px je detail vypnutý: tam je na celú kartu miesto naraz a klik na deň ho, ako
 doteraz, len vyberie vo všetkých grafoch. Rozhoduje o tom podmienka `!state.wide`
 v `renderSedemdni`, a `wide` je `(min-width: 768px)` – nie desktopových 1024 px. Pravidlá

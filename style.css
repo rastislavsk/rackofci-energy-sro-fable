@@ -1238,11 +1238,25 @@ b {
     stroke-opacity: 0.55;
     pointer-events: none;
 }
+/* Farba stĺpca je pásmo dňa - tá istá mierka a tie isté tri farby ako v heatmape
+   (weekDayTiers v shared/chart-model.js). Deň bez výroby pásmo nemá a ostáva sivý. */
 .bar {
     fill: var(--ink-45);
+    fill-opacity: 0.75;
 }
+.bar.tier-red {
+    fill: var(--red);
+}
+.bar.tier-amber {
+    fill: var(--amber);
+}
+.bar.tier-green {
+    fill: var(--green);
+}
+/* Vybraný deň sa neodlišuje inou farbou, ale plnou sýtosťou - farba už patrí pásmu.
+   Ktorý deň to je, hovorí aj jeho meno pod stĺpcom (.day-label.sel vyššie). */
 .bar.sel {
-    fill: var(--ink);
+    fill-opacity: 1;
 }
 .clear-cap {
     stroke: var(--ink-45);
@@ -1253,9 +1267,20 @@ b {
     font-family: var(--font-mono);
     font-size: 9.5px;
     fill: var(--ink-45);
+    fill-opacity: 0.85;
+}
+.bar-value.tier-red {
+    fill: var(--red);
+}
+.bar-value.tier-amber {
+    fill: var(--amber);
+}
+.bar-value.tier-green {
+    fill: var(--green);
 }
 .bar-value.sel {
-    fill: var(--ink);
+    fill-opacity: 1;
+    font-weight: 600;
 }
 .bar-hit {
     fill: transparent;
@@ -1502,6 +1527,16 @@ b {
 .week-table .mid {
     text-align: center;
 }
+/* Pásmo dňa na výrobe - tie isté tri farby ako v heatmape a v stĺpcoch. */
+.week-table td.tier-red {
+    color: var(--red);
+}
+.week-table td.tier-amber {
+    color: var(--amber);
+}
+.week-table td.tier-green {
+    color: var(--green);
+}
 /* Odtieň percenta využitia - prahy sú v useTier() vo web/render/sedemdni.js. */
 .week-table .use-hi {
     color: var(--green);
@@ -1661,6 +1696,17 @@ b {
     border-radius: var(--radius-sm);
     background: color-mix(in srgb, var(--green) 45%, transparent);
 }
+/* Pásmo dňa - tá istá mierka ako v heatmape. Sýtosť sa z heatmapy nepreberá: tam je
+   jediným nosičom veľkosti, tu je ňou dĺžka pásika a slabý deň by bol krátky aj vyblednutý. */
+.wday-bar i.tier-red {
+    background: color-mix(in srgb, var(--red) 55%, transparent);
+}
+.wday-bar i.tier-amber {
+    background: color-mix(in srgb, var(--amber) 55%, transparent);
+}
+.wday-bar i.tier-green {
+    background: color-mix(in srgb, var(--green) 55%, transparent);
+}
 .wday-kwh {
     font-family: var(--font-mono);
     font-size: var(--fs-md);
@@ -1668,6 +1714,15 @@ b {
     min-width: 40px;
     text-align: right;
     white-space: nowrap;
+}
+.wday-kwh.tier-red {
+    color: var(--red);
+}
+.wday-kwh.tier-amber {
+    color: var(--amber);
+}
+.wday-kwh.tier-green {
+    color: var(--green);
 }
 .wday-kwh .u {
     font-family: var(--font-mono);

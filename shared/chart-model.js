@@ -269,6 +269,23 @@ function heatBand(frac) {
 }
 
 /**
+ * Farebné pásmo celého dňa - tá istá logika ako v heatmape, len o úroveň vyššie: namiesto
+ * podielu z najsilnejšej hodiny sa počíta podiel z najsilnejšieho dňa v týždni. Vďaka tomu
+ * hovoria stĺpce, rebríček aj heatmapa na jednej obrazovke tou istou mierkou.
+ *
+ * Deň bez výroby (a týždeň bez jedinej kWh) nemá pásmo - `null` znamená "nefarbiť", rovnako
+ * ako pri prázdnej bunke heatmapy. Inak by polárny týždeň vyšiel celý červený.
+ * @param {ForecastDay[]} days @returns {('red' | 'amber' | 'green' | null)[]}
+ */
+export function weekDayTiers(days) {
+    const max = Math.max(...days.map((d) => d.kwhTotal), 0);
+    return days.map((d) => {
+        const frac = max > 0 ? d.kwhTotal / max : 0;
+        return frac <= 0.02 ? null : heatBand(frac);
+    });
+}
+
+/**
  * Mapa výroby hodina × deň. Bez `size` si plátno určí sama (mobil), s ním sa roztiahne
  * na skutočný rozmer karty - vtedy sa riadky rozdelia o dostupnú výšku.
  * @param {ForecastDay[]} days @param {number} selDay @param {{ W: number, H: number } | null} [size]
@@ -349,6 +366,7 @@ export function weekBarsModel(days, selDay, size = { W: 440, H: 190 }, showCeili
 
     const grid = [];
     for (let g = 0; g <= maxV; g += gridStep) grid.push({ y: yFor(g), label: String(g) });
+    const tiers = weekDayTiers(days);
     const bars = days.map((d, i) => {
         const cx = padL + i * slot + slot / 2;
         const usePct = d.clearKwhTotal > 0 ? Math.round((100 * d.kwhTotal) / d.clearKwhTotal) : 0;
@@ -356,6 +374,7 @@ export function weekBarsModel(days, selDay, size = { W: 440, H: 190 }, showCeili
             dayIndex: i,
             sel: i === selDay,
             today: i === 0,
+            tier: tiers[i],
             x: cx - bw / 2,
             y: yFor(d.kwhTotal),
             w: bw,
@@ -426,10 +445,12 @@ export function weekListModel(days, selDay) {
     // Týždeň bez jedinej kWh (polárna noc, pokazené dáta) by z delenia urobil NaN a pásiky
     // by zmizli aj s rozložením mriežky - vtedy sú prázdne, čo je pravda o takom týždni.
     const max = Math.max(...days.map((d) => d.kwhTotal), 0);
+    const tiers = weekDayTiers(days);
     return days.map((d, i) => ({
         dayIndex: i,
         today: i === 0,
         sel: i === selDay,
+        tier: tiers[i],
         name: weekDayName(d.date, i),
         dateLabel: weekDateLabel(d.date),
         cloudAvgPct: d.cloudAvgPct,
