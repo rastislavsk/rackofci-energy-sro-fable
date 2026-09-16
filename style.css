@@ -1582,6 +1582,153 @@ b {
     color: var(--ink-45);
 }
 
+/* ---- 7 dní: rebríček dní (prehľad na mobile) -------------------------------- */
+/* Jedno veľké číslo za týždeň a pod ním sedem riadkov s pásikmi. Dĺžka pásika je výroba
+   dňa voči najsilnejšiemu dňu v týždni, takže sa dni dajú porovnať očami, bez čítania
+   čísel - preto tu nie sú stĺpce Využitie a Špička, tie ostávajú v detaile dňa.
+   Blok je vidno len pod 768 px; na širokej obrazovke mu renderView nechá .hidden, lebo
+   tam je na prehľad miesta dosť na bubliny aj tabuľku. */
+.week-list-card {
+    border: 1px solid var(--ink-08);
+    border-radius: var(--radius-md);
+    background: var(--card-bg);
+    padding: var(--sp-3);
+}
+/* Hlavička aj riadky dní sú tlačidlá, takže potrebujú späť zarovnanie a šírku, ktoré si
+   tlačidlo inak určí samo (to isté robia bubliny .stat vyššie). */
+.week-list-hero,
+.wday {
+    width: 100%;
+    border: 0;
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.week-list-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: 0 0 var(--sp-3);
+}
+/* Šípka "›" hovorí, že hlavička otvára detail týždňa. Nepotrebuje @media ako tá istá šípka
+   pri bublinách - celý blok je na obrazovke len tam, kde detail existuje. */
+.week-list-hero .lbl::after {
+    content: ' ›';
+    color: var(--ink-35);
+}
+.week-list-sum {
+    display: block;
+    min-width: 0;
+}
+.week-list-hero .num {
+    font-family: var(--font-mono);
+    font-size: var(--fs-num);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+.week-list-hero .u {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--ink-35);
+    margin-left: 3px;
+}
+.week-list-avg {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-35);
+    text-align: right;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+.week-list-avg b {
+    display: block;
+    font-size: var(--fs-sm);
+}
+.week-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+/* Meno dňa má pevný stĺpec, aby pásiky začínali pod sebou a dali sa porovnať; 70 px je
+   šírka najdlhšieho názvu ("Pondelok") pri tomto písme. Ikona oblohy je 12 px (.cloud-cell
+   nižšie), stĺpec má o niečo viac, nech sa nedotýka mena. */
+.wday {
+    display: grid;
+    grid-template-columns: 70px 16px 1fr auto;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: 9px 4px;
+    border-radius: var(--radius-sm);
+    outline: 1px solid transparent;
+    outline-offset: -1px;
+}
+.wday.sel {
+    background: var(--ink-05);
+}
+.wday.today {
+    background: color-mix(in srgb, var(--green) 6%, transparent);
+    outline-color: color-mix(in srgb, var(--green) 30%, transparent);
+}
+.wday-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.15;
+    min-width: 0;
+}
+.wday.today .wday-name {
+    color: var(--green);
+}
+.wday-date {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--ink-35);
+}
+.wday-bar {
+    height: 22px;
+    border-radius: var(--radius-sm);
+    background: var(--ink-05);
+    overflow: hidden;
+}
+.wday-bar i {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--green) 45%, transparent);
+}
+.wday.today .wday-bar i {
+    background: var(--green);
+}
+.wday-kwh {
+    font-family: var(--font-mono);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    min-width: 40px;
+    text-align: right;
+    white-space: nowrap;
+}
+.wday-kwh .u {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--ink-35);
+    margin-left: 2px;
+}
+.week-list-hint {
+    margin: var(--sp-3) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-35);
+    text-align: center;
+}
+
 /* ---- Zdieľať ---------------------------------------------------------------- */
 .share-panel {
     display: flex;
