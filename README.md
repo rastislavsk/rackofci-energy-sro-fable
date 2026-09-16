@@ -26,16 +26,19 @@ jej QR kód kreslí knižnica z CDN.
   strán alebo klikom na bodky. Ciferník sa číta aj ako 24-hodinový: vonkajší prstenec je
   deň s farebnými tarifnými pásmami, biela bodka na ňom je „teraz“. Potiahnutím jazdca po
   prstenci alebo ťuknutím naň si pozrieš, ako to bude vyzerať v inom čase.
-- **7 dní** – prehľad dní v tabuľke a súhrn za dnes, zajtra a celý týždeň. Klik otvorí
-  detail: na deň (v tabuľke aj v bubline Dnes/Zajtra) jeho priebeh výroby s oblačnosťou,
-  čísla dňa, jeho riadok z mapy výroby a hlášku o tom dni; pri dnešku je v grafe aj skutočná
-  nameraná krivka so značkou „teraz“ a koľko už z predpovede nabehlo. Klik na „7 dní spolu“
-  otvorí detail celého týždňa: dennú výrobu, mapu výroby hodina × deň a hlášku o najsilnejšom
-  dni. Na širokej obrazovke je vidno všetko naraz.
+- **7 dní** – prehľad dní: na telefóne rebríček, kde má každý deň pásik dlhý podľa výroby
+  voči najsilnejšiemu dňu v týždni, a nad ním jediné veľké číslo za celý týždeň; na širokej
+  obrazovke bubliny (Dnes, Zajtra, 7 dní spolu) a tabuľka so všetkými stĺpcami. Klik otvorí
+  detail: na deň jeho priebeh výroby s oblačnosťou, čísla dňa (špička, využitie, oblačnosť),
+  jeho riadok z mapy výroby a hlášku o tom dni; pri dnešku je v grafe aj skutočná nameraná
+  krivka so značkou „teraz“ a koľko už z predpovede nabehlo. Klik na hlavičku „Spolu za 7 dní“
+  (na širokej obrazovke na bublinu „7 dní spolu“) otvorí detail celého týždňa: dennú výrobu,
+  mapu výroby hodina × deň a hlášku o najsilnejšom dni. Na širokej obrazovke je vidno všetko
+  naraz.
 - **Zdieľať** – QR kód, odkaz na appku a tlačidlo na poslanie cez WhatsApp.
 
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v
-poradí spodnej navigácie – aj ponad grafy a tabuľku 7 dní. V detaile dňa listuje to isté
+poradí spodnej navigácie – aj ponad grafy a prehľad dní. V detaile dňa listuje to isté
 gesto dni v týždni, nie karty: doľava na ďalší deň, doprava na predchádzajúci – a nový deň
 sa prisunie z tej strany, ktorou si ťahal, rovnako ako karta pri prepnutí. Nezacyklí sa
 – za posledným dňom ani pred prvým už ťah nevedie nikam a von z detailu vedie šípka späť
@@ -45,9 +48,8 @@ prezeraním s tooltipom ako doteraz. Zvislý ťah je posúvanie stránky – aj 
 tooltip sa pri ňom neukáže tiež. Nová karta sa pritom prisunie z tej strany, ktorou si listoval –
 rovnako pri ťahaní aj pri kliku na navigáciu. Kto má v systéme zapnutý útlm pohybu, dostane
 prepnutie bez animácie. Ťahanie si pre seba
-nechávajú len veci, ktoré sa samy posúvajú do strán: kolotoč odporúčaní na karte Terazky
-a na úzkych displejoch tabuľka 7 dní, kým má kam ísť. Bežec na páse dňa sa ťahá ako
-predtým.
+nechávajú len veci, ktoré sa samy posúvajú do strán: kolotoč odporúčaní na karte Terazky,
+kým má kam ísť. Bežec na páse dňa sa ťahá ako predtým.
 
 Systémové tlačidlo Späť na telefóne a tablete (a šípka v prehliadači) vracia o krok späť
 v appke: najprv zavrie detail dňa, potom sa vracia po kartách v opačnom poradí, než si

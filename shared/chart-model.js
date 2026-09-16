@@ -2,7 +2,7 @@
 // Kreslenie (SVG reťazce) je vo web/svg.js; tu nie je nič, čo by potrebovalo DOM.
 
 import { MINUTES_PER_DAY } from './config.js';
-import { formatGridKw, hourLabel, hourFloatToTimeStr, weekDateLabel, weekDayShort } from './format.js';
+import { formatGridKw, hourLabel, hourFloatToTimeStr, weekDateLabel, weekDayName, weekDayShort } from './format.js';
 import { stripSegments } from './tariff.js';
 
 /** @typedef {{ x: number, y: number }} Pt */
@@ -410,6 +410,34 @@ export function weekStatsModel(days, pv, tomorrowSunny) {
         trendPct,
         progress,
     };
+}
+
+/**
+ * Rebríček dní: prehľad karty 7 dní na mobile. Jeden riadok na deň, v ňom meno, dátum,
+ * obloha, výroba a dĺžka pásika.
+ *
+ * Pásik sa škáluje voči najsilnejšiemu dňu v týždni, nie voči stropu jasnej oblohy: otázka
+ * prehľadu je "ktorý deň z týchto siedmich je dobrý", nie "koľko dnes ubrali mraky" - to
+ * druhé hovorí využitie v detaile dňa. Znamená to, že aj v škaredom týždni má najsilnejší
+ * deň plný pásik; číslo vedľa neho to opravuje.
+ * @param {ForecastDay[]} days @param {number} selDay
+ */
+export function weekListModel(days, selDay) {
+    // Týždeň bez jedinej kWh (polárna noc, pokazené dáta) by z delenia urobil NaN a pásiky
+    // by zmizli aj s rozložením mriežky - vtedy sú prázdne, čo je pravda o takom týždni.
+    const max = Math.max(...days.map((d) => d.kwhTotal), 0);
+    return days.map((d, i) => ({
+        dayIndex: i,
+        today: i === 0,
+        sel: i === selDay,
+        name: weekDayName(d.date, i),
+        dateLabel: weekDateLabel(d.date),
+        cloudAvgPct: d.cloudAvgPct,
+        // Celé kWh: pri predpovedi na týždeň je desatina falošná presnosť a v riadku
+        // zaberá miesto, ktoré patrí pásiku.
+        kwh: Math.round(d.kwhTotal),
+        barPct: max > 0 ? Math.round((100 * d.kwhTotal) / max) : 0,
+    }));
 }
 
 /** Percento využitia jasnej oblohy pre deň. @param {ForecastDay} day */

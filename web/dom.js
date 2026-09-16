@@ -71,6 +71,7 @@ function sedemdniDom() {
         weekBlockBars: byId('week-block-bars'),
         weekBlockCurve: byId('week-block-curve'),
         weekBlockTable: byId('week-block-table'),
+        weekBlockList: byId('week-block-list'),
         weekMsgBlock: byId('week-msg-block'),
         weekToday: byId('week-today'),
         weekTodayBadge: byId('week-today-badge'),
@@ -102,6 +103,9 @@ function sedemdniDom() {
         weekCurve: byId('week-curve'),
         weekCurveTooltip: byId('week-curve-tooltip'),
         weekTbody: byId('week-tbody'),
+        weekList: byId('week-list'),
+        weekListTotal: byId('week-list-total'),
+        weekListAvg: byId('week-list-avg'),
         weekMsgTitle: byId('week-msg-title'),
         weekMsgBody: byId('week-msg-body'),
     };

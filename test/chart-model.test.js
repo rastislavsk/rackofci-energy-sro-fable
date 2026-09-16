@@ -19,6 +19,7 @@ import {
     usePct,
     WEEK_HOURS,
     weekBarsModel,
+    weekListModel,
     weekHeatModel,
     weekStatsModel,
 } from '../shared/chart-model.js';
@@ -225,6 +226,36 @@ test('weekBarsModel: showCeiling = false vypne čiaru stropu, ale nie tooltip', 
         'bez stropu nemá žiadny stĺpec clearY',
     );
     assert.match(m.bars[0].tip.text, /kWh · strop/, 'tooltip pri hoveri stále ukáže strop');
+});
+
+test('weekListModel: pásik podľa najsilnejšieho dňa, výroba v celých kWh', () => {
+    const rows = weekListModel(forecast.days, 3);
+    assert.equal(rows.length, 7);
+    assert.ok(rows[0].today && rows[3].sel, 'dnešok a vybraný deň sú označené');
+    assert.equal(rows[0].name, 'Dnes');
+    assert.equal(rows[1].name, 'Zajtra');
+    // Najsilnejší deň má plný pásik, žiadny iný ho nepresiahne.
+    const najsilnejsi = Math.max(...forecast.days.map((d) => d.kwhTotal));
+    assert.equal(rows[forecast.days.findIndex((d) => d.kwhTotal === najsilnejsi)].barPct, 100);
+    assert.ok(
+        rows.every((r) => r.barPct >= 0 && r.barPct <= 100),
+        'pásik ostáva v rozsahu 0-100 %',
+    );
+    assert.ok(
+        rows.every((r) => Number.isInteger(r.kwh)),
+        'výroba je v celých kWh',
+    );
+});
+
+test('weekListModel: týždeň bez výroby má prázdne pásiky, nie NaN', () => {
+    const rows = weekListModel(
+        forecast.days.map((d) => ({ ...d, kwhTotal: 0 })),
+        0,
+    );
+    assert.ok(
+        rows.every((r) => r.barPct === 0 && r.kwh === 0),
+        'delenie nulou nesmie pásiky rozhodiť',
+    );
 });
 
 test('weekStatsModel', () => {

@@ -1,6 +1,11 @@
 // Karta 7 dní: súhrn, mapa výroby, denné stĺpce, priebeh vybraného dňa, tabuľka, správa.
 // Na mobile je to rozdelené na dve obrazovky - prehľad dní a detail vybraného dňa (weekDetail
 // v stave); na širokej obrazovke je miesta dosť a vidno všetko naraz.
+//
+// Prehľad dní má dve podoby a vidno vždy práve jednu. Na mobile je to rebríček (jedno veľké
+// číslo za týždeň a sedem riadkov s pásikmi), na širokej obrazovke bubliny Dnes/Zajtra/spolu
+// a tabuľka so všetkými stĺpcami. Údaje, ktoré z mobilného prehľadu odišli (využitie, špička,
+// oblačnosť v percentách), ostávajú o ťuknutie ďalej v detaile dňa.
 
 import {
     chartDims,
@@ -10,6 +15,7 @@ import {
     visibleHours,
     weekBarsModel,
     weekHeatModel,
+    weekListModel,
     weekStatsModel,
 } from '../../shared/chart-model.js';
 import { INSTALLED_PV_KW, SITE } from '../../shared/config.js';
@@ -98,7 +104,9 @@ function renderStats(s, dom, detail) {
 
 /** @param {number | null} cloudPct */
 function skyCell(cloudPct) {
-    if (cloudPct == null) return '–';
+    // Aj neznáma obloha vracia ten istý obal: v rebríčku je bunka mriežky a holý text by
+    // stĺpce rozhodil.
+    if (cloudPct == null) return '<span class="cloud-cell">–</span>';
     if (cloudPct < 30) return `<span class="cloud-cell sun" title="slnečno">${ICON_SUN}</span>`;
     if (cloudPct < 70) return `<span class="cloud-cell partly" title="polooblačno">${ICON_PARTLY}</span>`;
     return `<span class="cloud-cell cloud" title="zamračené">${ICON_CLOUD}</span>`;
@@ -134,6 +142,28 @@ function renderTableAndTabs(days, sel, dom) {
                 `<td>${d.peakKw.toFixed(1)} kW<span class="sub">${peakAt}</span></td></tr>`
             );
         })
+        .join('');
+}
+
+/**
+ * Rebríček dní - prehľad karty na mobile. Hore jediné veľké číslo za týždeň (hlavička je
+ * tlačidlo a otvára detail týždňa), pod ním riadok na deň: meno s dátumom, obloha, pásik
+ * a výroba. Riadok je tlačidlo, otvára detail toho dňa.
+ * @param {ReturnType<typeof weekStatsModel>} s @param {ReturnType<typeof weekListModel>} rows
+ * @param {import('../dom.js').Dom} dom
+ */
+function renderList(s, rows, dom) {
+    dom.weekListTotal.textContent = String(Math.round(s.totalKwh));
+    dom.weekListAvg.textContent = `${fmt1(s.avgKwh)} kWh`;
+    dom.weekList.innerHTML = rows
+        .map(
+            (r) =>
+                `<button type="button" class="wday${r.today ? ' today' : ''}${r.sel ? ' sel' : ''}" data-day-index="${r.dayIndex}">` +
+                `<span class="wday-name">${escapeHtml(r.name)}<span class="wday-date">${escapeHtml(r.dateLabel)}</span></span>` +
+                skyCell(r.cloudAvgPct) +
+                `<span class="wday-bar"><i style="width:${r.barPct}%"></i></span>` +
+                `<span class="wday-kwh">${r.kwh}<span class="u">kWh</span></span></button>`,
+        )
         .join('');
 }
 
@@ -173,7 +203,12 @@ function renderCurve(state, day, dom) {
  */
 function renderView(detail, narrow, dom) {
     dom.panels['7dni'].classList.toggle('detail', !!detail);
-    for (const el of [dom.weekHead, dom.weekTrio, dom.weekBlockTable]) el.classList.toggle('hidden', !!detail);
+    dom.weekHead.classList.toggle('hidden', !!detail);
+    // Prehľad dní má dve podoby a vidno vždy práve jednu: na mobile rebríček, na širokej
+    // obrazovke bubliny a tabuľku. V detaile nie je ani jedna. Detail existuje len na mobile
+    // (viď renderSedemdni), takže bubliny a tabuľku stačí viazať na šírku.
+    dom.weekBlockList.classList.toggle('hidden', !narrow || !!detail);
+    for (const el of [dom.weekTrio, dom.weekBlockTable]) el.classList.toggle('hidden', narrow);
     // Správa patrí k tomu, čo je otvorené: v prehľade dní preto nie je vôbec, v detaile dňa
     // hovorí o tom dni a v detaile týždňa o najsilnejšom dni týždňa.
     dom.weekMsgBlock.classList.toggle('hidden', narrow && !detail);
@@ -250,10 +285,11 @@ function renderEmpty(dom) {
         dom.weekCurveStat,
         dom.weekDayTabs,
         dom.weekTbody,
+        dom.weekList,
         dom.weekHeatScale,
     ])
         el.innerHTML = '';
-    for (const el of [dom.weekToday, dom.weekTomorrow, dom.weekTotal]) el.textContent = '–';
+    for (const el of [dom.weekToday, dom.weekTomorrow, dom.weekTotal, dom.weekListTotal, dom.weekListAvg]) el.textContent = '–';
     dom.weekCurveLiveLegend.classList.add('hidden');
     for (const el of [
         dom.weekTodayBadge,
@@ -276,12 +312,20 @@ export function renderSedemdni(state, dom) {
     // Bez dát nie je čo otvárať - karta ostáva na prehľade so správou "Predpoveď sa pripravuje".
     const detail = !state.wide && days.length > 0 ? state.weekDetail : null;
     renderView(detail, !state.wide, dom);
-    if (!days.length) return renderEmpty(dom);
+    if (!days.length) {
+        // Prázdny rebríček by na mobile ukazoval kartu so samými pomlčkami - z prehľadu preto
+        // ostáva len tá správa, a tú musí byť vidno aj tam, kde ju renderView inak skrýva.
+        dom.weekBlockList.classList.add('hidden');
+        dom.weekMsgBlock.classList.remove('hidden');
+        return renderEmpty(dom);
+    }
     const sel = Math.min(state.weekSelDay, days.length - 1);
 
     renderDayHead(detail, days[sel], sel, dom);
     renderDayAnim(detail, sel, state.weekDayDir, dom);
-    renderStats(weekStatsModel(days, state.pv, state.forecast ? state.forecast.tomorrowSunny : false), dom, !!detail);
+    const stats = weekStatsModel(days, state.pv, state.forecast ? state.forecast.tomorrowSunny : false);
+    renderStats(stats, dom, !!detail);
+    renderList(stats, weekListModel(days, sel), dom);
 
     // Mapa a stĺpce dostanú skutočný rozmer karty len na širokej obrazovke; na mobile si
     // plátno určia samy, aby rozloženie ostalo také, aké bolo.

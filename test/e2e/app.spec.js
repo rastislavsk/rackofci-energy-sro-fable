@@ -2,7 +2,7 @@
 // doménovou logikou (shared/), takže test chytí rozdiel medzi modelom a tým, čo je v DOM.
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { ringPercent, usePct, visibleHours, WEEK_HOURS } from '../../shared/chart-model.js';
+import { ringPercent, usePct, visibleHours, weekListModel, WEEK_HOURS } from '../../shared/chart-model.js';
 import { LEGACY_SOURCES, PREVIEW, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
 import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
@@ -336,31 +336,40 @@ function viditelneBloky(page) {
 }
 
 /**
- * Karta 7 dní je na mobile rozdelená na dve obrazovky: prehľad (tri bubliny, tabuľka,
- * najsilnejší deň) a detail dňa, ktorý sa otvorí klikom na deň v tabuľke. V detaile ide
- * Denná výroba, Priebeh výroby a až potom Mapa výroby so zvýrazneným dňom.
+ * Karta 7 dní je na mobile rozdelená na dve obrazovky: prehľad (rebríček dní) a detail dňa,
+ * ktorý sa otvorí klikom na riadok rebríčka. V detaile ide Denná výroba, Priebeh výroby
+ * a až potom Mapa výroby so zvýrazneným dňom.
+ *
+ * Prehľad je na mobile rebríček, nie bubliny s tabuľkou - tie patria širokej obrazovke.
+ * Údaje, ktoré z neho odišli (využitie, špička), sú o ťuknutie ďalej v detaile dňa.
  */
 test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ page }) => {
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
 
-    // Prehľad: bubliny a tabuľka, grafy sú až v detaile.
-    await expect(page.locator('#week-tbody tr')).toHaveCount(7);
-    await expect(page.locator('#week-today')).toHaveText(fmt1(forecast.days[0].kwhTotal));
+    // Prehľad: rebríček so siedmimi dňami, grafy sú až v detaile.
+    await expect(page.locator('#week-list .wday')).toHaveCount(7);
+    await expect(page.locator('#week-list-total')).toHaveText(String(Math.round(forecast.days.reduce((a, d) => a + d.kwhTotal, 0))));
+    // Bubliny a tabuľka na mobile nie sú vôbec - prehľad je práve jeden.
+    await expect(page.locator('#week-trio')).toBeHidden();
+    await expect(page.locator('#week-block-table')).toBeHidden();
     // Správa patrí k tomu, čo je otvorené - v prehľade dní preto nie je.
     await expect(page.locator('#week-msg-block')).toBeHidden();
     await expect(page.locator('#week-day-head')).toBeHidden();
-    expect(await viditelneBloky(page)).toEqual(['week-block-table']);
+    expect(await viditelneBloky(page)).toEqual(['week-block-list']);
 
-    // Percento využitia má odtieň podľa toho, aký silný deň je - očakávanie sa počíta tou
-    // istou funkciou ako v appke. Štvrtý stĺpec tabuľky je Využitie.
-    for (const [i, day] of forecast.days.entries())
-        await expect(page.locator(`#week-tbody tr[data-day-index="${i}"] td:nth-child(4)`)).toHaveClass(`mid${useTier(usePct(day))}`);
+    // Dĺžka pásika je výroba dňa voči najsilnejšiemu dňu - očakávanie sa počíta tou istou
+    // funkciou ako v appke, takže test chytí rozdiel medzi modelom a tým, čo je v DOM.
+    for (const r of weekListModel(forecast.days, 0))
+        await expect(page.locator(`#week-list [data-day-index="${r.dayIndex}"] .wday-bar i`)).toHaveAttribute(
+            'style',
+            `width:${r.barPct}%`,
+        );
 
     // Klik na deň otvorí jeho detail: priebeh toho dňa a jeho riadok z mapy výroby.
-    await page.locator('#week-tbody tr[data-day-index="5"]').click();
+    await page.locator('#week-list [data-day-index="5"]').click();
     await expect(page.locator('#week-day-title')).toHaveText(weekDayLong(forecast.days[5].date, 5));
-    await expect(page.locator('#week-trio')).toBeHidden();
+    await expect(page.locator('#week-block-list')).toBeHidden();
     await expect(page.locator('#week-day-tabs')).toBeHidden();
     expect(await viditelneBloky(page)).toEqual(['week-block-curve', 'week-block-heat']);
 
@@ -383,8 +392,8 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
     // Späť sa vraciame na prehľad, výber dňa v ňom ostáva.
     await page.locator('#week-day-back').click();
     await expect(page.locator('#week-day-head')).toBeHidden();
-    await expect(page.locator('#week-tbody tr.sel')).toHaveAttribute('data-day-index', '5');
-    expect(await viditelneBloky(page)).toEqual(['week-block-table']);
+    await expect(page.locator('#week-list .wday.sel')).toHaveAttribute('data-day-index', '5');
+    expect(await viditelneBloky(page)).toEqual(['week-block-list']);
 
     // Odchod na inú kartu a návrat začína zase na prehľade.
     await page.locator('#nav-terazky').click();
@@ -394,36 +403,38 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
 });
 
 /**
- * Bubliny Dnes a Zajtra sú druhá cesta do detailu dňa - majú robiť presne to, čo klik na
- * ten istý deň v Prehľade dní. Bublina "7 dní spolu" k dňu nepatrí, tá nikam nevedie.
+ * Dnes a Zajtra sú v rebríčku prvé dva riadky a majú robiť presne to, čo ktorýkoľvek iný
+ * deň - meno navrchu ich nerobí výnimkou. Kým to boli bubliny nad tabuľkou, bola to druhá
+ * cesta do detailu; teraz je jedna.
  */
-test('7 dní na mobile: bubliny Dnes a Zajtra otvárajú detail toho dňa', async ({ page }) => {
+test('7 dní na mobile: riadky Dnes a Zajtra otvárajú detail toho dňa', async ({ page }) => {
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
 
-    await page.locator('#week-trio .stat[data-day-index="0"]').click();
+    await page.locator('#week-list [data-day-index="0"]').click();
     await expect(page.locator('#week-day-title')).toHaveText(weekDayLong(forecast.days[0].date, 0));
     await expect(page.locator('#week-curve-stat')).toContainText(`${fmt1(forecast.days[0].kwhTotal)} kWh`);
     await page.locator('#week-day-back').click();
 
-    await page.locator('#week-trio .stat[data-day-index="1"]').click();
+    await page.locator('#week-list [data-day-index="1"]').click();
     await expect(page.locator('#week-day-title')).toHaveText(weekDayLong(forecast.days[1].date, 1));
     await expect(page.locator('#week-curve-stat')).toContainText(`${fmt1(forecast.days[1].kwhTotal)} kWh`);
-    // Výber sa prenáša do celej karty rovnako ako z tabuľky.
+    // Výber sa prenáša do celej karty rovnako ako z ktoréhokoľvek iného riadka.
     await page.locator('#week-day-back').click();
-    await expect(page.locator('#week-tbody tr.sel')).toHaveAttribute('data-day-index', '1');
+    await expect(page.locator('#week-list .wday.sel')).toHaveAttribute('data-day-index', '1');
 
     expect(errors).toEqual([]);
 });
 
 /**
- * Bublina "7 dní spolu" nepatrí k dňu, ale k celému týždňu - otvára preto detail týždňa:
- * dennú výrobu a mapu výroby, bez krivky jedného dňa.
+ * Hlavička rebríčka ("Spolu za 7 dní") nepatrí k dňu, ale k celému týždňu - otvára preto
+ * detail týždňa: dennú výrobu a mapu výroby, bez krivky jedného dňa. Je to tá istá cesta,
+ * akou na širokej obrazovke vedie bublina "7 dní spolu".
  */
-test('7 dní na mobile: bublina 7 dní spolu otvára detail týždňa', async ({ page }) => {
+test('7 dní na mobile: hlavička rebríčka otvára detail týždňa', async ({ page }) => {
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
-    await page.locator('#week-trio .stat[data-week-detail]').click();
+    await page.locator('.week-list-hero').click();
 
     await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
     expect(await viditelneBloky(page)).toEqual(['week-block-bars', 'week-block-heat']);
@@ -435,7 +446,7 @@ test('7 dní na mobile: bublina 7 dní spolu otvára detail týždňa', async ({
     // Späť vedie na prehľad dní rovnako ako z detailu dňa.
     await page.locator('#week-day-back').click();
     await expect(page.locator('#week-day-head')).toBeHidden();
-    expect(await viditelneBloky(page)).toEqual(['week-block-table']);
+    expect(await viditelneBloky(page)).toEqual(['week-block-list']);
     expect(errors).toEqual([]);
 });
 
@@ -447,13 +458,13 @@ test('7 dní na mobile: bublina 7 dní spolu otvára detail týždňa', async ({
 test('7 dní: priebeh dnešného dňa ukazuje nameranú výrobu', async ({ page }) => {
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
-    await page.locator('#week-tbody tr[data-day-index="0"]').click();
+    await page.locator('#week-list [data-day-index="0"]').click();
     await expect(page.locator('#week-curve path.line-real')).toHaveCount(1);
     await expect(page.locator('#week-curve circle.dot-real')).toHaveCount(1);
     await expect(page.locator('#week-curve-live-legend')).toBeVisible();
 
     await page.locator('#week-day-back').click();
-    await page.locator('#week-tbody tr[data-day-index="3"]').click();
+    await page.locator('#week-list [data-day-index="3"]').click();
     await expect(page.locator('#week-curve path.line-real')).toHaveCount(0);
     await expect(page.locator('#week-curve-live-legend')).toBeHidden();
     expect(errors).toEqual([]);
@@ -465,6 +476,12 @@ test('7 dní na desktope: karta ostáva celá, výber dňa naprieč komponentmi'
     await page.setViewportSize({ width: 1366, height: 768 });
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
+    // Tabuľka je len tu - na mobile ju nahradil rebríček, takže odtieň percenta využitia
+    // patrí do desktopového testu. Očakávanie sa počíta tou istou funkciou ako v appke.
+    // Štvrtý stĺpec tabuľky je Využitie.
+    for (const [i, day] of forecast.days.entries())
+        await expect(page.locator(`#week-tbody tr[data-day-index="${i}"] td:nth-child(4)`)).toHaveClass(`mid${useTier(usePct(day))}`);
+
     await page.locator('#week-day-tabs [data-day-index="3"]').click();
     await expect(page.locator('#week-day-tabs .utab.active')).toHaveAttribute('data-day-index', '3');
     await expect(page.locator('#week-tbody tr.sel')).toHaveAttribute('data-day-index', '3');
@@ -478,12 +495,11 @@ test('7 dní na desktope: karta ostáva celá, výber dňa naprieč komponentmi'
 });
 
 /**
- * Karta "Dnes" má najviac dát (odznak počasia, špičku, priebeh dňa), preto dostane na
- * mobile celú šírku (Zajtra a 7 dní spolu sú vedľa seba užšie) a s ňou aj meta riadok,
- * ktorý má inak (pre nedostatok miesta) zobrazený len desktop - inak by tam ostal
- * nevyužitý priestor.
+ * Bubliny sú od zavedenia rebríčka len na širokej obrazovke, kde majú všetky tri meta riadok
+ * so špičkou a využitím. Na mobile to, čo v ňom stálo, hovorí detail dňa.
  */
-test('7 dní: karta "Dnes" má na mobile aj meta riadok z desktop verzie', async ({ page }) => {
+test('7 dní na desktope: bubliny majú meta riadok so špičkou a využitím', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 });
     const errors = await openApp(page);
     await page.locator('#nav-7dni').click();
     const today = forecast.days[0];
@@ -492,9 +508,8 @@ test('7 dní: karta "Dnes" má na mobile aj meta riadok z desktop verzie', async
         `⚡ ${today.peakKw.toFixed(1)} kW o ${hourLabel(today.peakHour)}` + (pct == null ? '' : `${pct} % z jasnej oblohy`);
     await expect(page.locator('#week-today-meta')).toBeVisible();
     await expect(page.locator('#week-today-meta')).toHaveText(expectedMeta);
-    // Zajtra/7 dní spolu ostávajú na mobile bez meta riadku - na to majú príliš úzky stĺpec.
-    await expect(page.locator('#week-tomorrow-meta')).toBeHidden();
-    await expect(page.locator('#week-total-meta')).toBeHidden();
+    await expect(page.locator('#week-tomorrow-meta')).toBeVisible();
+    await expect(page.locator('#week-total-meta')).toBeVisible();
     expect(errors).toEqual([]);
 });
 
@@ -570,7 +585,7 @@ test('prístupnosť: žiadne závažné nálezy axe na žiadnej karte', async ({
     // Detail dňa je vlastná obrazovka s vlastným ovládaním (šípka späť), preto sa kontroluje zvlášť.
     await page.locator('#nav-7dni').click();
     await pockajNaPrechod(page);
-    await page.locator('#week-tbody tr[data-day-index="5"]').click();
+    await page.locator('#week-list [data-day-index="5"]').click();
     const detail = await new AxeBuilder({ page }).analyze();
     const vazne = detail.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(vazne.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
@@ -789,7 +804,7 @@ test('7 dní - strop jasnej oblohy: na desktope zmizne aj s legendou, na mobile 
 
     // Na mobile žijú stĺpce v detaile dňa - strop aj jeho legenda sa kontrolujú tam.
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.locator('#week-trio .stat[data-week-detail]').click();
+    await page.locator('.week-list-hero').click();
     await expect(page.locator('#week-bars .clear-cap')).toHaveCount(7);
     await expect(page.locator('#week-bars-clear-legend')).toBeVisible();
     expect(errors).toEqual([]);
@@ -829,7 +844,7 @@ test('7 dní - správa "Najsilnejší deň": na desktope pod tabuľkou, na mobil
 
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.locator('#week-msg-block')).toBeHidden();
-    await page.locator('#week-trio .stat[data-week-detail]').click();
+    await page.locator('.week-list-hero').click();
     const mobile = await page.evaluate(() => ({
         msgTop: document.querySelector('#panel-7dni .msg-block').getBoundingClientRect().top,
         heatBottom: document.querySelector('#week-block-heat').getBoundingClientRect().bottom,
@@ -941,10 +956,10 @@ async function ocakavajKartu(page, panel) {
 }
 
 /** Graf priebehu dňa je na mobile až v detaile vybraného dňa - otvára sa klikom na riadok
- * v prehľade dní. @param {import('@playwright/test').Page} page @param {number} [den] */
+ * rebríčka. @param {import('@playwright/test').Page} page @param {number} [den] */
 async function otvorDetailDna(page, den = 0) {
     await page.locator('#nav-7dni').click();
-    await page.locator(`#week-tbody tr[data-day-index="${den}"]`).click();
+    await page.locator(`#week-list [data-day-index="${den}"]`).click();
     await expect(page.locator('#week-curve-wrap')).toBeVisible();
 }
 
@@ -995,7 +1010,7 @@ test('tlačidlo Späť vracia o krok v appke, dopredu ide zase tam', async ({ pa
 
     await page.locator('#nav-zdielat').click();
     await page.locator('#nav-7dni').click();
-    await page.locator('#week-tbody tr[data-day-index="5"]').click();
+    await page.locator('#week-list [data-day-index="5"]').click();
     await expect(page.locator('#week-day-head')).toBeVisible();
     expect(page.url(), 'appka nemení adresu, odkaz na ňu ostáva jeden').toBe(adresa);
 
@@ -1134,7 +1149,7 @@ test.describe('listovanie kariet prstom', () => {
         await page.setViewportSize({ width: 375, height: 667 });
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
-        await page.locator('#week-trio .stat[data-week-detail]').click();
+        await page.locator('.week-list-hero').click();
         await expect(page.locator('#week-bars-wrap')).toBeVisible();
         expect(
             await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
@@ -1179,52 +1194,44 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    test('ťah ponad tabuľku 7 dní prepne kartu a neotvorí detail dňa', async ({ page }) => {
+    test('ťah ponad rebríček dní prepne kartu a neotvorí detail dňa', async ({ page }) => {
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
 
-        // Na tejto šírke sa tabuľka zmestí celá, nemá sa kam posúvať - gesto teda patrí karte.
-        // Klik, ktorý by po ťahu otvoril detail dňa, appka zruší.
-        await swipe(page, '#week-tbody', { dx: -120 });
+        // Rebríček sa nemá kam posúvať do strán, gesto teda patrí karte. Klik, ktorý by po
+        // ťahu otvoril detail dňa, appka zruší.
+        await swipe(page, '#week-list', { dx: -120 });
         await ocakavajKartu(page, 'zdielat');
         await page.locator('#nav-7dni').click();
         await expect(page.locator('#week-day-head')).toBeHidden();
         expect(errors).toEqual([]);
     });
 
-    test('na bežnom telefóne (360 px) sa tabuľka 7 dní zmestí a ťah rovno prepne kartu', async ({ page }) => {
-        // Najužší bežný displej (Galaxy S22 a spol.) má 360 px. Kým sa tabuľka nezmestila,
-        // prvý ťah do strán posunul ju a kartu prelistoval až ten druhý - z pohľadu človeka
-        // "swipe nefunguje". Šírku drží odsadenie buniek v style.css.
-        await page.setViewportSize({ width: 360, height: 844 });
-        const errors = await openApp(page);
-        await page.locator('#nav-7dni').click();
-        const wrap = page.locator('.week-tbl-wrap');
-        expect(await wrap.evaluate((el) => el.scrollWidth - el.clientWidth), 'tabuľka pretekala do strán').toBeLessThanOrEqual(0);
+    /**
+     * Prehľad dní sa na mobile nesmie dať posunúť do strán. Kým tu stála tabuľka s piatimi
+     * stĺpcami, na úzkom displeji pretekala a prvý ťah posunul ju - kartu prelistoval až ten
+     * druhý, z pohľadu človeka "swipe nefunguje". Rebríček sa vojde do každej šírky, lebo
+     * pásik je pružný stĺpec mriežky (`1fr` v .wday) a zvyšok má pevné šírky.
+     *
+     * Testujú sa obe hranice naraz: bežný úzky telefón (360 px, Galaxy S22 a spol.) aj
+     * vonkajší displej skladačky (280 px), kde tabuľka pretekala vždy.
+     */
+    test('rebríček dní sa zmestí aj na 280 px a ťah rovno prepne kartu', async ({ page }) => {
+        for (const width of [360, 280]) {
+            await page.setViewportSize({ width, height: 844 });
+            const errors = await openApp(page);
+            await page.locator('#nav-7dni').click();
 
-        await swipe(page, '#week-tbody', { dx: -120 });
-        await ocakavajKartu(page, 'zdielat');
-        expect(errors).toEqual([]);
-    });
+            const pretecenie = await page.locator('#week-block-list').evaluate((el) => {
+                const pasy = [el, ...el.querySelectorAll('*')].map((n) => n.scrollWidth - n.clientWidth);
+                return Math.max(...pasy);
+            });
+            expect(pretecenie, `šírka ${width}px: prehľad dní pretekal do strán`).toBeLessThanOrEqual(0);
 
-    test('na úzkom displeji si posuvná tabuľka 7 dní ťahanie necháva', async ({ page }) => {
-        // Pod 360 px (tu vonkajší displej skladačky) tabuľka aj tak pretečie a dá sa posúvať
-        // do strán. Kým má kam ísť, patrí gesto jej - inak by sa posledný stĺpec na takom
-        // telefóne nedal pozrieť.
-        await page.setViewportSize({ width: 280, height: 844 });
-        const errors = await openApp(page);
-        await page.locator('#nav-7dni').click();
-        const wrap = page.locator('.week-tbl-wrap');
-        expect(await wrap.evaluate((el) => el.scrollWidth - el.clientWidth), 'tabuľka sa mala kam posúvať').toBeGreaterThan(0);
-
-        await swipe(page, '#week-tbody', { dx: -120 });
-        await ocakavajKartu(page, '7dni');
-
-        // Na ľavom kraji už tabuľka doprava nemá kam ísť, tam gesto prevezme karta.
-        await page.evaluate(() => document.querySelector('.week-tbl-wrap')?.scrollTo({ left: 0 }));
-        await swipe(page, '#week-tbody', { dx: 120 });
-        await ocakavajKartu(page, 'terazky');
-        expect(errors).toEqual([]);
+            await swipe(page, '#week-list', { dx: -120 });
+            await ocakavajKartu(page, 'zdielat');
+            expect(errors).toEqual([]);
+        }
     });
 
     /** Značka "teraz" je na prstenci a okolo 06:00 stojí na pravom okraji ciferníka, kde jej
@@ -1293,7 +1300,7 @@ test.describe('listovanie kariet prstom', () => {
     test('v detaile dňa listuje ťah dni, na kraji týždňa sa zastaví a kartu neprepne', async ({ page }) => {
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
-        await page.locator('#week-tbody tr[data-day-index="3"]').click();
+        await page.locator('#week-list [data-day-index="3"]').click();
         await ocakavajDetailDna(page, 3);
 
         // Doľava sa ide na ďalší deň, doprava na predchádzajúci - ako inde na karty, len
@@ -1305,13 +1312,13 @@ test.describe('listovanie kariet prstom', () => {
 
         // Posledný deň týždňa: doľava už nie je kam ísť a ťah nesmie prepnúť kartu.
         await page.locator('#week-day-back').click();
-        await page.locator('#week-tbody tr[data-day-index="6"]').click();
+        await page.locator('#week-list [data-day-index="6"]').click();
         await swipe(page, '#week-day-head', { dx: -120 });
         await ocakavajDetailDna(page, 6);
 
         // Prvý deň: doprava tiež nikam. Von z detailu vedie šípka späť, nie ťah.
         await page.locator('#week-day-back').click();
-        await page.locator('#week-tbody tr[data-day-index="0"]').click();
+        await page.locator('#week-list [data-day-index="0"]').click();
         await swipe(page, '#week-day-head', { dx: 120 });
         await ocakavajDetailDna(page, 0);
         await page.locator('#week-day-back').click();
@@ -1326,7 +1333,7 @@ test.describe('listovanie kariet prstom', () => {
     test('prelistovanie dňa prisunie detail z tej strany, ktorou sa ťahalo', async ({ page }) => {
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
-        await page.locator('#week-tbody tr[data-day-index="2"]').click();
+        await page.locator('#week-list [data-day-index="2"]').click();
         await ocakavajDetailDna(page, 2);
 
         // Ťah doľava: nový deň príde sprava (bez triedy day-in-prev), na hlavičke aj na mriežke.
@@ -1352,7 +1359,7 @@ test.describe('listovanie kariet prstom', () => {
         // Otvorenie detailu z prehľadu nie je listovanie - tam sa neprisúva nič.
         await page.locator('#week-day-back').click();
         await sledujAnimacie(page);
-        await page.locator('#week-tbody tr[data-day-index="5"]').click();
+        await page.locator('#week-list [data-day-index="5"]').click();
         await ocakavajDetailDna(page, 5);
         expect(await animacieDna(page), 'otvorenie detailu sa tvárilo ako listovanie').toHaveLength(0);
         expect(errors).toEqual([]);
@@ -1361,7 +1368,7 @@ test.describe('listovanie kariet prstom', () => {
     test('v detaile týždňa ťah neurobí nič - je tam jediná obrazovka', async ({ page }) => {
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
-        await page.locator('#week-trio .stat[data-week-detail]').click();
+        await page.locator('.week-list-hero').click();
         await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
 
         for (const dx of [-120, 120]) {

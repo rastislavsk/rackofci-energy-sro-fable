@@ -27,16 +27,16 @@ function initNavigation(store, dom) {
         if (panelBtn instanceof HTMLElement && panelBtn.dataset.panel) {
             store.setState(panelChange(store.get().panel, /** @type {Panel} */ (panelBtn.dataset.panel)));
         }
-        // Deň sa dá vybrať v tabuľke, v bublinách Dnes/Zajtra, v prepínači dní aj priamo
-        // v grafoch. Prehľad dní a bubliny navyše otvoria detail dňa (na mobile; na širokej
-        // obrazovke sa stav neprejaví) - obe sú prehľadom, z ktorého sa ide do detailu,
-        // kým výber v grafoch a v prepínači len prepína, čo je na nich vidno.
+        // Deň sa dá vybrať v rebríčku, v tabuľke, v bublinách Dnes/Zajtra, v prepínači dní aj
+        // priamo v grafoch. Prehľad dní - v oboch podobách - navyše otvorí detail dňa (na mobile;
+        // na širokej obrazovke sa stav neprejaví), kým výber v grafoch a v prepínači len prepína,
+        // čo je na nich vidno.
         const totalBtn = target.closest('[data-week-detail]');
         if (totalBtn instanceof HTMLElement) store.setState({ weekDetail: 'week' });
         const weekBtn = target.closest('[data-day-index]');
         if (weekBtn instanceof Element && dom.panels['7dni'].contains(weekBtn)) {
             const weekSelDay = Number(weekBtn.getAttribute('data-day-index'));
-            const doDetailu = dom.weekTbody.contains(weekBtn) || dom.weekTrio.contains(weekBtn);
+            const doDetailu = dom.weekList.contains(weekBtn) || dom.weekTbody.contains(weekBtn) || dom.weekTrio.contains(weekBtn);
             store.setState(doDetailu ? { weekSelDay, weekDetail: 'day' } : { weekSelDay });
         }
         // Bodka len posunie pás; stránka sa dopočíta z výslednej pozície ako pri prste. Cieľ je
