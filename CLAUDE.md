@@ -82,6 +82,34 @@ z CDN a berie prehliadač z Playwrightu, takže by každá aktualizácia písma 
 sčervenala PR, ktorý sa vzhľadu ani netýka. Na jednom stroji sú obrázky bajtovo rovnaké,
 takže rozdiel v `git status` znamená naozajstnú zmenu vzhľadu.
 
+## Nasadenie a cache: prvok v HTML a `byId` sa menia v dvoch krokoch
+
+**Pravidlo: v jednom nasadení nikdy nepribudne požiadavka na prvok, ktorý druhá strana ešte
+nemá.** Najprv ide von tá strana, ktorá prvok _poskytuje_, a až ďalším nasadením tá, ktorá ho
+_vyžaduje_.
+
+GitHub Pages posiela každý súbor s `cache-control: max-age=600` a bez revalidácie. Appka nemá
+build krok, takže `index.html` a moduly vo `web/` sú samostatné súbory s vlastnou platnosťou
+cache – prehliadač ich po nasadení vie desať minút miešať a načítať novú stránku so starým
+skriptom (alebo naopak). `byId` vo `web/dom.js` na chýbajúci prvok zámerne hodí výnimku, takže
+`collectDom()` spadne ešte pred prvým `render()` a v stránke ostane to, čo je v statickom HTML:
+`00:00`, „načítavam…" a prázdny ciferník. Appka je do vypršania cache mŕtva. Stalo sa to
+naozaj, keď jedno nasadenie odstránilo `#week-curve-now-badge` z HTML aj z `dom.js` naraz.
+
+Prakticky:
+
+- **Rušíš prvok**: 1. nasadenie zmaže referenciu v `dom.js` a jeho vykresľovanie (prvok
+  v HTML ostane, len ho nikto nezobrazí – navonok je zmena hotová hneď), 2. nasadenie zmaže
+  prvok z `index.html` a jeho pravidlá v `style.css`.
+- **Pridávaš prvok**: opačné poradie – 1. nasadenie pridá prvok do `index.html`, 2. nasadenie ho začne používať v `dom.js`.
+- Medzi krokmi stačí počkať, kým vyprší cache (`max-age=600`, teda desať minút od nasadenia).
+
+Netýka sa to zmien, kde sa HTML a JS navzájom nepotrebujú – text, farba, CSS, výpočet
+v `shared/`. Tie idú ako doteraz jedným nasadením.
+
+CI toto nechytí: v rámci jedného commitu je repozitár vždy konzistentný, chyba vzniká až
+kombináciou dvoch nasadení v prehliadači. Drží to len toto pravidlo.
+
 ## Proces
 
 Vetvy `claude/<téma>`, jeden pull request na tému, commit správy v štýle `feat: …`,
