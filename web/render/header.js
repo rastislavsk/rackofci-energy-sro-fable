@@ -26,7 +26,9 @@ export function renderHeader(state, dom) {
     const live = heroModel({ ...state, previewMinutes: null });
     const shown = state.previewMinutes === null ? live : heroModel(state);
     const accent = live.accent;
-    dom.headerStatusDot.className = `live-dot${accent === 'red' ? ' status-red' : accent === 'amber' ? ' status-amber' : ''}`;
+    // Farbu bodky (a s ňou aj prúžok nad aktívnou kartou v navigácii) drží data-accent
+    // na <html> - mapovanie na konkrétnu farbu je v style.css pri --live-rgb.
+    dom.root.dataset.accent = accent || '';
     // Pozadie drží farbu tarifného okna (tier), nie "smart" farbu bodky (accent, tá počíta
     // aj so slnkom) - hovorí teda to isté, čo segment pod bežcom na dennom prstenci.
     dom.root.dataset.tier = shown.tier || '';
