@@ -46,7 +46,6 @@ function terazkyDom() {
         verdictGoRow: byId('verdict-go-row'),
         verdictPager: byId('verdict-pager'),
         verdictPageWait: byId('verdict-page-wait'),
-        verdictDots: byId('verdict-dots'),
         verdictDotButtons: /** @type {HTMLElement[]} */ (Array.from(byId('verdict-dots').querySelectorAll('.pager-dot'))),
         verdictDotWait: byId('verdict-dot-wait'),
         verdictChipTooltip: byId('verdict-chip-tooltip'),
