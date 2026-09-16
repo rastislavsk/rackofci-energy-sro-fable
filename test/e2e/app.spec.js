@@ -2,7 +2,7 @@
 // doménovou logikou (shared/), takže test chytí rozdiel medzi modelom a tým, čo je v DOM.
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { ringPercent, usePct, visibleHours, weekListModel, WEEK_HOURS } from '../../shared/chart-model.js';
+import { ringPercent, usePct, visibleHours, weekDayTiers, weekListModel, WEEK_HOURS } from '../../shared/chart-model.js';
 import { LEGACY_SOURCES, PREVIEW, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
 import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
@@ -366,6 +366,14 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
             `width:${r.barPct}%`,
         );
 
+    // Pásmo dňa (farba heatmapy) nesie pásik aj číslo. Očakávanie sa počíta tou istou
+    // funkciou ako v appke, takže test chytí rozdiel medzi mierkou modelu a farbou v DOM.
+    for (const [i, tier] of weekDayTiers(forecast.days).entries()) {
+        const riadok = page.locator(`#week-list [data-day-index="${i}"]`);
+        await expect(riadok.locator('.wday-bar i')).toHaveClass(tier ? `tier-${tier}` : '');
+        await expect(riadok.locator('.wday-kwh')).toHaveClass(tier ? `wday-kwh tier-${tier}` : 'wday-kwh');
+    }
+
     // Klik na deň otvorí jeho detail: priebeh toho dňa a jeho riadok z heatmapy.
     await page.locator('#week-list [data-day-index="5"]').click();
     await expect(page.locator('#week-day-title')).toHaveText(weekDayLong(forecast.days[5].date, 5));
@@ -481,6 +489,12 @@ test('7 dní na desktope: karta ostáva celá, výber dňa naprieč komponentmi'
     // Štvrtý stĺpec tabuľky je Využitie.
     for (const [i, day] of forecast.days.entries())
         await expect(page.locator(`#week-tbody tr[data-day-index="${i}"] td:nth-child(4)`)).toHaveClass(`mid${useTier(usePct(day))}`);
+
+    // Druhý stĺpec tabuľky je Výroba - nesie to isté pásmo dňa ako stĺpce grafu vedľa nej.
+    for (const [i, tier] of weekDayTiers(forecast.days).entries()) {
+        await expect(page.locator(`#week-tbody tr[data-day-index="${i}"] td:nth-child(2)`)).toHaveClass(tier ? `tier-${tier}` : '');
+        await expect(page.locator('#week-bars rect.bar').nth(i)).toHaveClass(tier ? new RegExp(`\\btier-${tier}\\b`) : /^bar$/);
+    }
 
     await page.locator('#week-day-tabs [data-day-index="3"]').click();
     await expect(page.locator('#week-day-tabs .utab.active')).toHaveAttribute('data-day-index', '3');

@@ -19,6 +19,7 @@ import {
     usePct,
     WEEK_HOURS,
     weekBarsModel,
+    weekDayTiers,
     weekListModel,
     weekHeatModel,
     weekStatsModel,
@@ -244,6 +245,39 @@ test('weekListModel: pásik podľa najsilnejšieho dňa, výroba v celých kWh',
     assert.ok(
         rows.every((r) => Number.isInteger(r.kwh)),
         'výroba je v celých kWh',
+    );
+});
+
+test('weekDayTiers: pásmo dňa podľa podielu z najsilnejšieho dňa, tie isté hranice ako heatmapa', () => {
+    const den = (/** @type {number} */ kwhTotal) => ({ ...forecast.days[0], kwhTotal });
+    // 60 je najsilnejší deň: 60/60 = 1 zelená, 35/60 = 0,58 jantárová, 15/60 = 0,25 červená.
+    const tiers = weekDayTiers([den(60), den(35), den(15), den(0)]);
+    assert.deepEqual(tiers, ['green', 'amber', 'red', null]);
+    // Hranice sú presne v tretinách, rovnako ako pásma buniek heatmapy.
+    assert.deepEqual(weekDayTiers([den(90), den(30), den(29.9), den(60), den(59.9)]), ['green', 'amber', 'red', 'green', 'amber']);
+});
+
+test('weekDayTiers: týždeň bez jedinej kWh nemá byť celý červený', () => {
+    const tiers = weekDayTiers(forecast.days.map((d) => ({ ...d, kwhTotal: 0 })));
+    assert.ok(
+        tiers.every((t) => t === null),
+        'deň bez výroby nemá pásmo - null znamená nefarbiť',
+    );
+});
+
+test('weekBarsModel a weekListModel nesú to isté pásmo dňa', () => {
+    const tiers = weekDayTiers(forecast.days);
+    assert.deepEqual(
+        weekBarsModel(forecast.days, 1).bars.map((b) => b.tier),
+        tiers,
+    );
+    assert.deepEqual(
+        weekListModel(forecast.days, 1).map((r) => r.tier),
+        tiers,
+    );
+    assert.ok(
+        tiers.some((t) => t === 'green'),
+        'najsilnejší deň v týždni je vždy zelený',
     );
 });
 

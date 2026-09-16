@@ -79,10 +79,13 @@ export function weekBarsSvg(m) {
         )
         .join('');
     for (const b of m.bars) {
-        out += `<rect class="bar${b.sel ? ' sel' : ''}" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="3"/>`;
+        // Pásmo dňa je tá istá farba ako v heatmape (viď weekDayTiers) - stĺpec aj číslo
+        // nad ním ju nesú spolu, aby sa dal silný deň nájsť očami bez čítania.
+        const tier = b.tier ? ` tier-${b.tier}` : '';
+        out += `<rect class="bar${tier}${b.sel ? ' sel' : ''}" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="3"/>`;
         if (b.clearY != null)
             out += `<line class="clear-cap" x1="${n(b.x - 2)}" y1="${n(b.clearY)}" x2="${n(b.x + b.w + 2)}" y2="${n(b.clearY)}"/>`;
-        out += `<text class="bar-value${b.sel ? ' sel' : ''}" x="${n(b.cx)}" y="${n(b.y - 6)}" text-anchor="middle">${b.valueLabel}</text>`;
+        out += `<text class="bar-value${tier}${b.sel ? ' sel' : ''}" x="${n(b.cx)}" y="${n(b.y - 6)}" text-anchor="middle">${b.valueLabel}</text>`;
         out += `<text class="day-label${b.today ? ' today' : ''}${b.sel ? ' sel' : ''}" x="${n(b.cx)}" y="${m.labelY}" text-anchor="middle">${b.dayLabel}</text>`;
         out += `<text class="axis-label" x="${n(b.cx)}" y="${m.dateY}" text-anchor="middle">${b.dateLabel}</text>`;
         out += `<rect class="bar-hit"${tipAttrs(b.tip)} data-day-index="${b.dayIndex}" x="${n(b.hit.x)}" y="0" width="${n(b.hit.w)}" height="${m.H}"/>`;

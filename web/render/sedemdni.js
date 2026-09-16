@@ -14,6 +14,7 @@ import {
     usePct,
     visibleHours,
     weekBarsModel,
+    weekDayTiers,
     weekHeatModel,
     weekListModel,
     weekStatsModel,
@@ -131,6 +132,7 @@ function renderTableAndTabs(days, sel, dom) {
                 `<button type="button" role="tab" class="utab${i === sel ? ' active' : ''}" aria-selected="${i === sel}" data-day-index="${i}">${weekDayShort(d.date, i)}</button>`,
         )
         .join('');
+    const tiers = weekDayTiers(days);
     dom.weekTbody.innerHTML = days
         .map((d, i) => {
             const pct = usePct(d);
@@ -138,7 +140,7 @@ function renderTableAndTabs(days, sel, dom) {
             const peakAt = d.peakHour == null ? '–' : `o ${hourLabel(d.peakHour)}`;
             return (
                 `<tr class="${i === 0 ? 'today' : ''}${i === sel ? ' sel' : ''}" data-day-index="${i}"><td>${weekDayShort(d.date, i)}${dateSub}</td>` +
-                `<td>${d.kwhTotal.toFixed(1)} kWh</td><td class="mid">${skyCell(d.cloudAvgPct)}</td><td class="mid${useTier(pct)}">${pct == null ? '–' : `${pct} %`}</td>` +
+                `<td class="${tiers[i] ? `tier-${tiers[i]}` : ''}">${d.kwhTotal.toFixed(1)} kWh</td><td class="mid">${skyCell(d.cloudAvgPct)}</td><td class="mid${useTier(pct)}">${pct == null ? '–' : `${pct} %`}</td>` +
                 `<td>${d.peakKw.toFixed(1)} kW<span class="sub">${peakAt}</span></td></tr>`
             );
         })
@@ -159,14 +161,18 @@ function renderList(s, rows, dom) {
     dom.weekListTotal.textContent = String(Math.round(s.totalKwh));
     dom.weekListAvg.textContent = `${fmt1(s.avgKwh)} kWh`;
     dom.weekList.innerHTML = rows
-        .map(
-            (r) =>
+        .map((r) => {
+            // Pásmo dňa nesie pásik aj číslo vedľa neho - tá istá farba a tá istá mierka
+            // ako v heatmape (viď weekDayTiers v shared/chart-model.js).
+            const tier = r.tier ? ` tier-${r.tier}` : '';
+            return (
                 `<button type="button" class="wday${r.sel ? ' sel' : ''}" data-day-index="${r.dayIndex}">` +
                 `<span class="wday-name">${escapeHtml(r.name)}<span class="wday-date">${escapeHtml(r.dateLabel)}</span></span>` +
                 skyCell(r.cloudAvgPct) +
-                `<span class="wday-bar"><i style="width:${r.barPct}%"></i></span>` +
-                `<span class="wday-kwh">${r.kwh}<span class="u">kWh</span></span></button>`,
-        )
+                `<span class="wday-bar"><i class="${tier.trim()}" style="width:${r.barPct}%"></i></span>` +
+                `<span class="wday-kwh${tier}">${r.kwh}<span class="u">kWh</span></span></button>`
+            );
+        })
         .join('');
 }
 
