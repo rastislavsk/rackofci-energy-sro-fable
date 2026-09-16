@@ -1533,9 +1533,10 @@ b {
 }
 
 /* ---- 7 dní: rebríček dní (prehľad na mobile) -------------------------------- */
-/* Jedno veľké číslo za týždeň a pod ním sedem riadkov s pásikmi. Dĺžka pásika je výroba
-   dňa voči najsilnejšiemu dňu v týždni, takže sa dni dajú porovnať očami, bez čítania
-   čísel - preto tu nie sú stĺpce Využitie a Špička, tie ostávajú v detaile dňa.
+/* Dve karty pod sebou: bublina so súčtom za týždeň a pod ňou sedem riadkov s pásikmi.
+   Rám okolo súčtu hovorí, že je to súhrn dní, nie ďalší riadok zoznamu. Dĺžka pásika je
+   výroba dňa voči najsilnejšiemu dňu v týždni, takže sa dni dajú porovnať očami, bez
+   čítania čísel - preto tu nie sú stĺpce Využitie a Špička, tie ostávajú v detaile dňa.
    Blok je vidno len pod 768 px; na širokej obrazovke mu renderView nechá .hidden, lebo
    tam je na prehľad miesta dosť na bubliny aj tabuľku. */
 .week-list-card {
@@ -1544,8 +1545,8 @@ b {
     background: var(--card-bg);
     padding: var(--sp-3);
 }
-/* Hlavička aj riadky dní sú tlačidlá, takže potrebujú späť zarovnanie a šírku, ktoré si
-   tlačidlo inak určí samo (to isté robia bubliny .stat vyššie). */
+/* Bublina so súčtom aj riadky dní sú tlačidlá, takže potrebujú späť zarovnanie a šírku,
+   ktoré si tlačidlo inak určí samo (to isté robia bubliny .stat vyššie). */
 .week-list-hero,
 .wday {
     width: 100%;
@@ -1555,15 +1556,21 @@ b {
     text-align: left;
     cursor: pointer;
 }
+/* Rám, výplň a zaoblenie sú tie isté, aké má bublina .stat - je to ten istý útvar, len na
+   inej karte. Poradie pravidiel rozhoduje: reset tlačidla vyššie musí ostať pred týmto. */
 .week-list-hero {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: var(--sp-3);
-    padding: 0 0 var(--sp-3);
+    margin-bottom: var(--sp-2);
+    padding: var(--sp-3);
+    background: var(--card-bg);
+    border: 1px solid var(--ink-08);
+    border-radius: var(--radius-md);
 }
-/* Šípka "›" hovorí, že hlavička otvára detail týždňa. Nepotrebuje @media ako tá istá šípka
-   pri bublinách - celý blok je na obrazovke len tam, kde detail existuje. */
+/* Šípka "›" hovorí, že bublina otvára detail týždňa. Nepotrebuje @media ako tá istá šípka
+   pri bublinách vyššie - celý blok je na obrazovke len tam, kde detail existuje. */
 .week-list-hero .lbl::after {
     content: ' ›';
     color: var(--ink-35);
@@ -1604,32 +1611,35 @@ b {
 }
 /* Meno dňa má pevný stĺpec, aby pásiky začínali pod sebou a dali sa porovnať; 70 px je
    šírka najdlhšieho názvu ("Pondelok") pri tomto písme. Ikona oblohy je 12 px (.cloud-cell
-   nižšie), stĺpec má o niečo viac, nech sa nedotýka mena. */
+   nižšie), stĺpec má o niečo viac, nech sa nedotýka mena. Piaty stĺpec je šípka nižšie.
+   Pásik je jediný pružný stĺpec (1fr), ostatné majú pevnú šírku - preto sa riadok zmestí
+   aj na 280 px a nepretečie do strán (drží to e2e test). */
 .wday {
     display: grid;
-    grid-template-columns: 70px 16px 1fr auto;
+    grid-template-columns: 70px 16px 1fr auto 10px;
     align-items: center;
     gap: var(--sp-2);
     padding: 9px 4px;
     border-radius: var(--radius-sm);
-    outline: 1px solid transparent;
-    outline-offset: -1px;
+}
+/* Šípka pri každom dni hovorí, že riadok je tlačidlo - predtým to bola veta pod zoznamom.
+   Kreslí ju CSS ako ďalšiu bunku mriežky, takže render v JS ostáva taký, aký bol. */
+.wday::after {
+    content: '›';
+    color: var(--ink-35);
+    font-size: var(--fs-md);
+    text-align: right;
 }
 .wday.sel {
     background: var(--ink-05);
 }
-.wday.today {
-    background: color-mix(in srgb, var(--green) 6%, transparent);
-    outline-color: color-mix(in srgb, var(--green) 30%, transparent);
-}
+/* Dnešok sa nezvýrazňuje: v rebríčku stojí vždy prvý a volá sa "Dnes", takže by farba
+   hovorila to, čo už povedalo poradie aj meno. */
 .wday-name {
     font-size: 13.5px;
     font-weight: 600;
     line-height: 1.15;
     min-width: 0;
-}
-.wday.today .wday-name {
-    color: var(--green);
 }
 .wday-date {
     display: block;
@@ -1651,9 +1661,6 @@ b {
     border-radius: var(--radius-sm);
     background: color-mix(in srgb, var(--green) 45%, transparent);
 }
-.wday.today .wday-bar i {
-    background: var(--green);
-}
 .wday-kwh {
     font-family: var(--font-mono);
     font-size: var(--fs-md);
@@ -1669,16 +1676,6 @@ b {
     color: var(--ink-35);
     margin-left: 2px;
 }
-.week-list-hint {
-    margin: var(--sp-3) 0 0;
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-35);
-    text-align: center;
-}
-
 /* ---- Zdieľať ---------------------------------------------------------------- */
 .share-panel {
     display: flex;

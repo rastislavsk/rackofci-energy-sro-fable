@@ -294,19 +294,18 @@
                          a nový blok pred nimi by to poradie posunul. Na širokej obrazovke sa nekreslí,
                          tam je na prehľad miesta dosť na bubliny aj tabuľku vyššie. -->
                     <section class="week-block hidden" id="week-block-list">
+                        <!-- Súčet za týždeň má vlastnú bublinu nad dňami: je to súhrn zoznamu, nie jeho
+                             ôsmy riadok. Je to tlačidlo - otvára detail týždňa rovnako ako bublina
+                             "7 dní spolu" na širokej obrazovke. -->
+                        <button type="button" class="week-list-hero" data-week-detail>
+                            <span class="week-list-sum">
+                                <span class="lbl">Spolu za 7 dní</span>
+                                <span class="stat-num-row"><span class="num" id="week-list-total">–</span><span class="u">kWh</span></span>
+                            </span>
+                            <span class="week-list-avg">ø na deň<b id="week-list-avg">–</b></span>
+                        </button>
                         <div class="week-list-card">
-                            <!-- Hlavička je tlačidlo: otvára detail týždňa rovnako ako bublina "7 dní spolu". -->
-                            <button type="button" class="week-list-hero" data-week-detail>
-                                <span class="week-list-sum">
-                                    <span class="lbl">Spolu za 7 dní</span>
-                                    <span class="stat-num-row"
-                                        ><span class="num" id="week-list-total">–</span><span class="u">kWh</span></span
-                                    >
-                                </span>
-                                <span class="week-list-avg">ø na deň<b id="week-list-avg">–</b></span>
-                            </button>
                             <div class="week-list" id="week-list"></div>
-                            <p class="week-list-hint">Ťuknite na deň pre podrobnosti</p>
                         </div>
                     </section>
                     <div class="msg-block" id="week-msg-block">

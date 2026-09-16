@@ -31,7 +31,7 @@ jej QR kód kreslí knižnica z CDN.
   obrazovke bubliny (Dnes, Zajtra, 7 dní spolu) a tabuľka so všetkými stĺpcami. Klik otvorí
   detail: na deň jeho priebeh výroby s oblačnosťou, čísla dňa (špička, využitie, oblačnosť),
   jeho riadok z mapy výroby a hlášku o tom dni; pri dnešku je v grafe aj skutočná nameraná
-  krivka so značkou „teraz“ a koľko už z predpovede nabehlo. Klik na hlavičku „Spolu za 7 dní“
+  krivka so značkou „teraz“ a koľko už z predpovede nabehlo. Klik na bublinu „Spolu za 7 dní“
   (na širokej obrazovke na bublinu „7 dní spolu“) otvorí detail celého týždňa: dennú výrobu,
   mapu výroby hodina × deň a hlášku o najsilnejšom dni. Na širokej obrazovke je vidno všetko
   naraz.

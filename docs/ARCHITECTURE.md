@@ -124,11 +124,11 @@ plátno presne na kartu. Rozmer teda prichádza tou istou cestou ako každý in�
 Na telefóne mala karta štyri grafy a tabuľku pod sebou – pätnásť obrazoviek scrollovania,
 kým sa človek dostal k tomu, čo ho zaujímalo. Je preto rozdelená na dve obrazovky:
 
-- **Prehľad dní** – rebríček: jedno veľké číslo za týždeň a sedem riadkov s pásikmi.
-  Zmestí sa celý na jednu obrazovku.
+- **Prehľad dní** – rebríček: bublina so súčtom za týždeň a pod ňou sedem riadkov
+  s pásikmi. Zmestí sa celý na jednu obrazovku.
 - **Detail dňa** – otvorí ho klik na riadok rebríčka: priebeh výroby toho dňa, čísla o ňom,
   jeho jediný riadok z mapy výroby a správa o tom dni.
-- **Detail týždňa** – otvorí ho klik na hlavičku „Spolu za 7 dní“: denná výroba, mapa výroby
+- **Detail týždňa** – otvorí ho klik na bublinu „Spolu za 7 dní“: denná výroba, mapa výroby
   hodina × deň a správa „Najsilnejší deň“.
 
 Správa je jeden prvok pre obe obrazovky: v detaile dňa v ňom stojí `dayDetailMessage`,

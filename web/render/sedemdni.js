@@ -146,9 +146,12 @@ function renderTableAndTabs(days, sel, dom) {
 }
 
 /**
- * Rebríček dní - prehľad karty na mobile. Hore jediné veľké číslo za týždeň (hlavička je
- * tlačidlo a otvára detail týždňa), pod ním riadok na deň: meno s dátumom, obloha, pásik
+ * Rebríček dní - prehľad karty na mobile. Hore bublina so súčtom za týždeň (je to tlačidlo
+ * a otvára detail týždňa), pod ňou karta s riadkom na deň: meno s dátumom, obloha, pásik
  * a výroba. Riadok je tlačidlo, otvára detail toho dňa.
+ *
+ * Dnešok tu nemá vlastnú triedu: v rebríčku stojí vždy prvý a volá sa "Dnes", takže niet
+ * čo zvýrazňovať. Príznak `r.today` z modelu ostáva, značí sa ním prepínač dní a tabuľka.
  * @param {ReturnType<typeof weekStatsModel>} s @param {ReturnType<typeof weekListModel>} rows
  * @param {import('../dom.js').Dom} dom
  */
@@ -158,7 +161,7 @@ function renderList(s, rows, dom) {
     dom.weekList.innerHTML = rows
         .map(
             (r) =>
-                `<button type="button" class="wday${r.today ? ' today' : ''}${r.sel ? ' sel' : ''}" data-day-index="${r.dayIndex}">` +
+                `<button type="button" class="wday${r.sel ? ' sel' : ''}" data-day-index="${r.dayIndex}">` +
                 `<span class="wday-name">${escapeHtml(r.name)}<span class="wday-date">${escapeHtml(r.dateLabel)}</span></span>` +
                 skyCell(r.cloudAvgPct) +
                 `<span class="wday-bar"><i style="width:${r.barPct}%"></i></span>` +
