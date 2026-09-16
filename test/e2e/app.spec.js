@@ -338,7 +338,7 @@ function viditelneBloky(page) {
 /**
  * Karta 7 dní je na mobile rozdelená na dve obrazovky: prehľad (rebríček dní) a detail dňa,
  * ktorý sa otvorí klikom na riadok rebríčka. V detaile ide Denná výroba, Priebeh výroby
- * a až potom Mapa výroby so zvýrazneným dňom.
+ * a až potom Heatmapa so zvýrazneným dňom.
  *
  * Prehľad je na mobile rebríček, nie bubliny s tabuľkou - tie patria širokej obrazovke.
  * Údaje, ktoré z neho odišli (využitie, špička), sú o ťuknutie ďalej v detaile dňa.
@@ -366,7 +366,7 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
             `width:${r.barPct}%`,
         );
 
-    // Klik na deň otvorí jeho detail: priebeh toho dňa a jeho riadok z mapy výroby.
+    // Klik na deň otvorí jeho detail: priebeh toho dňa a jeho riadok z heatmapy.
     await page.locator('#week-list [data-day-index="5"]').click();
     await expect(page.locator('#week-day-title')).toHaveText(weekDayLong(forecast.days[5].date, 5));
     await expect(page.locator('#week-block-list')).toBeHidden();
