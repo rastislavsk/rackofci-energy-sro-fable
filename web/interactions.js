@@ -174,11 +174,6 @@ function highlightDot(dom, index) {
  * tam a späť. @param {Store} store @param {Dom} dom */
 function initVerdictPager(store, dom) {
     const pager = dom.verdictPager;
-    // Klony krajných stránok po kolotoči už majú triedu hidden priamo v HTML; toto je poistka
-    // na staršiu stránku z cache, ktorá ju ešte nemá. Selektor zámerne nie je byId: ten na
-    // chýbajúci prvok hádže výnimku, a tie prvky práve miznú - ďalšie nasadenie zmaže spolu
-    // s nimi aj tento riadok (viď pravidlo o dvoch krokoch v CLAUDE.md).
-    pager.querySelectorAll('#verdict-page-clone-start, #verdict-page-clone-end').forEach((el) => el.classList.add('hidden'));
 
     /** @type {ReturnType<typeof setTimeout> | undefined} */
     let timer;
