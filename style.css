@@ -220,6 +220,9 @@ b {
 }
 .pv-updated-line {
     margin-top: var(--sp-1);
+    display: flex;
+    align-items: center;
+    gap: 5px;
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     color: var(--ink-35);
@@ -623,11 +626,13 @@ b {
 }
 
 /* ---- Spotrebiče: ikonka a popup s vysvetlením ciferníka --------------------
-   Ikonka sedí v hlavičke vedľa hodín (viď .appbar-clock v index.html), nie na karte -
-   dáva zmysel len na Terazky, ktorá ako jediná má ciferník na vysvetlenie, preto je
-   inde v hlavičke skrytá tým istým :has() vzorom, akým appka na Terazky mení aj
-   iné veci v .appbar (viď nižšie). Bez vlastného orámovania - pri tejto veľkosti by
-   krúžok okolo "i" zle čitateľné písmeno ešte zmenšil. */
+   Ikonka sedí v hlavičke vedľa riadku "aktualizované HH:MM" (viď .pv-updated-line
+   v index.html), nie na karte - dáva zmysel len na Terazky, ktorá ako jediná má
+   ciferník na vysvetlenie, preto je inde v hlavičke skrytá tým istým :has() vzorom,
+   akým appka na Terazky mení aj iné veci v .appbar (viď nižšie). Bez vlastného
+   orámovania - pri tejto veľkosti by krúžok okolo "i" zle čitateľné písmeno ešte
+   zmenšil. Rozmer ikony drží pod výškou riadku, do ktorého sedí, aby si hlavička
+   nepýtala viac miesta, než mala doteraz. */
 .info-btn {
     display: none;
     align-items: center;
@@ -638,8 +643,8 @@ body:has(#page[data-panel='terazky']) .info-btn {
     display: flex;
 }
 .info-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 11px;
+    height: 11px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
