@@ -629,10 +629,10 @@ b {
    Ikonka sedí v hlavičke vedľa riadku "aktualizované HH:MM" (viď .pv-updated-line
    v index.html), nie na karte - dáva zmysel len na Terazky, ktorá ako jediná má
    ciferník na vysvetlenie, preto je inde v hlavičke skrytá tým istým :has() vzorom,
-   akým appka na Terazky mení aj iné veci v .appbar (viď nižšie). Bez vlastného
-   orámovania - pri tejto veľkosti by krúžok okolo "i" zle čitateľné písmeno ešte
-   zmenšil. Rozmer ikony drží pod výškou riadku, do ktorého sedí, aby si hlavička
-   nepýtala viac miesta, než mala doteraz. */
+   akým appka na Terazky mení aj iné veci v .appbar (viď nižšie). Kruh okolo "i" je
+   súčasť SVG, nie orámovanie tlačidla - to by pridalo druhý, prekrývajúci sa kruh.
+   Rozmer ikony drží pod výškou riadku, do ktorého sedí, aby si hlavička nepýtala
+   viac miesta, než mala doteraz. */
 .info-btn {
     display: none;
     align-items: center;
