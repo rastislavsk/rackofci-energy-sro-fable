@@ -63,13 +63,13 @@ function initNavigation(store, dom) {
         // skutočná šírka stránky býva desatinná, čo na desktope (klik na bodku, nie prstom) nechávalo
         // pás o pár pixelov mimo prichytenia a cez okraj presvital kúsok susednej stránky. Bodku
         // hľadá poradie v zozname bodiek, nie atribút s číslom stránky: zoznam je ten istý, ktorý
-        // bodky rozsvecuje, takže si obe strany nemajú ako rozísť. +1, lebo pred prvou reálnou
-        // stránkou je klon poslednej (kolotoč, viď initVerdictPager).
+        // bodky rozsvecuje, takže si obe strany nemajú ako rozísť. Skryté stránky do poradia
+        // nepatria - rovnako ako ich neráta currentPage.
         handleInfoClick(target, store);
         const dotBtn = target.closest('.pager-dot');
         const dotIndex = dotBtn instanceof HTMLElement ? dom.verdictDotButtons.indexOf(dotBtn) : -1;
         if (dotIndex >= 0) {
-            const pageEl = dom.verdictPager.children[dotIndex + 1];
+            const pageEl = dom.verdictPager.querySelectorAll('.pager-page:not(.hidden)')[dotIndex];
             if (pageEl instanceof HTMLElement) pageEl.scrollIntoView({ inline: 'start', block: 'nearest' });
         }
     });
@@ -152,13 +152,13 @@ function initTimePreview(store, dom) {
     });
 }
 
-/** Index reálnej stránky pod prstom práve teraz, aj keď je pás ešte v pohybe - záporný/za
- * koncom tok (klon) sa pre zobrazenie pripne na najbližší reálny okraj. @param {HTMLElement} pager @param {Dom} dom */
-function currentFlowPage(pager, dom) {
-    const width = pager.clientWidth || 1;
-    const realPages = dom.verdictPageWait.classList.contains('hidden') ? 3 : 4;
-    const flowIndex = Math.round(pager.scrollLeft / width);
-    return { realPages, flowIndex, logical: Math.min(Math.max(flowIndex - 1, 0), realPages - 1) };
+/** Index stránky pod prstom práve teraz, aj keď je pás ešte v pohybe. Skrytá stránka
+ * (napr. "lepšie bude" bez času čakania) z toku vypadne, takže do poradia nepatrí - preto
+ * sa počíta zo skutočne zobrazených stránok a nie z pevného čísla. @param {HTMLElement} pager */
+function currentPage(pager) {
+    const pages = pager.querySelectorAll('.pager-page:not(.hidden)').length;
+    const index = Math.round(pager.scrollLeft / (pager.clientWidth || 1));
+    return Math.min(Math.max(index, 0), pages - 1);
 }
 
 /** Bodka nech prstu/kolieskam sleduje plynulo, nie až po ustálení pásu - toto len kozmeticky
@@ -168,46 +168,26 @@ function highlightDot(dom, index) {
     dom.verdictDotButtons.forEach((dot, i) => dot.classList.toggle('active', i === index));
 }
 
-/** Listovanie verdiktu posúva prehliadač sám. Pred prvou a za poslednou reálnou stránkou je
- * neviditeľný klon poslednej/prvej (obsah drží syncPagerClones v terazky.js) - keď sa naň
- * pás ustáli, znamená to, že sa listovalo za okraj, a JS ho bez animácie preskočí na skutočnú
- * stránku na druhom konci, takže to pôsobí ako kolotoč. Do stavu ide až ustálená stránka - inak
- * by prekreslenie uprostred gesta prepisovalo bodky tam a späť. @param {Store} store @param {Dom} dom */
+/** Listovanie verdiktu posúva a prichytáva prehliadač sám; JS len číta, na ktorej stránke sa
+ * pás ustálil. Poradie má konce: na poslednej správe sa dá ísť už len späť, na prvej len ďalej.
+ * Do stavu ide až ustálená stránka - inak by prekreslenie uprostred gesta prepisovalo bodky
+ * tam a späť. @param {Store} store @param {Dom} dom */
 function initVerdictPager(store, dom) {
     const pager = dom.verdictPager;
-
-    // Defaultná prvá stránka je skutočná prvá (index 1 v toku pásu, index 0 je klon poslednej).
-    // rAF počká na prvé prekreslenie (nastaví #page data-panel, od ktorého závisí na desktope
-    // šírka stránky pageru) a skočí tam bez animácie.
-    requestAnimationFrame(() => {
-        const firstPage = pager.children[1];
-        if (firstPage instanceof HTMLElement) firstPage.scrollIntoView({ inline: 'start', block: 'nearest', behavior: 'instant' });
-    });
+    // Kolotoč zanikol. Klony krajných stránok, ktoré ho robili, ostávajú zatiaľ v HTML -
+    // skryté z toku nevadia a zmaže ich až ďalšie nasadenie (viď pravidlo v CLAUDE.md).
+    dom.verdictPageCloneStart.classList.add('hidden');
+    dom.verdictPageCloneEnd.classList.add('hidden');
 
     /** @type {ReturnType<typeof setTimeout> | undefined} */
     let timer;
     pager.addEventListener(
         'scroll',
         () => {
-            highlightDot(dom, currentFlowPage(pager, dom).logical);
+            highlightDot(dom, currentPage(pager));
 
             clearTimeout(timer);
-            timer = setTimeout(() => {
-                const { realPages, flowIndex } = currentFlowPage(pager, dom);
-                if (flowIndex <= 0) {
-                    const lastPage = pager.children[realPages];
-                    if (lastPage instanceof HTMLElement)
-                        lastPage.scrollIntoView({ inline: 'start', block: 'nearest', behavior: 'instant' });
-                    store.setState({ verdictPage: realPages - 1 });
-                } else if (flowIndex >= realPages + 1) {
-                    const firstPage = pager.children[1];
-                    if (firstPage instanceof HTMLElement)
-                        firstPage.scrollIntoView({ inline: 'start', block: 'nearest', behavior: 'instant' });
-                    store.setState({ verdictPage: 0 });
-                } else {
-                    store.setState({ verdictPage: flowIndex - 1 });
-                }
-            }, PAGER_SETTLE_MS);
+            timer = setTimeout(() => store.setState({ verdictPage: currentPage(pager) }), PAGER_SETTLE_MS);
         },
         { passive: true },
     );

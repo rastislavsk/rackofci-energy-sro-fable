@@ -20,9 +20,10 @@ Snímky sú z testovacích dát a pevného času (13:00), nie zo živej elektrá
 sú syntetické. Prekresliť ich vie `npm run screenshots`. Karta Zdieľať na obrázku nie je,
 jej QR kód kreslí knižnica z CDN.
 
-- **Terazky** – aktuálny výkon na ciferníku a pod ním kolotoč odporúčaní: jednovetné
+- **Terazky** – aktuálny výkon na ciferníku a pod ním pás odporúčaní: jednovetné
   odporúčanie („Najlepší čas dňa — zapni všetko“), stav piatich spotrebičov, predpoveď dňa
-  a prípadne čas, kedy bude lepšie. Listuje sa potiahnutím do strán alebo klikom na bodky.
+  a prípadne čas, kedy bude lepšie. Listuje sa potiahnutím do strán alebo klikom na bodky;
+  poradie má konce – na prvej správe sa dá ísť len ďalej, na poslednej len späť.
   Ciferník sa číta aj ako 24-hodinový: vonkajší prstenec je deň s farebnými tarifnými
   pásmami, biela bodka na ňom je „teraz“. Potiahnutím jazdca po prstenci alebo ťuknutím
   naň si pozrieš, ako to bude vyzerať v inom čase. Ikonka „i“ v pravom hornom rohu otvorí
@@ -49,13 +50,14 @@ prezeraním s tooltipom ako doteraz. Zvislý ťah je posúvanie stránky – aj 
 tooltip sa pri ňom neukáže tiež. Nová karta sa pritom prisunie z tej strany, ktorou si listoval –
 rovnako pri ťahaní aj pri kliku na navigáciu. Kto má v systéme zapnutý útlm pohybu, dostane
 prepnutie bez animácie. Ťahanie si pre seba
-nechávajú len veci, ktoré sa samy posúvajú do strán: kolotoč odporúčaní na karte Terazky,
-kým má kam ísť. Bežec na páse dňa sa ťahá ako predtým.
+nechávajú len veci, ktoré sa samy posúvajú do strán: pás odporúčaní na karte Terazky – ten
+si ho necháva aj na krajnej správe, takže ťah v ňom nikdy neopustí kartu. Bežec na páse dňa
+sa ťahá ako predtým.
 
 Systémové tlačidlo Späť na telefóne a tablete (a šípka v prehliadači) vracia o krok späť
 v appke: najprv zavrie detail dňa, potom sa vracia po kartách v opačnom poradí, než si
 nimi prešiel. Dopredu vedie tá istá cesta naspäť. Výber vnútri karty – vybraný deň
-alebo stránka kolotoča – krok navigácie nie je, na ten sa Späť nevracia.
+alebo stránka pásu odporúčaní – krok navigácie nie je, na ten sa Späť nevracia.
 Keď sa kroky minú, ďalšie Späť z appky odíde; v nainštalovanej appke (PWA) to znamená jej
 zatvorenie. Zatvorenie sa nikde nevynucuje dvojitým stlačením – to je zvyk natívnych
 androidových appiek, nie webu, a stránka sa sama zavrieť ani nevie. Adresa sa pritom

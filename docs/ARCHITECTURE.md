@@ -101,7 +101,7 @@ plátno presne na kartu. Rozmer teda prichádza tou istou cestou ako každý in�
   zapíšeš to isté, čo tam už je. Účet nepríde hneď – príde, keď si appka najbližšie vypýta
   rozmery, lebo vtedy musí prehliadač dopočítať layout. Pri ťahaní jazdca po dennom prstenci
   tak jeden zbytočný zápis zdražel každý ďalší pohyb prsta. `memo.js` si preto pamätá, čo sám
-  naposledy zapísal, a denný prstenec, chipy spotrebičov aj klony pageru sa prekresľujú len
+  naposledy zapísal, a denný prstenec aj chipy spotrebičov sa prekresľujú len
   pri zmene vlastných vstupov. Namerané: 1,675 → 0,675 ms na pohyb na mobilnej šírke,
   2,817 → 0,892 ms na desktope.
 - **Plátno grafu sa rovná karte.** Grafy sa nekreslia na pevné plátno, ktoré potom CSS

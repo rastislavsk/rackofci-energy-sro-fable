@@ -6,7 +6,7 @@ import { escapeHtml, fmt1, minutesToTimeStr } from '../../shared/format.js';
 import { heroModel, minutesOfDay } from '../../shared/hero-model.js';
 import { EMPTY_MESSAGES, forecastDayMessage } from '../../shared/messages.js';
 import { DEVICE_ICONS } from '../icons.js';
-import { changedKeys, writeHtml } from '../memo.js';
+import { writeHtml } from '../memo.js';
 import { dayRingSvg } from '../svg.js';
 
 const DIAL_CIRCUMFERENCE = 2 * Math.PI * RING.rPower;
@@ -50,25 +50,6 @@ function renderForecastPage(state, dom) {
     dom.verdictForecastBody.textContent = msg.body;
 }
 
-/** Kolotoč: klon poslednej/prvej reálnej stránky vernou kópiou (cloneNode), aj keď sa mení,
- * ktorá stránka je posledná (predpoveď dňa/lepšie bude) - odstránené id v klone predídu
- * duplicitám. @param {HTMLElement} source @param {HTMLElement} target */
-function mirrorPage(source, target) {
-    target.className = source.className;
-    target.replaceChildren(...source.cloneNode(true).childNodes);
-    target.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
-}
-
-/** @param {import('../dom.js').Dom} dom */
-function syncPagerClones(dom) {
-    const lastPage = dom.verdictPageWait.classList.contains('hidden') ? dom.verdictPageForecast : dom.verdictPageWait;
-    // Do kľúča patrí aj trieda, lebo mirrorPage kopíruje oboje - inak by zmena samotnej
-    // triedy zdroja klon nedobehla.
-    if (changedKeys('clone-start', [lastPage.className, lastPage.innerHTML])) mirrorPage(lastPage, dom.verdictPageCloneStart);
-    const firstPage = dom.verdictPageNow;
-    if (changedKeys('clone-end', [firstPage.className, firstPage.innerHTML])) mirrorPage(firstPage, dom.verdictPageCloneEnd);
-}
-
 /** @param {import('../state.js').AppState} state @param {ReturnType<typeof heroModel>} m @param {import('../dom.js').Dom} dom */
 function renderHero(state, m, dom) {
     const panel = dom.panels.terazky;
@@ -87,7 +68,6 @@ function renderHero(state, m, dom) {
     writeHtml(dom.verdictGoRow, devicesHtml(m.devices), 'devices');
     renderForecastPage(state, dom);
     renderVerdictPager(state, m, dom);
-    syncPagerClones(dom);
 }
 
 /** Poloha na dennom prstenci. Obal je štvorec zhodný s ciferníkom, takže percentá platia

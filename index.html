@@ -135,9 +135,10 @@
                              tak otvára rovno odporúčaním. Správa o predpovedi dňa žije už len tu -
                              karta Dnes-Zajtra, kde bola aj druhýkrát, zanikla (jej dáta sú v karte
                              7 dní).
-                             Pred prvou a za poslednou reálnou stránkou je neviditeľný klon poslednej/
-                             prvej (obsah dopĺňa JS, viď syncPagerClones v terazky.js) - vďaka nim
-                             listovanie pôsobí ako kolotoč (initVerdictPager v interactions.js).
+                             Listovanie má konce: na prvej stránke sa dá ísť len ďalej, na poslednej
+                             len späť. Dve prázdne stránky s id verdict-page-clone-* sú zvyškom po
+                             kolotoči - JS ich skrýva (initVerdictPager v interactions.js) a zmaže
+                             ich až ďalšie nasadenie (viď CLAUDE.md).
                              Bodky nenesú číslo stránky: pás ich berie podľa poradia (viď initNavigation
                              v interactions.js), takže číslovanie nemá ako zostarnúť. -->
                     <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán" tabindex="0">

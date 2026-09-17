@@ -7,7 +7,7 @@ import { nextPanel, nextWeekDay, panelChange } from './state.js';
 
 /** @typedef {import('./state.js').Store} Store */
 /** @typedef {import('./dom.js').Dom} Dom */
-/** @typedef {{ x: number, y: number, t: number, room: { left: number, right: number } | null, chart: boolean }} Zaciatok */
+/** @typedef {{ x: number, y: number, t: number, room: { left: number, right: number, pager: boolean } | null, chart: boolean }} Zaciatok */
 
 /** Jazdec na dennom prstenci nie je posuvný pás, ale úchytka na ťahanie - pravidlo
  * o vnútorných pásoch nižšie ho nechytí a bez tejto výnimky by ťahanie jazdca prepínalo
@@ -23,11 +23,17 @@ const CHART = '.chart-wrap';
  * prehliadač s nimi prstom nepohne, takže gesto nad nimi nepatrí im. */
 const PANNABLE = /^(auto|scroll)$/;
 
+/** Pás, ktorý sa sám prichytáva po stránkach, je listovanie sám o sebe - gesto nad ním patrí
+ * jemu aj vtedy, keď stojí na krajnej stránke a nemá kam ísť. Bez toho by ťah z poslednej
+ * správy pod ciferníkom odišiel na susednú kartu. Nie je to menované miesto, ale pravidlo:
+ * prichytávanie po stránkach má v štýloch jediný pás, kolotoč odporúčaní (.pager). */
+const SNAPS_X = /^(x|both)\b/;
+
 /**
  * Koľko miesta ostáva najbližšiemu vnútornému pásu pod prstom, ktorý sa dá posúvať do strán:
- * kolotoč odporúčaní na karte Terazky, na úzkych displejoch aj tabuľka 7 dní. Kým má taký pás
+ * pás odporúčaní na karte Terazky, na úzkych displejoch aj tabuľka 7 dní. Kým má taký pás
  * kam ísť, patrí gesto jemu a nie karte - rovnaké pravidlo, aké medzi sebou používajú vnorené
- * kolotoče. Menovať jednotlivé miesta netreba: pás sa pozná podľa toho, že sa naozaj má kam
+ * pásy. Menovať jednotlivé miesta netreba: pás sa pozná podľa toho, že sa naozaj má kam
  * posunúť - a že sa posunúť vôbec dá.
  *
  * Druhá podmienka tu nie je navyše. Stačilo, aby obsah presiahol orezaný prvok o dva pixely,
@@ -39,7 +45,9 @@ const PANNABLE = /^(auto|scroll)$/;
 function innerScrollRoom(target, page) {
     for (let el = target instanceof Element ? target : null; el && el !== page; el = el.parentElement) {
         const room = el.scrollWidth - el.clientWidth;
-        if (room > 1 && PANNABLE.test(getComputedStyle(el).overflowX)) return { left: el.scrollLeft, right: room - el.scrollLeft };
+        const style = getComputedStyle(el);
+        if (room > 1 && PANNABLE.test(style.overflowX))
+            return { left: el.scrollLeft, right: room - el.scrollLeft, pager: SNAPS_X.test(style.scrollSnapType) };
     }
     return null;
 }
@@ -53,7 +61,8 @@ function isSwipe(from, dx, dy, ms) {
 
 /** Posúval prst vnútorný pás namiesto karty? @param {Zaciatok} from @param {number} dx */
 function pansInner(from, dx) {
-    return !!from.room && (dx < 0 ? from.room.right : from.room.left) > 1;
+    if (!from.room) return false;
+    return from.room.pager || (dx < 0 ? from.room.right : from.room.left) > 1;
 }
 
 /** Kam gesto vedie: buď na susedný deň (v detaile dňa), alebo na susednú kartu, alebo

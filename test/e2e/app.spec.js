@@ -148,18 +148,18 @@ test('verdikt sa listuje do strán: teraz (defaultne prvá), spotrebiče, predpo
     await expect(dots.nth(3)).toHaveClass(/active/);
     await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
 
-    // Pás je kolotoč: posun za poslednú stránku sa zacyklí na prvú.
+    // Poradie má koniec: posun za poslednú stránku sa nezacyklí, ostáva na nej.
     await page.mouse.wheel(400, 0);
-    await expect(dots.nth(0)).toHaveClass(/active/);
-    await expect(page.locator('#verdict-headline')).toBeInViewport();
-
-    // A opačným smerom z prvej stránky sa zacyklí na poslednú.
-    await page.mouse.wheel(-400, 0);
     await expect(dots.nth(3)).toHaveClass(/active/);
     await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
 
     // Bodka posunie pás späť na prvú stránku.
     await dots.nth(0).click();
+    await expect(dots.nth(0)).toHaveClass(/active/);
+    await expect(page.locator('#verdict-headline')).toBeInViewport();
+
+    // A ten istý koniec na druhej strane: z prvej stránky sa naspäť nedá.
+    await page.mouse.wheel(-400, 0);
     await expect(dots.nth(0)).toHaveClass(/active/);
     await expect(page.locator('#verdict-headline')).toBeInViewport();
 
@@ -1139,14 +1139,21 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    test('kolotoč odporúčaní si ťahanie necháva pre seba', async ({ page }) => {
+    test('pás odporúčaní si ťahanie necháva pre seba aj na krajnej stránke', async ({ page }) => {
         const errors = await openApp(page);
+        const dots = page.locator('#verdict-dots .pager-dot');
 
-        // Swipe pole pod ciferníkom je vnútorný pás, ktorý sa má stále kam posunúť (pred prvou
-        // a za poslednou stránkou má klony), takže gesto patrí jemu a karta ostáva.
+        // Pás pod ciferníkom sa listuje sám, takže gesto nad ním patrí jemu a karta ostáva -
+        // aj na prvej stránke, z ktorej naspäť nevedie nič.
+        await swipe(page, '#verdict-pager', { dx: 120 });
+        await ocakavajKartu(page, 'terazky');
         await swipe(page, '#verdict-pager', { dx: -120 });
         await ocakavajKartu(page, 'terazky');
-        await swipe(page, '#verdict-pager', { dx: 120 });
+
+        // To isté na poslednej stránke - bez času čakania je ňou predpoveď dňa.
+        await dots.nth(2).click();
+        await expect(dots.nth(2)).toHaveClass(/active/);
+        await swipe(page, '#verdict-pager', { dx: -120 });
         await ocakavajKartu(page, 'terazky');
         expect(errors).toEqual([]);
     });
