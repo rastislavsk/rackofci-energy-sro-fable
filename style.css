@@ -629,10 +629,10 @@ b {
    Ikonka sedí v hlavičke vedľa riadku "aktualizované HH:MM" (viď .pv-updated-line
    v index.html), nie na karte - dáva zmysel len na Terazky, ktorá ako jediná má
    ciferník na vysvetlenie, preto je inde v hlavičke skrytá tým istým :has() vzorom,
-   akým appka na Terazky mení aj iné veci v .appbar (viď nižšie). Kruh okolo "i" je
-   súčasť SVG, nie orámovanie tlačidla - to by pridalo druhý, prekrývajúci sa kruh.
-   Rozmer ikony drží pod výškou riadku, do ktorého sedí, aby si hlavička nepýtala
-   viac miesta, než mala doteraz. */
+   akým appka na Terazky mení aj iné veci v .appbar (viď nižšie). Kruh je plný, "i"
+   v ňom je vyrezané farbou pozadia, nie orámovanie tlačidla - to by pridalo druhý,
+   prekrývajúci sa kruh. Rozmer ikony drží pod výškou riadku, do ktorého sedí, aby
+   si hlavička nepýtala viac miesta, než mala doteraz. */
 .info-btn {
     display: none;
     align-items: center;
@@ -643,15 +643,14 @@ body:has(#page[data-panel='terazky']) .info-btn {
     display: flex;
 }
 .info-btn svg {
-    width: 11px;
-    height: 11px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
+    width: 12px;
+    height: 12px;
 }
-.info-btn svg .dot {
+.info-btn svg .bg {
     fill: currentColor;
+}
+.info-btn svg .i {
+    fill: var(--bg);
 }
 /* Prekrytie je position: fixed, nie súčasť .dial-hero - má sadnúť na celú obrazovku,
    nie len na kartu. */
