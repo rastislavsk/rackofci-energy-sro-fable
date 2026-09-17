@@ -137,12 +137,14 @@
                              7 dní).
                              Listovanie má konce: na prvej stránke sa dá ísť len ďalej, na poslednej
                              len späť. Dve prázdne stránky s id verdict-page-clone-* sú zvyškom po
-                             kolotoči - JS ich skrýva (initVerdictPager v interactions.js) a zmaže
-                             ich až ďalšie nasadenie (viď CLAUDE.md).
+                             kolotoči. Skrýva ich trieda hidden priamo tu a ešte raz JS
+                             (initVerdictPager v interactions.js), aby boli preč aj vtedy, keď si
+                             prehliadač namieša nové skripty so starým HTML z cache. Ďalšie nasadenie
+                             zmaže oboje naraz - vtedy už stará stránka v cache nie je (viď CLAUDE.md).
                              Bodky nenesú číslo stránky: pás ich berie podľa poradia (viď initNavigation
                              v interactions.js), takže číslovanie nemá ako zostarnúť. -->
                     <div class="pager" id="verdict-pager" role="group" aria-label="Odporúčanie, potiahni do strán" tabindex="0">
-                        <div class="pager-page" id="verdict-page-clone-start" aria-hidden="true"></div>
+                        <div class="pager-page hidden" id="verdict-page-clone-start" aria-hidden="true"></div>
                         <div class="pager-page">
                             <h1 id="verdict-headline">Načítavam…</h1>
                             <p class="body" id="verdict-body"></p>
@@ -168,7 +170,7 @@
                                 <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
                             </div>
                         </div>
-                        <div class="pager-page" id="verdict-page-clone-end" aria-hidden="true"></div>
+                        <div class="pager-page hidden" id="verdict-page-clone-end" aria-hidden="true"></div>
                     </div>
                     <div class="pager-dots" id="verdict-dots">
                         <button class="pager-dot active" type="button" aria-label="Čo robiť teraz"></button>
