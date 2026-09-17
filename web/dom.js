@@ -31,19 +31,17 @@ function headerDom() {
 function terazkyDom() {
     return {
         previewReset: byId('preview-reset'),
-        verdictPageForecast: byId('verdict-page-forecast'),
         verdictForecastTitle: byId('verdict-forecast-title'),
         verdictForecastBody: byId('verdict-forecast-body'),
+        // Zvyšok po kolotoči: initVerdictPager ich pri štarte skryje, takže do listovania
+        // nezasahujú. Z HTML ich zmaže až ďalšie nasadenie (viď CLAUDE.md), spolu s týmito
+        // dvoma riadkami.
         verdictPageCloneStart: byId('verdict-page-clone-start'),
         verdictPageCloneEnd: byId('verdict-page-clone-end'),
         dialRing: byId('dial-ring'),
         pvPower: byId('pv-power'),
         pvPowerUnit: byId('pv-power-unit'),
         verdictHeadline: byId('verdict-headline'),
-        // Prvá reálna stránka pageru. Vlastné id nemá zámerne: appka ho smie vyžadovať až
-        // nasadenie po tom, čo sa objaví v HTML (viď CLAUDE.md), a nadpis v nej je rovnako
-        // spoľahlivá kotva. Klonuje sa za poslednú stránku, viď syncPagerClones v terazky.js.
-        verdictPageNow: /** @type {HTMLElement} */ (byId('verdict-headline').closest('.pager-page')),
         verdictBody: byId('verdict-body'),
         verdictGoRow: byId('verdict-go-row'),
         verdictPager: byId('verdict-pager'),

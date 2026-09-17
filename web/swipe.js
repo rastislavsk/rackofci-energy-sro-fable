@@ -7,7 +7,7 @@ import { nextPanel, nextWeekDay, panelChange } from './state.js';
 
 /** @typedef {import('./state.js').Store} Store */
 /** @typedef {import('./dom.js').Dom} Dom */
-/** @typedef {{ x: number, y: number, t: number, room: { left: number, right: number } | null, chart: boolean }} Zaciatok */
+/** @typedef {{ x: number, y: number, t: number, room: { left: number, right: number, pager: boolean } | null, chart: boolean }} Zaciatok */
 
 /** Jazdec na dennom prstenci nie je posuvný pás, ale úchytka na ťahanie - pravidlo
  * o vnútorných pásoch nižšie ho nechytí a bez tejto výnimky by ťahanie jazdca prepínalo
@@ -23,11 +23,17 @@ const CHART = '.chart-wrap';
  * prehliadač s nimi prstom nepohne, takže gesto nad nimi nepatrí im. */
 const PANNABLE = /^(auto|scroll)$/;
 
+/** Pás, ktorý sa sám prichytáva po stránkach, je listovanie sám o sebe - gesto nad ním patrí
+ * jemu aj vtedy, keď stojí na krajnej stránke a nemá kam ísť. Bez toho by ťah z poslednej
+ * správy pod ciferníkom odišiel na susednú kartu. Nie je to menované miesto, ale pravidlo:
+ * prichytávanie po stránkach má v štýloch jediný pás, kolotoč odporúčaní (.pager). */
+const SNAPS_X = /^(x|both)\b/;
+
 /**
  * Koľko miesta ostáva najbližšiemu vnútornému pásu pod prstom, ktorý sa dá posúvať do strán:
- * kolotoč odporúčaní na karte Terazky, na úzkych displejoch aj tabuľka 7 dní. Kým má taký pás
+ * pás odporúčaní na karte Terazky, na úzkych displejoch aj tabuľka 7 dní. Kým má taký pás
  * kam ísť, patrí gesto jemu a nie karte - rovnaké pravidlo, aké medzi sebou používajú vnorené
- * kolotoče. Menovať jednotlivé miesta netreba: pás sa pozná podľa toho, že sa naozaj má kam
+ * pásy. Menovať jednotlivé miesta netreba: pás sa pozná podľa toho, že sa naozaj má kam
  * posunúť - a že sa posunúť vôbec dá.
  *
  * Druhá podmienka tu nie je navyše. Stačilo, aby obsah presiahol orezaný prvok o dva pixely,
@@ -39,7 +45,9 @@ const PANNABLE = /^(auto|scroll)$/;
 function innerScrollRoom(target, page) {
     for (let el = target instanceof Element ? target : null; el && el !== page; el = el.parentElement) {
         const room = el.scrollWidth - el.clientWidth;
-        if (room > 1 && PANNABLE.test(getComputedStyle(el).overflowX)) return { left: el.scrollLeft, right: room - el.scrollLeft };
+        const style = getComputedStyle(el);
+        if (room > 1 && PANNABLE.test(style.overflowX))
+            return { left: el.scrollLeft, right: room - el.scrollLeft, pager: SNAPS_X.test(style.scrollSnapType) };
     }
     return null;
 }
@@ -53,25 +61,29 @@ function isSwipe(from, dx, dy, ms) {
 
 /** Posúval prst vnútorný pás namiesto karty? @param {Zaciatok} from @param {number} dx */
 function pansInner(from, dx) {
-    return !!from.room && (dx < 0 ? from.room.right : from.room.left) > 1;
+    if (!from.room) return false;
+    return from.room.pager || (dx < 0 ? from.room.right : from.room.left) > 1;
 }
 
-/** Kam gesto vedie: buď na susedný deň (v detaile dňa), alebo na susednú kartu, alebo
- * nikam (kraj poradia, detail týždňa).
+/** Kam gesto vedie: buď na susedný deň (v detaile dňa), alebo späť do prehľadu dní, alebo
+ * na susednú kartu, alebo nikam (koniec poradia dní, kraj poradia kariet).
  *
  * Detail je podobrazovka karty 7 dní a ťah ju neopúšťa - v detaile dňa listuje dni, tak ako
- * inde listuje karty, a v detaile týždňa nerobí nič, lebo tam je jediná obrazovka a listovať
- * nie je čo. Von z detailu vedie šípka späť v jeho hlavičke (a tlačidlo Späť v prehliadači).
- * Na širokej obrazovke detail neexistuje (viď renderSedemdni), tam sa ťahom prepína karta.
+ * inde listuje karty. Ťah doprava je pritom všade v appke krok späť, takže keď už listovať
+ * nie je kam (prvý deň, alebo detail týždňa, kde je jediná obrazovka), vedie tam, kam šípka
+ * v hlavičke detailu: do prehľadu dní. Doľava sa na poslednom dni nedeje nič - vpred z detailu
+ * cesta nevedie. Na širokej obrazovke detail neexistuje (viď renderSedemdni), tam sa ťahom
+ * prepína karta.
  * @param {import('./state.js').AppState} state @param {number} dx */
 function targetFor(state, dx) {
     if (state.panel === '7dni' && state.weekDetail && !state.wide) {
-        if (state.weekDetail !== 'day') return null;
+        const spat = dx > 0 ? { weekDetail: null } : null;
+        if (state.weekDetail !== 'day') return spat;
         const dir = /** @type {1 | -1} */ (dx < 0 ? 1 : -1);
         const den = nextWeekDay(state.weekSelDay, dir, state.forecast?.days.length ?? 0);
         // Smer ide do stavu s dňom: podľa neho sa detail prisunie z tej strany, ktorou sa
         // listovalo - to isté, čo panelChange robí pre karty.
-        return den === null ? null : { weekSelDay: den, weekDayDir: dir };
+        return den === null ? spat : { weekSelDay: den, weekDayDir: dir };
     }
     const panel = nextPanel(state.panel, dx < 0 ? 1 : -1);
     return panel ? panelChange(state.panel, panel) : null;

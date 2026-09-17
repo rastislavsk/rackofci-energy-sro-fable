@@ -148,18 +148,18 @@ test('verdikt sa listuje do strán: teraz (defaultne prvá), spotrebiče, predpo
     await expect(dots.nth(3)).toHaveClass(/active/);
     await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
 
-    // Pás je kolotoč: posun za poslednú stránku sa zacyklí na prvú.
+    // Poradie má koniec: posun za poslednú stránku sa nezacyklí, ostáva na nej.
     await page.mouse.wheel(400, 0);
-    await expect(dots.nth(0)).toHaveClass(/active/);
-    await expect(page.locator('#verdict-headline')).toBeInViewport();
-
-    // A opačným smerom z prvej stránky sa zacyklí na poslednú.
-    await page.mouse.wheel(-400, 0);
     await expect(dots.nth(3)).toHaveClass(/active/);
     await expect(page.locator('#verdict-wait-chip')).toBeInViewport();
 
     // Bodka posunie pás späť na prvú stránku.
     await dots.nth(0).click();
+    await expect(dots.nth(0)).toHaveClass(/active/);
+    await expect(page.locator('#verdict-headline')).toBeInViewport();
+
+    // A ten istý koniec na druhej strane: z prvej stránky sa naspäť nedá.
+    await page.mouse.wheel(-400, 0);
     await expect(dots.nth(0)).toHaveClass(/active/);
     await expect(page.locator('#verdict-headline')).toBeInViewport();
 
@@ -1139,14 +1139,21 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    test('kolotoč odporúčaní si ťahanie necháva pre seba', async ({ page }) => {
+    test('pás odporúčaní si ťahanie necháva pre seba aj na krajnej stránke', async ({ page }) => {
         const errors = await openApp(page);
+        const dots = page.locator('#verdict-dots .pager-dot');
 
-        // Swipe pole pod ciferníkom je vnútorný pás, ktorý sa má stále kam posunúť (pred prvou
-        // a za poslednou stránkou má klony), takže gesto patrí jemu a karta ostáva.
+        // Pás pod ciferníkom sa listuje sám, takže gesto nad ním patrí jemu a karta ostáva -
+        // aj na prvej stránke, z ktorej naspäť nevedie nič.
+        await swipe(page, '#verdict-pager', { dx: 120 });
+        await ocakavajKartu(page, 'terazky');
         await swipe(page, '#verdict-pager', { dx: -120 });
         await ocakavajKartu(page, 'terazky');
-        await swipe(page, '#verdict-pager', { dx: 120 });
+
+        // To isté na poslednej stránke - bez času čakania je ňou predpoveď dňa.
+        await dots.nth(2).click();
+        await expect(dots.nth(2)).toHaveClass(/active/);
+        await swipe(page, '#verdict-pager', { dx: -120 });
         await ocakavajKartu(page, 'terazky');
         expect(errors).toEqual([]);
     });
@@ -1347,7 +1354,7 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    test('v detaile dňa listuje ťah dni, na kraji týždňa sa zastaví a kartu neprepne', async ({ page }) => {
+    test('v detaile dňa listuje ťah dni, za posledným sa zastaví a z prvého vedie do prehľadu', async ({ page }) => {
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
         await page.locator('#week-list [data-day-index="3"]').click();
@@ -1366,13 +1373,14 @@ test.describe('listovanie kariet prstom', () => {
         await swipe(page, '#week-day-head', { dx: -120 });
         await ocakavajDetailDna(page, 6);
 
-        // Prvý deň: doprava tiež nikam. Von z detailu vedie šípka späť, nie ťah.
+        // Prvý deň: doprava už nie je kam listovať, tak ťah zavrie detail - to isté, čo šípka
+        // späť v jeho hlavičke. Karta pod ním ostáva 7 dní.
         await page.locator('#week-day-back').click();
         await page.locator('#week-list [data-day-index="0"]').click();
-        await swipe(page, '#week-day-head', { dx: 120 });
         await ocakavajDetailDna(page, 0);
-        await page.locator('#week-day-back').click();
+        await swipe(page, '#week-day-head', { dx: 120 });
         await expect(page.locator('#week-day-head')).toBeHidden();
+        await ocakavajKartu(page, '7dni');
         expect(errors).toEqual([]);
     });
 
@@ -1415,17 +1423,21 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    test('v detaile týždňa ťah neurobí nič - je tam jediná obrazovka', async ({ page }) => {
+    test('v detaile týždňa ťah doľava neurobí nič, doprava sa vráti do prehľadu', async ({ page }) => {
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
         await page.locator('.week-list-hero').click();
         await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
 
-        for (const dx of [-120, 120]) {
-            await swipe(page, '#week-day-head', { dx });
-            await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
-            await ocakavajKartu(page, '7dni');
-        }
+        // Doľava nie je kam ísť - je tam jediná obrazovka a vpred z detailu cesta nevedie.
+        await swipe(page, '#week-day-head', { dx: -120 });
+        await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
+        await ocakavajKartu(page, '7dni');
+
+        // Doprava je krok späť: detail sa zavrie a ostane prehľad dní.
+        await swipe(page, '#week-day-head', { dx: 120 });
+        await expect(page.locator('#week-day-head')).toBeHidden();
+        await ocakavajKartu(page, '7dni');
         expect(errors).toEqual([]);
     });
 });
