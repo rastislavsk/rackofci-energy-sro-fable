@@ -1354,7 +1354,7 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    test('v detaile dňa listuje ťah dni, na kraji týždňa sa zastaví a kartu neprepne', async ({ page }) => {
+    test('v detaile dňa listuje ťah dni, za posledným sa zastaví a z prvého vedie do prehľadu', async ({ page }) => {
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
         await page.locator('#week-list [data-day-index="3"]').click();
@@ -1373,13 +1373,14 @@ test.describe('listovanie kariet prstom', () => {
         await swipe(page, '#week-day-head', { dx: -120 });
         await ocakavajDetailDna(page, 6);
 
-        // Prvý deň: doprava tiež nikam. Von z detailu vedie šípka späť, nie ťah.
+        // Prvý deň: doprava už nie je kam listovať, tak ťah zavrie detail - to isté, čo šípka
+        // späť v jeho hlavičke. Karta pod ním ostáva 7 dní.
         await page.locator('#week-day-back').click();
         await page.locator('#week-list [data-day-index="0"]').click();
-        await swipe(page, '#week-day-head', { dx: 120 });
         await ocakavajDetailDna(page, 0);
-        await page.locator('#week-day-back').click();
+        await swipe(page, '#week-day-head', { dx: 120 });
         await expect(page.locator('#week-day-head')).toBeHidden();
+        await ocakavajKartu(page, '7dni');
         expect(errors).toEqual([]);
     });
 
@@ -1422,17 +1423,21 @@ test.describe('listovanie kariet prstom', () => {
         expect(errors).toEqual([]);
     });
 
-    test('v detaile týždňa ťah neurobí nič - je tam jediná obrazovka', async ({ page }) => {
+    test('v detaile týždňa ťah doľava neurobí nič, doprava sa vráti do prehľadu', async ({ page }) => {
         const errors = await openApp(page);
         await page.locator('#nav-7dni').click();
         await page.locator('.week-list-hero').click();
         await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
 
-        for (const dx of [-120, 120]) {
-            await swipe(page, '#week-day-head', { dx });
-            await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
-            await ocakavajKartu(page, '7dni');
-        }
+        // Doľava nie je kam ísť - je tam jediná obrazovka a vpred z detailu cesta nevedie.
+        await swipe(page, '#week-day-head', { dx: -120 });
+        await expect(page.locator('#week-day-title')).toHaveText('Celý týždeň');
+        await ocakavajKartu(page, '7dni');
+
+        // Doprava je krok späť: detail sa zavrie a ostane prehľad dní.
+        await swipe(page, '#week-day-head', { dx: 120 });
+        await expect(page.locator('#week-day-head')).toBeHidden();
+        await ocakavajKartu(page, '7dni');
         expect(errors).toEqual([]);
     });
 });

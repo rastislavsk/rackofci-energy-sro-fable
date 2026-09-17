@@ -65,22 +65,25 @@ function pansInner(from, dx) {
     return from.room.pager || (dx < 0 ? from.room.right : from.room.left) > 1;
 }
 
-/** Kam gesto vedie: buď na susedný deň (v detaile dňa), alebo na susednú kartu, alebo
- * nikam (kraj poradia, detail týždňa).
+/** Kam gesto vedie: buď na susedný deň (v detaile dňa), alebo späť do prehľadu dní, alebo
+ * na susednú kartu, alebo nikam (koniec poradia dní, kraj poradia kariet).
  *
  * Detail je podobrazovka karty 7 dní a ťah ju neopúšťa - v detaile dňa listuje dni, tak ako
- * inde listuje karty, a v detaile týždňa nerobí nič, lebo tam je jediná obrazovka a listovať
- * nie je čo. Von z detailu vedie šípka späť v jeho hlavičke (a tlačidlo Späť v prehliadači).
- * Na širokej obrazovke detail neexistuje (viď renderSedemdni), tam sa ťahom prepína karta.
+ * inde listuje karty. Ťah doprava je pritom všade v appke krok späť, takže keď už listovať
+ * nie je kam (prvý deň, alebo detail týždňa, kde je jediná obrazovka), vedie tam, kam šípka
+ * v hlavičke detailu: do prehľadu dní. Doľava sa na poslednom dni nedeje nič - vpred z detailu
+ * cesta nevedie. Na širokej obrazovke detail neexistuje (viď renderSedemdni), tam sa ťahom
+ * prepína karta.
  * @param {import('./state.js').AppState} state @param {number} dx */
 function targetFor(state, dx) {
     if (state.panel === '7dni' && state.weekDetail && !state.wide) {
-        if (state.weekDetail !== 'day') return null;
+        const spat = dx > 0 ? { weekDetail: null } : null;
+        if (state.weekDetail !== 'day') return spat;
         const dir = /** @type {1 | -1} */ (dx < 0 ? 1 : -1);
         const den = nextWeekDay(state.weekSelDay, dir, state.forecast?.days.length ?? 0);
         // Smer ide do stavu s dňom: podľa neho sa detail prisunie z tej strany, ktorou sa
         // listovalo - to isté, čo panelChange robí pre karty.
-        return den === null ? null : { weekSelDay: den, weekDayDir: dir };
+        return den === null ? spat : { weekSelDay: den, weekDayDir: dir };
     }
     const panel = nextPanel(state.panel, dx < 0 ? 1 : -1);
     return panel ? panelChange(state.panel, panel) : null;

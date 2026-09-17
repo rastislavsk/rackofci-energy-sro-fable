@@ -43,8 +43,9 @@ Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta d
 poradí spodnej navigácie – aj ponad grafy a prehľad dní. V detaile dňa listuje to isté
 gesto dni v týždni, nie karty: doľava na ďalší deň, doprava na predchádzajúci – a nový deň
 sa prisunie z tej strany, ktorou si ťahal, rovnako ako karta pri prepnutí. Nezacyklí sa
-– za posledným dňom ani pred prvým už ťah nevedie nikam a von z detailu vedie šípka späť
-v jeho hlavičke. V detaile týždňa ťah neurobí nič, lebo je tam jediná obrazovka. Nad grafom
+– za posledným dňom už ťah nevedie nikam a z prvého dňa (Dnes) sa ťahom doprava vrátiš do
+prehľadu dní, teda tam, kam vedie aj šípka späť v hlavičke detailu. V detaile týždňa je to
+to isté: doľava sa nedeje nič, doprava zavrie detail. Nad grafom
 listuje rýchle švihnutie a tooltip sa pri ňom vôbec neukáže; pomalé ťahanie po krivke ostáva
 prezeraním s tooltipom ako doteraz. Zvislý ťah je posúvanie stránky – aj keď prst začne na grafe – a
 tooltip sa pri ňom neukáže tiež. Nová karta sa pritom prisunie z tej strany, ktorou si listoval –
