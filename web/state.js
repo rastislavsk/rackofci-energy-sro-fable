@@ -22,12 +22,13 @@ import { PANELS } from './dom.js';
  *   previewMinutes: number | null,
  *   isDragging: boolean,
  *   wide: boolean,
+ *   tall: boolean,
  *   chartSizes: Record<string, { w: number, h: number }>,
  * }} AppState
  * @typedef {{ panel: Panel, weekDetail: 'day' | 'week' | null }} NavStep krok navigácie pre tlačidlo Späť
  */
 
-/** @param {Date} now @param {Season} season @param {{ wide: boolean }} layout @returns {AppState} */
+/** @param {Date} now @param {Season} season @param {{ wide: boolean, tall: boolean }} layout @returns {AppState} */
 export function initialState(now, season, layout) {
     return {
         now,
@@ -52,6 +53,9 @@ export function initialState(now, season, layout) {
         previewMinutes: null,
         isDragging: false,
         wide: layout.wide,
+        // Či je okno dosť vysoké na to, aby sa do prehľadu dní zmestila aj správa týždňa
+        // (WEEK_MSG_MIN_H). Keď nie je, správa sa nekreslí - prehľad ostáva bez scrollovania.
+        tall: layout.tall,
         // Skutočné rozmery plátien grafov. Napĺňa ich ResizeObserver v interactions.js;
         // kým sú prázdne, grafy sa kreslia na pevné plátno z chartDims.
         chartSizes: {},

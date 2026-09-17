@@ -141,6 +141,16 @@ export const REFRESH = {
     dataMs: 60 * 1000,
 };
 
+// Od akej viditeľnej výšky okna (px) sa v prehľade dní na karte 7 dní ukáže aj správa
+// týždňa. Prehľad sám sa zmestí od 710 px; so správou potrebuje 835 px, a pri najdlhšej
+// možnej správe na úzkom displeji (320 px) 854 px - namerané v Chromiu pri predvolenej
+// veľkosti písma. 860 je tých 854 a malá rezerva.
+//
+// Rozhoduje skutočná viditeľná výška (visualViewport), nie rozlíšenie displeja: v mobilnom
+// prehliadači ukrojí adresný riadok 60-90 px, a práve o tie tu ide. Keď sa správa nezmestí,
+// jednoducho nie je - prehľad má ostať na jednu obrazovku bez scrollovania.
+export const WEEK_MSG_MIN_H = 860;
+
 // Ako dlho ostáva tooltip po ťuknutí zobrazený (ms).
 export const TOOLTIP_HOLD_MS = 1600;
 

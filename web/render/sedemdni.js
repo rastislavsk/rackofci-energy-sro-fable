@@ -208,9 +208,10 @@ function renderCurve(state, day, dom) {
  * Prehľad a detaily sú na mobile obrazovky tej istej karty: prehľad má bubliny, tabuľku
  * a správu, detail dňa ukazuje priebeh vybraného dňa a detail týždňa dennú výrobu s mapou.
  * Na širokej obrazovke (`narrow` je false) sú detaily vypnuté a karta ostáva celá pokope.
- * @param {'day' | 'week' | null} detail @param {boolean} narrow @param {import('../dom.js').Dom} dom
+ * @param {'day' | 'week' | null} detail @param {boolean} narrow @param {boolean} tall
+ * @param {import('../dom.js').Dom} dom
  */
-function renderView(detail, narrow, dom) {
+function renderView(detail, narrow, tall, dom) {
     dom.panels['7dni'].classList.toggle('detail', !!detail);
     dom.weekHead.classList.toggle('hidden', !!detail);
     // Prehľad dní má dve podoby a vidno vždy práve jednu: na mobile rebríček, na širokej
@@ -218,9 +219,10 @@ function renderView(detail, narrow, dom) {
     // (viď renderSedemdni), takže bubliny a tabuľku stačí viazať na šírku.
     dom.weekBlockList.classList.toggle('hidden', !narrow || !!detail);
     for (const el of [dom.weekTrio, dom.weekBlockTable]) el.classList.toggle('hidden', narrow);
-    // Správa patrí k tomu, čo je otvorené: v prehľade dní preto nie je vôbec, v detaile dňa
-    // hovorí o tom dni a v detaile týždňa o najsilnejšom dni týždňa.
-    dom.weekMsgBlock.classList.toggle('hidden', narrow && !detail);
+    // Správa patrí k tomu, čo je otvorené: v detaile dňa hovorí o tom dni, inde o najsilnejšom
+    // dni týždňa. V prehľade dní na mobile je len vtedy, keď sa zvyšok zmestil na obrazovku
+    // a ostalo na ňu miesto (`tall`, viď WEEK_MSG_MIN_H) - prehľad sa nemá kvôli nej rozscrollovať.
+    dom.weekMsgBlock.classList.toggle('hidden', narrow && !detail && !tall);
     const vidno = detail === 'day' ? ['weekBlockCurve', 'weekBlockHeat'] : detail === 'week' ? ['weekBlockBars', 'weekBlockHeat'] : [];
     for (const key of ['weekBlockHeat', 'weekBlockBars', 'weekBlockCurve'])
         dom[key].classList.toggle('hidden', detail ? !vidno.includes(key) : narrow);
@@ -320,7 +322,7 @@ export function renderSedemdni(state, dom) {
     const days = state.forecast && Array.isArray(state.forecast.days) ? state.forecast.days : [];
     // Bez dát nie je čo otvárať - karta ostáva na prehľade so správou "Predpoveď sa pripravuje".
     const detail = !state.wide && days.length > 0 ? state.weekDetail : null;
-    renderView(detail, !state.wide, dom);
+    renderView(detail, !state.wide, state.tall, dom);
     if (!days.length) {
         // Prázdny rebríček by na mobile ukazoval kartu so samými pomlčkami - z prehľadu preto
         // ostáva len tá správa, a tú musí byť vidno aj tam, kde ju renderView inak skrýva.

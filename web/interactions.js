@@ -2,7 +2,16 @@
 // nikto tu nekreslí do DOM okrem tooltipov, ktoré nie sú súčasťou stavu.
 
 import { chartTooltipModel, minutesFromAngle, ringGap } from '../shared/chart-model.js';
-import { MINUTES_PER_DAY, PAGER_SETTLE_MS, PREVIEW, REFRESH, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS } from '../shared/config.js';
+import {
+    MINUTES_PER_DAY,
+    PAGER_SETTLE_MS,
+    PREVIEW,
+    REFRESH,
+    SWIPE,
+    TOOLTIP_FADE_MS,
+    TOOLTIP_HOLD_MS,
+    WEEK_MSG_MIN_H,
+} from '../shared/config.js';
 import { minutesOfDay } from '../shared/hero-model.js';
 import { loadData } from './data.js';
 import { initHistory } from './history.js';
@@ -446,7 +455,16 @@ function initChartSizes(store, dom) {
     measure();
 }
 
-/** Hodiny, obnova dát, návrat z pozadia a zmeny šírky okna. @param {Store} store @param {{ wide: MediaQueryList }} mq */
+/**
+ * Je okno dosť vysoké na správu týždňa v prehľade dní? Rozhoduje `visualViewport` - to je
+ * to, čo je z okna naozaj vidieť. `innerHeight` v mobilnom prehliadači počíta aj pás pod
+ * adresným riadkom, takže by tvrdil, že miesto je, hoci by sa muselo scrollovať.
+ */
+export function isTall() {
+    return (window.visualViewport ? window.visualViewport.height : window.innerHeight) >= WEEK_MSG_MIN_H;
+}
+
+/** Hodiny, obnova dát, návrat z pozadia a zmeny rozmerov okna. @param {Store} store @param {{ wide: MediaQueryList }} mq */
 function initTicks(store, mq) {
     const refresh = async () => {
         const result = await loadData();
@@ -462,6 +480,12 @@ function initTicks(store, mq) {
     setInterval(() => !document.hidden && refresh(), REFRESH.dataMs);
     document.addEventListener('visibilitychange', () => !document.hidden && refresh());
     mq.wide.addEventListener('change', (e) => store.setState({ wide: e.matches }));
+    // Viditeľná výška sa mení aj bez otočenia displeja - ukrytím adresného riadka pri
+    // scrollovaní, klávesnicou, priblížením. setState zahodí rovnakú hodnotu, takže
+    // z tohto poslucháča vzíde prekreslenie len vtedy, keď sa naozaj prekročí hranica.
+    const sledujVysku = () => store.setState({ tall: isTall() });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', sledujVysku);
+    window.addEventListener('resize', sledujVysku);
     return refresh;
 }
 

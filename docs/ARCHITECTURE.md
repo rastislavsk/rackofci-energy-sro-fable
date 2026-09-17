@@ -135,6 +135,17 @@ Správa je jeden prvok pre obe obrazovky: v detaile dňa v ňom stojí `dayDetai
 v detaile týždňa `weekMessage`. Text v detaile dňa deň naschvál nepomenúva – hovorí to
 hlavička nad ním, a inak by sa „zajtra“ ukázalo aj pri štvrtku.
 
+V **prehľade dní** je tá istá správa (`weekMessage`) navyše, a len vtedy, keď na ňu ostalo
+miesto: prehľad má byť jedna obrazovka bez scrollovania, takže správa je bonus, nie obsah.
+Rozhoduje pole `tall` v stave – viditeľná výška okna oproti `WEEK_MSG_MIN_H` (860 px).
+Namerané v Chromiu pri predvolenom písme: samotný prehľad sa zmestí od 710 px, so správou
+potrebuje 835 px a pri najdlhšej možnej správe na 320 px širokom displeji 854 px.
+
+Výšku dáva `visualViewport`, nie `innerHeight` ani `@media (min-height: …)`: v mobilnom
+prehliadači ukrojí adresný riadok 60 – 90 px, ktoré tie dve o sebe nevedia, a správa by sa
+ukázala do priestoru, ktorý vidieť nie je. Slučka z toho nevznikne – vstupom je okno, nie
+obsah, takže ukázanie správy výšku okna nezmení.
+
 Obe obrazovky majú hlavičku so šípkou späť. Rozhoduje o tom jediné pole v stave
 (`weekDetail`: `'day' | 'week' | null`), prepínajú sa len triedy `.hidden` – žiadny presun
 prvkov v DOM. Poradie na detaile robí jedno pravidlo `order` v CSS, lebo heatmapa je

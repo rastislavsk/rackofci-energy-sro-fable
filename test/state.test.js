@@ -13,7 +13,7 @@ import {
 } from '../web/state.js';
 
 test('setState zlúči zmenu a zavolá odberateľa presne raz', () => {
-    const store = createStore(initialState(new Date('2026-09-05T11:00:00Z'), 'summer', { wide: false }));
+    const store = createStore(initialState(new Date('2026-09-05T11:00:00Z'), 'summer', { wide: false, tall: false }));
     let calls = 0;
     store.subscribe(() => calls++);
     store.setState({ panel: '7dni', weekSelDay: 3 });
@@ -22,10 +22,13 @@ test('setState zlúči zmenu a zavolá odberateľa presne raz', () => {
     assert.equal(store.get().weekSelDay, 3);
     assert.equal(store.get().season, 'summer');
     assert.equal(store.get().verdictPage, 0, 'verdikt začína na prvej stránke');
+    // Rozmery okna prichádzajú zvonku, stav si ich nedomýšľa.
+    assert.equal(store.get().wide, false);
+    assert.equal(store.get().tall, false);
 });
 
 test('rovnaké hodnoty nespustia prekreslenie, odhlásenie funguje', () => {
-    const store = createStore(initialState(new Date(), 'winter', { wide: true }));
+    const store = createStore(initialState(new Date(), 'winter', { wide: true, tall: true }));
     let calls = 0;
     const off = store.subscribe(() => calls++);
     store.setState({ panel: 'terazky', wide: true });
@@ -60,7 +63,7 @@ test('smer prechodu ide podľa poradia v navigácii, nie podľa toho, ako sa pre
 });
 
 test('krok navigácie pre tlačidlo Späť je karta a otvorený detail, nič iné', () => {
-    const state = initialState(new Date(), 'summer', { wide: false });
+    const state = initialState(new Date(), 'summer', { wide: false, tall: false });
     assert.deepEqual(navStep(state), { panel: 'terazky', weekDetail: null });
     // Vybraný deň ani stránka verdiktu nie sú miesto v appke - Späť sa na ne nevracia.
     assert.ok(sameNavStep(navStep(state), navStep({ ...state, weekSelDay: 4, verdictPage: 2 })));
