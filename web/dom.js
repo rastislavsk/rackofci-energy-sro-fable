@@ -33,11 +33,6 @@ function terazkyDom() {
         previewReset: byId('preview-reset'),
         verdictForecastTitle: byId('verdict-forecast-title'),
         verdictForecastBody: byId('verdict-forecast-body'),
-        // Zvyšok po kolotoči: initVerdictPager ich pri štarte skryje, takže do listovania
-        // nezasahujú. Z HTML ich zmaže až ďalšie nasadenie (viď CLAUDE.md), spolu s týmito
-        // dvoma riadkami.
-        verdictPageCloneStart: byId('verdict-page-clone-start'),
-        verdictPageCloneEnd: byId('verdict-page-clone-end'),
         dialRing: byId('dial-ring'),
         pvPower: byId('pv-power'),
         pvPowerUnit: byId('pv-power-unit'),
