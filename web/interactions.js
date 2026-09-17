@@ -14,6 +14,16 @@ import { initSwipe } from './swipe.js';
 /** @typedef {import('./dom.js').Dom} Dom */
 /** @typedef {import('./state.js').Panel} Panel */
 
+/** Popup s vysvetlením ciferníka: otvára ho ikonka, zatvára krížik, tlačidlo "Rozumiem"
+ * aj klik na tmavé pozadie okolo neho - nie však klik dovnútra samotného popupu.
+ * @param {HTMLElement} target @param {Store} store */
+function handleInfoClick(target, store) {
+    if (target.closest('[data-info-open]')) store.setState({ infoOpen: true });
+    if (target.closest('[data-info-close]') || (target.closest('#info-overlay') && !target.closest('.info-popup'))) {
+        store.setState({ infoOpen: false });
+    }
+}
+
 /** @param {Store} store @param {Dom} dom */
 function initNavigation(store, dom) {
     document.addEventListener('click', (e) => {
@@ -46,6 +56,7 @@ function initNavigation(store, dom) {
         // hľadá poradie v zozname bodiek, nie atribút s číslom stránky: zoznam je ten istý, ktorý
         // bodky rozsvecuje, takže si obe strany nemajú ako rozísť. +1, lebo pred prvou reálnou
         // stránkou je klon poslednej (kolotoč, viď initVerdictPager).
+        handleInfoClick(target, store);
         const dotBtn = target.closest('.pager-dot');
         const dotIndex = dotBtn instanceof HTMLElement ? dom.verdictDotButtons.indexOf(dotBtn) : -1;
         if (dotIndex >= 0) {
@@ -55,6 +66,9 @@ function initNavigation(store, dom) {
     });
     dom.previewReset.addEventListener('click', () => store.setState({ previewMinutes: null, isDragging: false }));
     dom.weekDayBack.addEventListener('click', () => store.setState({ weekDetail: null }));
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && store.get().infoOpen) store.setState({ infoOpen: false });
+    });
 }
 
 /** Uhol bodu voči stredu ciferníka -> minúta dňa. @param {Dom} dom @param {number} clientX @param {number} clientY */

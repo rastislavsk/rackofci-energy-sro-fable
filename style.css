@@ -622,6 +622,200 @@ b {
     transition: background-color var(--dur);
 }
 
+/* ---- Spotrebiče: ikonka a popup s vysvetlením ciferníka -------------------- */
+.info-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--sp-2);
+}
+.info-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--ink-20);
+    background: var(--ink-05);
+    color: var(--ink-45);
+}
+.info-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.info-btn svg .dot {
+    fill: currentColor;
+    stroke: none;
+}
+/* Prekrytie je position: fixed, nie súčasť .dial-hero - má sadnúť na celú obrazovku,
+   nie len na kartu. */
+.info-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 70px 20px 20px;
+    background: rgba(0, 0, 0, 0.62);
+}
+.info-popup {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    background: var(--card-bg);
+    border: 1px solid var(--ink-12);
+    border-radius: var(--radius-lg);
+    padding: 22px 20px 20px;
+    text-align: left;
+}
+.info-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--ink-20);
+    background: var(--ink-05);
+    color: var(--ink-45);
+    font-size: 15px;
+    line-height: 1;
+}
+.info-popup h2 {
+    margin: 0 0 4px;
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+.info-sub {
+    margin: 0 0 18px;
+    font-size: var(--fs-sm);
+    color: var(--ink-35);
+}
+/* Ilustračný ciferník: pevné pásma aj ukážková hodnota výkonu, nie živé dáta - na
+   vysvetlenie farieb a prstencov to netreba prepočítavať. Farby pásiem (.day-band)
+   aj pozadie prstenca (.dial-track) sú tie isté triedy ako na skutočnom ciferníku. */
+.info-dial {
+    display: block;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 18px;
+}
+.info-dial-power {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 14;
+    stroke-linecap: round;
+    stroke-dasharray: 490;
+    stroke-dashoffset: 172;
+}
+.info-dial-now {
+    fill: var(--ink);
+    stroke: var(--card-bg);
+    stroke-width: 2;
+}
+.info-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+}
+.info-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: var(--fs-md);
+    line-height: 1.45;
+    color: var(--ink-70);
+}
+.info-row-icon {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+}
+.info-icon-tariff .seg {
+    fill: none;
+    stroke-width: 3.2;
+}
+.info-icon-tariff .seg.green {
+    stroke: var(--green);
+}
+.info-icon-tariff .seg.amber {
+    stroke: var(--amber);
+}
+.info-icon-tariff .seg.red {
+    stroke: var(--red);
+}
+.info-icon-now .ring {
+    fill: none;
+    stroke: var(--ink-12);
+    stroke-width: 3;
+}
+.info-icon-now .dot {
+    fill: var(--ink);
+}
+.info-icon-power .track {
+    fill: none;
+    stroke: var(--ink-08);
+    stroke-width: 4;
+}
+.info-icon-power .arc {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 30 50;
+}
+.info-icon-drag circle,
+.info-icon-drag path {
+    fill: none;
+    stroke: var(--ink-45);
+    stroke-width: 2;
+}
+.info-icon-drag path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+/* Farba pásma vo vnútri popisku prstenca - rovnaká trieda ako v .go-legend nižšie. */
+.info-tiers {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+    font-size: var(--fs-sm);
+    color: var(--ink-45);
+}
+.info-tiers li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.info-ok {
+    margin-top: 18px;
+    width: 100%;
+    padding: 11px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--ink-20);
+    background: var(--ink-05);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    text-align: center;
+}
+
 /* ---- Spotrebiče: verdikt a spotrebiče ------------------------------------- */
 .verdict {
     text-align: center;

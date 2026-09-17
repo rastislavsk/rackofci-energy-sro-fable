@@ -25,7 +25,8 @@ jej QR kód kreslí knižnica z CDN.
   a prípadne čas, kedy bude lepšie. Listuje sa potiahnutím do strán alebo klikom na bodky.
   Ciferník sa číta aj ako 24-hodinový: vonkajší prstenec je deň s farebnými tarifnými
   pásmami, biela bodka na ňom je „teraz“. Potiahnutím jazdca po prstenci alebo ťuknutím
-  naň si pozrieš, ako to bude vyzerať v inom čase.
+  naň si pozrieš, ako to bude vyzerať v inom čase. Ikonka „i“ v pravom hornom rohu otvorí
+  popup s vysvetlením, čo prstence a farby na ciferníku znamenajú.
 - **7 dní** – prehľad dní: na telefóne rebríček, kde má každý deň pásik dlhý podľa výroby
   voči najsilnejšiemu dňu v týždni, a nad ním jediné veľké číslo za celý týždeň; na širokej
   obrazovke bubliny (Dnes, Zajtra, 7 dní spolu) a tabuľka so všetkými stĺpcami. Klik otvorí

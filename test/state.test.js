@@ -53,8 +53,8 @@ test('poradie dní v detaile dňa: na kraji týždňa sa nezacyklí', () => {
 });
 
 test('smer prechodu ide podľa poradia v navigácii, nie podľa toho, ako sa prepínalo', () => {
-    assert.deepEqual(panelChange('terazky', '7dni'), { panel: '7dni', panelDir: 1, weekDetail: null });
-    assert.deepEqual(panelChange('zdielat', '7dni'), { panel: '7dni', panelDir: -1, weekDetail: null });
+    assert.deepEqual(panelChange('terazky', '7dni'), { panel: '7dni', panelDir: 1, weekDetail: null, infoOpen: false });
+    assert.deepEqual(panelChange('zdielat', '7dni'), { panel: '7dni', panelDir: -1, weekDetail: null, infoOpen: false });
     assert.equal(panelChange('terazky', 'zdielat').panelDir, 1);
     assert.equal(panelChange('zdielat', 'terazky').panelDir, -1);
 });
@@ -75,12 +75,14 @@ test('Späť obnoví kartu aj otvorený detail, smer prechodu ide podľa poradia
         panel: '7dni',
         panelDir: -1,
         weekDetail: 'day',
+        infoOpen: false,
     });
     // Na rozdiel od panelChange sa detail nezatvára, ale nastavuje na to, čo v kroku bolo.
     assert.deepEqual(navChange('terazky', { panel: '7dni', weekDetail: 'week' }), {
         panel: '7dni',
         panelDir: 1,
         weekDetail: 'week',
+        infoOpen: false,
     });
 });
 

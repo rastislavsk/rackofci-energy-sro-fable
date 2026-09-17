@@ -21,6 +21,7 @@ import { PANELS } from './dom.js';
  *   verdictPage: number,
  *   previewMinutes: number | null,
  *   isDragging: boolean,
+ *   infoOpen: boolean,
  *   wide: boolean,
  *   chartSizes: Record<string, { w: number, h: number }>,
  * }} AppState
@@ -51,6 +52,7 @@ export function initialState(now, season, layout) {
         verdictPage: 0,
         previewMinutes: null,
         isDragging: false,
+        infoOpen: false,
         wide: layout.wide,
         // Skutočné rozmery plátien grafov. Napĺňa ich ResizeObserver v interactions.js;
         // kým sú prázdne, grafy sa kreslia na pevné plátno z chartDims.
@@ -113,11 +115,17 @@ export function nextWeekDay(sel, dir, count) {
  * Zmena karty aj so smerom, ktorým sa má nová karta prisunúť. Smer sa berie z poradia
  * v navigácii, nie z toho, či sa ťahalo alebo klikalo - prechod tak vyzerá rovnako pri
  * oboch. Detail dňa sa pritom zatvára: je to vec jedného pozretia, nie stav, do ktorého
- * by sa appka mala vrátiť o hodinu neskôr.
+ * by sa appka mala vrátiť o hodinu neskôr. To isté platí pre popup s vysvetlením
+ * ciferníka - pri odchode z karty sa zatvorí, nech sa pri návrate sám od seba nezjaví.
  * @param {Panel} from @param {Panel} to
  */
 export function panelChange(from, to) {
-    return { panel: to, panelDir: /** @type {1 | -1} */ (PANELS.indexOf(to) < PANELS.indexOf(from) ? -1 : 1), weekDetail: null };
+    return {
+        panel: to,
+        panelDir: /** @type {1 | -1} */ (PANELS.indexOf(to) < PANELS.indexOf(from) ? -1 : 1),
+        weekDetail: null,
+        infoOpen: false,
+    };
 }
 
 /**
