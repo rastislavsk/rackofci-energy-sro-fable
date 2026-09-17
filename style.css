@@ -622,22 +622,20 @@ b {
     transition: background-color var(--dur);
 }
 
-/* ---- Spotrebiče: ikonka a popup s vysvetlením ciferníka -------------------- */
-.info-btn-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: var(--sp-2);
-}
+/* ---- Spotrebiče: ikonka a popup s vysvetlením ciferníka --------------------
+   Ikonka sedí v hlavičke vedľa hodín (viď .appbar-clock v index.html), nie na karte -
+   dáva zmysel len na Terazky, ktorá ako jediná má ciferník na vysvetlenie, preto je
+   inde v hlavičke skrytá tým istým :has() vzorom, akým appka na Terazky mení aj
+   iné veci v .appbar (viď nižšie). Bez vlastného orámovania - pri tejto veľkosti by
+   krúžok okolo "i" zle čitateľné písmeno ešte zmenšil. */
 .info-btn {
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--ink-20);
-    background: var(--ink-05);
     color: var(--ink-45);
+}
+body:has(#page[data-panel='terazky']) .info-btn {
+    display: flex;
 }
 .info-btn svg {
     width: 14px;
@@ -646,11 +644,9 @@ b {
     stroke: currentColor;
     stroke-width: 2;
     stroke-linecap: round;
-    stroke-linejoin: round;
 }
 .info-btn svg .dot {
     fill: currentColor;
-    stroke: none;
 }
 /* Prekrytie je position: fixed, nie súčasť .dial-hero - má sadnúť na celú obrazovku,
    nie len na kartu. */
