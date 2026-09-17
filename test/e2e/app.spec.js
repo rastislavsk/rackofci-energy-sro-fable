@@ -3,11 +3,11 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { ringPercent, usePct, visibleHours, weekDayTiers, weekListModel, WEEK_HOURS } from '../../shared/chart-model.js';
-import { LEGACY_SOURCES, PREVIEW, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS, WORKER_URL } from '../../shared/config.js';
+import { LEGACY_SOURCES, PREVIEW, SWIPE, TOOLTIP_FADE_MS, TOOLTIP_HOLD_MS, WEEK_MSG_MIN_H, WORKER_URL } from '../../shared/config.js';
 import { heroModel } from '../../shared/hero-model.js';
 import { fmt1, hourLabel, weekDayLong } from '../../shared/format.js';
 import { useTier } from '../../web/render/sedemdni.js';
-import { dayDetailMessage, forecastDayMessage } from '../../shared/messages.js';
+import { dayDetailMessage, forecastDayMessage, weekMessage } from '../../shared/messages.js';
 import { FIXED_NOW, fixtureData } from '../helpers.js';
 
 const { pv, forecast } = fixtureData();
@@ -345,7 +345,8 @@ test('7 dní na mobile: prehľad dní, detail dňa a návrat späť', async ({ p
     // Bubliny a tabuľka na mobile nie sú vôbec - prehľad je práve jeden.
     await expect(page.locator('#week-trio')).toBeHidden();
     await expect(page.locator('#week-block-table')).toBeHidden();
-    // Správa patrí k tomu, čo je otvorené - v prehľade dní preto nie je.
+    // Správa je v prehľade len na dosť vysokom okne (WEEK_MSG_MIN_H). Predvolené plátno
+    // testov je nižšie, takže tu ostáva skrytá; obe strany hranice preveruje vlastná skupina nižšie.
     await expect(page.locator('#week-msg-block')).toBeHidden();
     await expect(page.locator('#week-day-head')).toBeHidden();
     expect(await viditelneBloky(page)).toEqual(['week-block-list']);
@@ -468,6 +469,50 @@ test('7 dní: priebeh dnešného dňa ukazuje nameranú výrobu', async ({ page 
     await expect(page.locator('#week-curve path.line-real')).toHaveCount(0);
     await expect(page.locator('#week-curve-live-legend')).toBeHidden();
     expect(errors).toEqual([]);
+});
+
+/**
+ * Správa týždňa pod rebríčkom dní je vec miesta, nie obsahu: ukáže sa len vtedy, keď sa celý
+ * prehľad aj s ňou zmestí na obrazovku. Hranicu drží WEEK_MSG_MIN_H a testujú sa obe jej strany -
+ * v oboch prípadoch musí platiť to hlavné, že prehľad nescrolluje.
+ */
+test.describe('správa týždňa v prehľade dní', () => {
+    /** @param {import('@playwright/test').Page} page */
+    const scrollujeSa = (page) => page.evaluate(() => document.documentElement.scrollHeight > document.documentElement.clientHeight);
+
+    test('na vysokom okne je správa vidno a prehľad sa nescrolluje', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: WEEK_MSG_MIN_H + 40 });
+        const errors = await openApp(page);
+        await page.locator('#nav-7dni').click();
+        await expect(page.locator('#week-msg-block')).toBeVisible();
+        await expect(page.locator('#week-msg-title')).toHaveText(weekMessage(forecast.days).title);
+        expect(await scrollujeSa(page)).toBe(false);
+        expect(errors).toEqual([]);
+    });
+
+    test('na nízkom okne správa nie je a prehľad sa nescrolluje', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: WEEK_MSG_MIN_H - 40 });
+        const errors = await openApp(page);
+        await page.locator('#nav-7dni').click();
+        await expect(page.locator('#week-msg-block')).toBeHidden();
+        expect(await scrollujeSa(page)).toBe(false);
+        // V detaile dňa správa patrí k obsahu, nie k miestu - tam je aj na nízkom okne.
+        await page.locator('#week-list [data-day-index="2"]').click();
+        await expect(page.locator('#week-msg-block')).toBeVisible();
+        expect(errors).toEqual([]);
+    });
+
+    test('zmenšenie okna správu odoberie, zväčšenie vráti', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: WEEK_MSG_MIN_H + 40 });
+        const errors = await openApp(page);
+        await page.locator('#nav-7dni').click();
+        await expect(page.locator('#week-msg-block')).toBeVisible();
+        await page.setViewportSize({ width: 390, height: WEEK_MSG_MIN_H - 40 });
+        await expect(page.locator('#week-msg-block')).toBeHidden();
+        await page.setViewportSize({ width: 390, height: WEEK_MSG_MIN_H + 40 });
+        await expect(page.locator('#week-msg-block')).toBeVisible();
+        expect(errors).toEqual([]);
+    });
 });
 
 /** Na širokej obrazovke je na celú kartu miesto naraz - detail dňa sa tam neotvára a klik
