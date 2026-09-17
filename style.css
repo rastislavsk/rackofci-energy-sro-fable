@@ -654,6 +654,10 @@ b {
 }
 /* Prekrytie je position: fixed, nie súčasť .dial-hero - má sadnúť na celú obrazovku,
    nie len na kartu. */
+/* Pri nižšom displeji (alebo natrvalo zobrazenej navigačnej lište telefónu) je popup
+   vyšší než viditeľná plocha - prekrytie preto smie scrollovať a spodný odstup počíta
+   aj s bezpečnou zónou, rovnako ako .bottomnav. Bez toho by tlačidlo "Rozumiem" ostalo
+   pod navigačnou lištou, nedosiahnuteľné. */
 .info-overlay {
     position: fixed;
     inset: 0;
@@ -661,13 +665,15 @@ b {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 70px 20px 20px;
+    padding: 70px 20px calc(20px + env(safe-area-inset-bottom));
     background: rgba(0, 0, 0, 0.62);
+    overflow-y: auto;
 }
 .info-popup {
     position: relative;
     width: 100%;
     max-width: 340px;
+    flex: 0 0 auto;
     background: var(--card-bg);
     border: 1px solid var(--ink-12);
     border-radius: var(--radius-lg);
