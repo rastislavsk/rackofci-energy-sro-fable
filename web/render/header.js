@@ -26,7 +26,7 @@ export function renderHeader(state, dom) {
     const live = heroModel({ ...state, previewMinutes: null });
     const shown = state.previewMinutes === null ? live : heroModel(state);
     const accent = live.accent;
-    // Farbu bodky (a s ňou aj prúžok nad aktívnou kartou v navigácii) drží data-accent
+    // Farbu bodky (a s ňou aj podsvietenie ikony aktívnej karty v navigácii) drží data-accent
     // na <html> - mapovanie na konkrétnu farbu je v style.css pri --live-rgb.
     dom.root.dataset.accent = accent || '';
     // Pozadie drží farbu tarifného okna (tier), nie "smart" farbu bodky (accent, tá počíta

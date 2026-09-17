@@ -91,7 +91,7 @@
 
 /* Farba stavovej bodky pri čase (tarifa × výkon, teda "smart" farba - accent). data-accent
    zapisuje renderHeader vo web/render/header.js, rovnako ako data-tier vyššie. Číta z nej
-   bodka aj prúžok nad aktívnou kartou v navigácii, aby obe hovorili tú istú farbu a mapovanie
+   bodka aj podsvietenie ikony aktívnej karty v navigácii, aby obe hovorili tú istú farbu a mapovanie
    farieb ostalo na jednom mieste. Zelená platí do prvého prekreslenia. */
 :root {
     --live-rgb: var(--green-rgb);
@@ -292,16 +292,26 @@ b {
 .nav-item.active {
     color: var(--ink);
 }
+/* Podsvietenie ikony: rozmazaný farebný kruh za ňou. Stred sadá presne na ikonu - na mobile
+   je 7px horný padding a ikona 18px, teda 7 + 9 = 16px od vrchu položky. Kruh je plná farba
+   stlmená cez opacity, nie priehľadná farba v gradiente: `background-color` tak ostáva presne
+   tá istá hodnota ako má stavová bodka pri čase (e2e test ich porovnáva). `z-index: -1` ho
+   posunie za ikonu aj popisku; pozadie pása to neprekryje, lebo .bottomnav je vlastný
+   stacking context (má z-index) a záporná vrstva sa kreslí až nad jeho pozadím. */
 .nav-item.active::after {
     content: '';
     position: absolute;
-    top: 0;
-    left: 30%;
-    right: 30%;
-    height: 2px;
-    /* Tá istá farba ako stavová bodka pri čase - prúžok aj bodka hovoria o tom istom stave. */
+    top: 16px;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border-radius: 50%;
+    /* Tá istá farba ako stavová bodka pri čase - podsvietenie aj bodka hovoria o tom istom stave. */
     background: rgb(var(--live-rgb));
-    border-radius: 0 0 2px 2px;
+    opacity: 0.45;
+    filter: blur(8px);
+    z-index: -1;
     transition: background-color var(--dur);
 }
 
@@ -2026,11 +2036,15 @@ body:has(#page[data-panel='terazky']) .info-btn {
     .nav-item .lbl {
         line-height: 1.2;
     }
+    /* Na desktope je položka v riadku: ikona (16px) stojí pri ľavom okraji, popiska vedľa nej.
+       Podsvietenie preto necentrujeme na šírku položky, ale na ikonu - 8px od ľavého okraja
+       a na polovicu výšky. */
     .nav-item.active::after {
-        top: auto;
-        bottom: -1px;
-        left: 0;
-        right: 0;
+        top: 50%;
+        left: 8px;
+        width: 26px;
+        height: 26px;
+        margin: -13px 0 0 -13px;
     }
     /* Spotrebiče majú na širokej obrazovke celú šírku stránky. Kým vedľa nich stála karta
        Dnes-Zajtra, delila si stránka šírku mriežkou 1:1; tá karta zanikla (jej dáta sú

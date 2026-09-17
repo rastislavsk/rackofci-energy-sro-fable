@@ -192,14 +192,14 @@ for (const [hm, label] of [
     ['08:00', 'červená'],
     ['02:00', 'oranžová'],
 ]) {
-    test(`prúžok nad aktívnou kartou má rovnakú farbu ako stavová bodka (${hm}, ${label})`, async ({ page }) => {
+    test(`podsvietenie ikony aktívnej karty má rovnakú farbu ako stavová bodka (${hm}, ${label})`, async ({ page }) => {
         const { instant, wall } = atTime(hm);
         await openApp(page, { time: instant });
         await expect(page.locator('html')).toHaveAttribute('data-accent', modelAt(wall).accent || '');
         const dot = await page.locator('.appbar-clock .live-dot').evaluate((el) => getComputedStyle(el).backgroundColor);
-        const bar = await page.locator('.nav-item.active').evaluate((el) => getComputedStyle(el, '::after').backgroundColor);
+        const glow = await page.locator('.nav-item.active').evaluate((el) => getComputedStyle(el, '::after').backgroundColor);
         expect(dot).toMatch(/^rgb\(/);
-        expect(bar).toBe(dot);
+        expect(glow).toBe(dot);
     });
 }
 
