@@ -57,6 +57,7 @@ function terazkyDom() {
         dialWhen: byId('dial-when'),
         dialNow: byId('dial-now'),
         dialGrip: byId('dial-grip'),
+        infoOverlay: byId('info-overlay'),
     };
 }
 
