@@ -5,7 +5,7 @@ import { PANELS } from './dom.js';
 
 /**
  * @typedef {import('../shared/config.js').Season} Season
- * @typedef {'terazky' | '7dni' | 'zdielat'} Panel
+ * @typedef {'terazky' | '7dni' | 'zdielat' | 'info'} Panel
  * @typedef {{
  *   now: Date,
  *   season: Season,
@@ -21,7 +21,6 @@ import { PANELS } from './dom.js';
  *   verdictPage: number,
  *   previewMinutes: number | null,
  *   isDragging: boolean,
- *   infoOpen: boolean,
  *   wide: boolean,
  *   tall: boolean,
  *   chartSizes: Record<string, { w: number, h: number }>,
@@ -53,7 +52,6 @@ export function initialState(now, season, layout) {
         verdictPage: 0,
         previewMinutes: null,
         isDragging: false,
-        infoOpen: false,
         wide: layout.wide,
         // Či je okno dosť vysoké na to, aby sa do prehľadu dní zmestila aj správa týždňa
         // (WEEK_MSG_MIN_H). Keď nie je, správa sa nekreslí - prehľad ostáva bez scrollovania.
@@ -119,8 +117,7 @@ export function nextWeekDay(sel, dir, count) {
  * Zmena karty aj so smerom, ktorým sa má nová karta prisunúť. Smer sa berie z poradia
  * v navigácii, nie z toho, či sa ťahalo alebo klikalo - prechod tak vyzerá rovnako pri
  * oboch. Detail dňa sa pritom zatvára: je to vec jedného pozretia, nie stav, do ktorého
- * by sa appka mala vrátiť o hodinu neskôr. To isté platí pre popup s vysvetlením
- * ciferníka - pri odchode z karty sa zatvorí, nech sa pri návrate sám od seba nezjaví.
+ * by sa appka mala vrátiť o hodinu neskôr.
  * @param {Panel} from @param {Panel} to
  */
 export function panelChange(from, to) {
@@ -128,7 +125,6 @@ export function panelChange(from, to) {
         panel: to,
         panelDir: /** @type {1 | -1} */ (PANELS.indexOf(to) < PANELS.indexOf(from) ? -1 : 1),
         weekDetail: null,
-        infoOpen: false,
     };
 }
 

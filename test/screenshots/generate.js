@@ -16,6 +16,7 @@ const VYSKA = 844;
 const KARTY = [
     { subor: 'terazky.png', nav: 'nav-terazky' },
     { subor: '7dni.png', nav: 'nav-7dni' },
+    { subor: 'info.png', nav: 'nav-info' },
 ];
 
 /** Počká, kým server odpovie, aby sa prvý pokus o snímku netrafil do prázdna. */

@@ -12,9 +12,9 @@ Cloudflare Worker.
 
 Karty sú pomenované tak, ako ich vidno v spodnej navigácii.
 
-|                Terazky                 |               7 dní               |
-| :------------------------------------: | :-------------------------------: |
-| ![Karta Terazky](docs/img/terazky.png) | ![Karta 7 dní](docs/img/7dni.png) |
+|                Terazky                 |               7 dní               |               Info               |
+| :------------------------------------: | :-------------------------------: | :------------------------------: |
+| ![Karta Terazky](docs/img/terazky.png) | ![Karta 7 dní](docs/img/7dni.png) | ![Karta Info](docs/img/info.png) |
 
 Snímky sú z testovacích dát a pevného času (13:00), nie zo živej elektrárne – čísla na nich
 sú syntetické. Prekresliť ich vie `npm run screenshots`. Karta Zdieľať na obrázku nie je,
@@ -26,8 +26,8 @@ jej QR kód kreslí knižnica z CDN.
   poradie má konce – na prvej správe sa dá ísť len ďalej, na poslednej len späť.
   Ciferník sa číta aj ako 24-hodinový: vonkajší prstenec je deň s farebnými tarifnými
   pásmami, biela bodka na ňom je „teraz“. Potiahnutím jazdca po prstenci alebo ťuknutím
-  naň si pozrieš, ako to bude vyzerať v inom čase. Ikonka „i“ v pravom hornom rohu otvorí
-  popup s vysvetlením, čo prstence a farby na ciferníku znamenajú.
+  naň si pozrieš, ako to bude vyzerať v inom čase. Čo prstence a farby znamenajú, vysvetľuje
+  karta Info.
 - **7 dní** – prehľad dní: na telefóne rebríček, kde má každý deň pásik dlhý podľa výroby
   voči najsilnejšiemu dňu v týždni, a nad ním jediné veľké číslo za celý týždeň; na širokej
   obrazovke bubliny (Dnes, Zajtra, 7 dní spolu) a tabuľka so všetkými stĺpcami. Klik otvorí
@@ -38,6 +38,9 @@ jej QR kód kreslí knižnica z CDN.
   mapu výroby hodina × deň a hlášku o najsilnejšom dni. Na širokej obrazovke je vidno všetko
   naraz.
 - **Zdieľať** – QR kód, odkaz na appku a tlačidlo na poslanie cez WhatsApp.
+- **Info** – návod k ciferníku z karty Terazky: ilustračný ciferník a štyri vysvetlivky
+  (vonkajší prstenec s tarifnými pásmami, biela bodka „teraz“, vnútorný oblúk výkonu,
+  jazdec na prstenci). Obsah je statický, appka ho neprepočítava.
 
 Medzi kartami sa dá na dotykovej obrazovke prechádzať aj potiahnutím prsta do strán, v
 poradí spodnej navigácie – aj ponad grafy a prehľad dní. V detaile dňa listuje to isté

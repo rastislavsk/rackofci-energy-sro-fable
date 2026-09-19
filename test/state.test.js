@@ -41,7 +41,8 @@ test('rovnaké hodnoty nespustia prekreslenie, odhlásenie funguje', () => {
 test('poradie kariet pri listovaní prstom: na kraji sa nezacyklí', () => {
     assert.equal(nextPanel('terazky', 1), '7dni');
     assert.equal(nextPanel('7dni', 1), 'zdielat');
-    assert.equal(nextPanel('zdielat', 1), null, 'za poslednou kartou už nič nie je');
+    assert.equal(nextPanel('zdielat', 1), 'info');
+    assert.equal(nextPanel('info', 1), null, 'za poslednou kartou už nič nie je');
     assert.equal(nextPanel('7dni', -1), 'terazky');
     assert.equal(nextPanel('terazky', -1), null, 'pred prvou kartou už nič nie je');
 });
@@ -56,8 +57,8 @@ test('poradie dní v detaile dňa: na kraji týždňa sa nezacyklí', () => {
 });
 
 test('smer prechodu ide podľa poradia v navigácii, nie podľa toho, ako sa prepínalo', () => {
-    assert.deepEqual(panelChange('terazky', '7dni'), { panel: '7dni', panelDir: 1, weekDetail: null, infoOpen: false });
-    assert.deepEqual(panelChange('zdielat', '7dni'), { panel: '7dni', panelDir: -1, weekDetail: null, infoOpen: false });
+    assert.deepEqual(panelChange('terazky', '7dni'), { panel: '7dni', panelDir: 1, weekDetail: null });
+    assert.deepEqual(panelChange('zdielat', '7dni'), { panel: '7dni', panelDir: -1, weekDetail: null });
     assert.equal(panelChange('terazky', 'zdielat').panelDir, 1);
     assert.equal(panelChange('zdielat', 'terazky').panelDir, -1);
 });
@@ -78,14 +79,12 @@ test('Späť obnoví kartu aj otvorený detail, smer prechodu ide podľa poradia
         panel: '7dni',
         panelDir: -1,
         weekDetail: 'day',
-        infoOpen: false,
     });
     // Na rozdiel od panelChange sa detail nezatvára, ale nastavuje na to, čo v kroku bolo.
     assert.deepEqual(navChange('terazky', { panel: '7dni', weekDetail: 'week' }), {
         panel: '7dni',
         panelDir: 1,
         weekDetail: 'week',
-        infoOpen: false,
     });
 });
 

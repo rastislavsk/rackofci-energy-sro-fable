@@ -120,5 +120,4 @@ export function renderTerazky(state, dom) {
     renderDayRing(state, dom);
     renderRingMarks(state, hero, dom);
     renderPreviewUi(state, hero, dom);
-    dom.infoOverlay.classList.toggle('hidden', !state.infoOpen);
 }

@@ -570,6 +570,19 @@ test('zdieľať: odkaz na appku', async ({ page }) => {
     await expect(page.locator('#share-whatsapp')).toHaveAttribute('href', /wa\.me/);
 });
 
+test('info: karta vysvetľuje všetky štyri časti ciferníka', async ({ page }) => {
+    const errors = await openApp(page);
+    await page.locator('#nav-info').click();
+    await expect(page.locator('#panel-info')).toBeVisible();
+    await expect(page.locator('#info-title')).toHaveText('Ako čítať ciferník');
+    // Ilustračný ciferník aj štyri vysvetlivky: prstenec, bodka "teraz", oblúk výkonu, jazdec.
+    await expect(page.locator('#panel-info .info-dial')).toBeVisible();
+    await expect(page.locator('#panel-info .info-row')).toHaveCount(4);
+    // Tri tarifné pásma sú rozpísané po riadkoch, nie schované do jednej vety.
+    await expect(page.locator('#panel-info .info-tiers li')).toHaveCount(3);
+    expect(errors).toEqual([]);
+});
+
 test('bez dát: appka neukáže chybu, iba stav "dáta nedostupné"', async ({ page }) => {
     const errors = await openApp(page, { workerDown: true });
     await expect(page.locator('#pv-updated')).toHaveText('dáta nedostupné');
@@ -590,7 +603,7 @@ test('bez dát: appka neukáže chybu, iba stav "dáta nedostupné"', async ({ p
 test('.hidden skryje každý prvok v stránke, nič ju neprebíja', async ({ page }) => {
     const errors = await openApp(page);
     // Karty sa vykresľujú až po otvorení, aby test videl aj ich obsah.
-    for (const nav of ['#nav-7dni', '#nav-zdielat', '#nav-terazky']) await page.locator(nav).click();
+    for (const nav of ['#nav-7dni', '#nav-zdielat', '#nav-info', '#nav-terazky']) await page.locator(nav).click();
 
     const broken = await page.evaluate(() => {
         const out = [];
@@ -626,7 +639,7 @@ const pockajNaPrechod = (page) =>
 
 test('prístupnosť: žiadne závažné nálezy axe na žiadnej karte', async ({ page }) => {
     await openApp(page);
-    for (const panel of ['terazky', '7dni', 'zdielat']) {
+    for (const panel of ['terazky', '7dni', 'zdielat', 'info']) {
         await page.locator(`#nav-${panel}`).click();
         await pockajNaPrechod(page);
         const results = await new AxeBuilder({ page }).analyze();
@@ -715,6 +728,7 @@ test('desktop: appka sa zmestí na obrazovku bez scrollovania', async ({ page })
         ['#nav-terazky', '#panel-terazky'],
         ['#nav-7dni', '#panel-7dni'],
         ['#nav-zdielat', '#panel-zdielat'],
+        ['#nav-info', '#panel-info'],
     ]) {
         await page.locator(nav).click();
         await expect(page.locator(panel)).toBeVisible();
@@ -816,7 +830,7 @@ test('mobil: pod 620px výšky sa karta Terazky odomkne a dá sa doscrollovať',
  */
 test('mobil: ťahom nadol sa dá obnoviť každá karta', async ({ page }) => {
     const errors = await openApp(page);
-    for (const panel of ['terazky', '7dni', 'zdielat']) {
+    for (const panel of ['terazky', '7dni', 'zdielat', 'info']) {
         await page.locator(`#nav-${panel}`).click();
         await expect(page.locator(`#panel-${panel}`)).toBeVisible();
         const zamknute = await page.evaluate(() =>

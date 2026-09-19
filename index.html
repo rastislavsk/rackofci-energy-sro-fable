@@ -35,18 +35,7 @@
                         <time id="current-time-display">00:00</time>
                     </div>
                 </div>
-                <div class="pv-updated-line">
-                    <span id="pv-updated">načítavam…</span>
-                    <!-- Ikonka vysvetlenia ciferníka - vidno len na karte Terazky, viď
-                         .info-btn v style.css. -->
-                    <button type="button" class="info-btn" data-info-open aria-label="Ako čítať ciferník">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <circle class="bg" cx="12" cy="12" r="9" />
-                            <rect class="i" x="11" y="10.3" width="2" height="6.7" rx="1" />
-                            <circle class="i" cx="12" cy="6.3" r="1.2" />
-                        </svg>
-                    </button>
-                </div>
+                <div class="pv-updated-line"><span id="pv-updated">načítavam…</span></div>
             </div>
             <nav class="bottomnav" aria-label="Hlavná navigácia">
                 <div class="bottomnav-inner">
@@ -69,6 +58,13 @@
                             <path d="M8.6 10.6l6.8-3.8M8.6 13.4l6.8 3.8" />
                         </svg>
                         <span class="lbl">Zdieľať</span>
+                    </button>
+                    <button id="nav-info" class="nav-item" type="button" data-panel="info">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 11v5M12 7.5h.01" />
+                        </svg>
+                        <span class="lbl">Info</span>
                     </button>
                 </div>
             </nav>
@@ -174,79 +170,6 @@
                         <button class="pager-dot hidden" type="button" id="verdict-dot-wait" aria-label="Kedy bude lepšie"></button>
                     </div>
                     <div class="chip-tooltip" id="verdict-chip-tooltip" aria-hidden="true"></div>
-                </div>
-
-                <!-- Popup s vysvetlením ciferníka. Ciferník v ňom je statická ilustrácia (pevne
-                     dané pásma a jedna ukážková hodnota výkonu), nie živé dáta - na vysvetlenie
-                     farieb a prstencov to netreba prepočítavať. -->
-                <div class="info-overlay hidden" id="info-overlay">
-                    <div class="info-popup" role="dialog" aria-modal="true" aria-labelledby="info-title">
-                        <button type="button" class="info-close" data-info-close aria-label="Zavrieť">×</button>
-                        <h2 id="info-title">Ako čítať ciferník</h2>
-                        <p class="info-sub">Farby a prstence v skratke.</p>
-
-                        <svg class="info-dial" viewBox="0 0 240 240" aria-hidden="true">
-                            <path class="day-band amber" d="M120,14 A106,106 0 0 1 217.93,160.57" />
-                            <path class="day-band red" d="M217.93,160.57 A106,106 0 0 1 204.10,184.53" />
-                            <path class="day-band amber" d="M204.10,184.53 A106,106 0 0 1 184.53,204.10" />
-                            <path class="day-band red" d="M184.53,204.10 A106,106 0 0 1 160.57,217.93" />
-                            <path class="day-band green" d="M160.57,217.93 A106,106 0 0 1 14.91,133.83" />
-                            <path class="day-band amber" d="M14.91,133.83 A106,106 0 0 1 35.90,55.47" />
-                            <path class="day-band red" d="M35.90,55.47 A106,106 0 0 1 55.47,35.90" />
-                            <path class="day-band amber" d="M55.47,35.90 A106,106 0 0 1 79.43,22.07" />
-                            <path class="day-band red" d="M79.43,22.07 A106,106 0 0 1 106.17,14.91" />
-                            <path class="day-band amber" d="M106.17,14.91 A106,106 0 0 1 120,14" />
-                            <circle class="dial-track" cx="120" cy="120" r="78" />
-                            <circle class="info-dial-power" cx="120" cy="120" r="78" transform="rotate(-90 120 120)" />
-                            <circle class="info-dial-now" cx="92.57" cy="222.39" r="5" />
-                        </svg>
-
-                        <ul class="info-rows">
-                            <li class="info-row">
-                                <svg class="info-row-icon info-icon-tariff" viewBox="0 0 22 22" aria-hidden="true">
-                                    <path class="seg green" d="M11,2 A9,9 0 0 1 16.29,18.28" />
-                                    <path class="seg amber" d="M16.29,18.28 A9,9 0 0 1 2,11" />
-                                    <path class="seg red" d="M2,11 A9,9 0 0 1 11,2" />
-                                </svg>
-                                <div>
-                                    <b>Vonkajší prstenec</b> — 24 hodín dňa, farba pásma:
-                                    <ul class="info-tiers">
-                                        <li><i class="sw green"></i>ideálne okno (svieti slnko)</li>
-                                        <li><i class="sw amber"></i>lacná sieť / nízka tarifa</li>
-                                        <li><i class="sw red"></i>najdrahšia sieť / vysoká tarifa</li>
-                                    </ul>
-                                </div>
-                            </li>
-                            <li class="info-row">
-                                <svg class="info-row-icon info-icon-now" viewBox="0 0 22 22" aria-hidden="true">
-                                    <circle class="ring" cx="11" cy="11" r="9" />
-                                    <circle class="dot" cx="11" cy="3" r="3" />
-                                </svg>
-                                <div><b>Biela bodka</b> — presný aktuálny čas („teraz“).</div>
-                            </li>
-                            <li class="info-row">
-                                <svg class="info-row-icon info-icon-power" viewBox="0 0 22 22" aria-hidden="true">
-                                    <circle class="track" cx="11" cy="11" r="8" />
-                                    <circle class="arc" cx="11" cy="11" r="8" transform="rotate(-90 11 11)" />
-                                </svg>
-                                <div>
-                                    <b>Vnútorný oblúk a číslo</b> — aktuálny výkon fotovoltiky. Dĺžka aj farba ukazujú, koľko dávajú panely
-                                    (kW).
-                                </div>
-                            </li>
-                            <li class="info-row">
-                                <svg class="info-row-icon info-icon-drag" viewBox="0 0 22 22" aria-hidden="true">
-                                    <circle cx="11" cy="11" r="9" />
-                                    <path d="M7 8l-2.5 3L7 14M15 8l2.5 3L15 14" />
-                                </svg>
-                                <div>
-                                    <b>Jazdec na prstenci</b> — potiahni ho (alebo naň ťukni) a pozri si, ako to bude vyzerať v inom čase.
-                                </div>
-                            </li>
-                        </ul>
-
-                        <button type="button" class="info-ok" data-info-close>Rozumiem</button>
-                    </div>
                 </div>
             </section>
 
@@ -406,6 +329,78 @@
                     </a>
                     <p class="share-credit mono">Toilet Apps Ltd.</p>
                     <p class="share-credit mono">Made by 2R &amp; Claude ¯\_(ツ)_/¯</p>
+                </div>
+            </section>
+
+            <!-- PANEL: INFO -->
+            <!-- Ciferník je tu statická ilustrácia (pevne dané pásma a jedna ukážková hodnota
+                 výkonu), nie živé dáta - na vysvetlenie farieb a prstencov to netreba
+                 prepočítavať. Karta nemá žiadnu render funkciu, obsah sa nemení. -->
+            <section id="panel-info" class="panel hidden" aria-labelledby="info-title">
+                <div class="section-head centered">
+                    <h2 class="section-title" id="info-title">Ako čítať ciferník</h2>
+                    <div class="section-sub">Farby a prstence v skratke</div>
+                </div>
+                <div class="info-panel">
+                    <svg class="info-dial" viewBox="0 0 240 240" aria-hidden="true">
+                        <path class="day-band amber" d="M120,14 A106,106 0 0 1 217.93,160.57" />
+                        <path class="day-band red" d="M217.93,160.57 A106,106 0 0 1 204.10,184.53" />
+                        <path class="day-band amber" d="M204.10,184.53 A106,106 0 0 1 184.53,204.10" />
+                        <path class="day-band red" d="M184.53,204.10 A106,106 0 0 1 160.57,217.93" />
+                        <path class="day-band green" d="M160.57,217.93 A106,106 0 0 1 14.91,133.83" />
+                        <path class="day-band amber" d="M14.91,133.83 A106,106 0 0 1 35.90,55.47" />
+                        <path class="day-band red" d="M35.90,55.47 A106,106 0 0 1 55.47,35.90" />
+                        <path class="day-band amber" d="M55.47,35.90 A106,106 0 0 1 79.43,22.07" />
+                        <path class="day-band red" d="M79.43,22.07 A106,106 0 0 1 106.17,14.91" />
+                        <path class="day-band amber" d="M106.17,14.91 A106,106 0 0 1 120,14" />
+                        <circle class="dial-track" cx="120" cy="120" r="78" />
+                        <circle class="info-dial-power" cx="120" cy="120" r="78" transform="rotate(-90 120 120)" />
+                        <circle class="info-dial-now" cx="92.57" cy="222.39" r="5" />
+                    </svg>
+
+                    <ul class="info-rows">
+                        <li class="info-row">
+                            <svg class="info-row-icon info-icon-tariff" viewBox="0 0 22 22" aria-hidden="true">
+                                <path class="seg green" d="M11,2 A9,9 0 0 1 16.29,18.28" />
+                                <path class="seg amber" d="M16.29,18.28 A9,9 0 0 1 2,11" />
+                                <path class="seg red" d="M2,11 A9,9 0 0 1 11,2" />
+                            </svg>
+                            <div>
+                                <b>Vonkajší prstenec</b> — 24 hodín dňa, farba pásma:
+                                <ul class="info-tiers">
+                                    <li><i class="sw green"></i>ideálne okno (svieti slnko)</li>
+                                    <li><i class="sw amber"></i>lacná sieť / nízka tarifa</li>
+                                    <li><i class="sw red"></i>najdrahšia sieť / vysoká tarifa</li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="info-row">
+                            <svg class="info-row-icon info-icon-now" viewBox="0 0 22 22" aria-hidden="true">
+                                <circle class="ring" cx="11" cy="11" r="9" />
+                                <circle class="dot" cx="11" cy="3" r="3" />
+                            </svg>
+                            <div><b>Biela bodka</b> — presný aktuálny čas („teraz“).</div>
+                        </li>
+                        <li class="info-row">
+                            <svg class="info-row-icon info-icon-power" viewBox="0 0 22 22" aria-hidden="true">
+                                <circle class="track" cx="11" cy="11" r="8" />
+                                <circle class="arc" cx="11" cy="11" r="8" transform="rotate(-90 11 11)" />
+                            </svg>
+                            <div>
+                                <b>Vnútorný oblúk a číslo</b> — aktuálny výkon fotovoltiky. Dĺžka aj farba ukazujú, koľko dávajú panely
+                                (kW).
+                            </div>
+                        </li>
+                        <li class="info-row">
+                            <svg class="info-row-icon info-icon-drag" viewBox="0 0 22 22" aria-hidden="true">
+                                <circle cx="11" cy="11" r="9" />
+                                <path d="M7 8l-2.5 3L7 14M15 8l2.5 3L15 14" />
+                            </svg>
+                            <div>
+                                <b>Jazdec na prstenci</b> — potiahni ho (alebo naň ťukni) a pozri si, ako to bude vyzerať v inom čase.
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </section>
         </main>
