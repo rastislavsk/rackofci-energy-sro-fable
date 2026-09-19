@@ -1477,3 +1477,31 @@ test.describe('otočenie displeja', () => {
         expect(errors).toEqual([]);
     });
 });
+
+/**
+ * iPhone s výrezom: po pridaní na plochu beží appka bez lišty prehliadača a jej stránka
+ * začína až pod stavovým riadkom systému, teda pod hodinami a batériou (viewport-fit=cover
+ * a black-translucent v index.html). Prehliadač o tejto zóne povie len cez
+ * env(safe-area-inset-top), ktoré sa v teste nastaviť nedá - appka ju preto číta cez
+ * premennú --safe-top a test si do nej dosadí výšku stavového riadku iPhonu.
+ * Celá hlavička musí ostať pod ňou: inak sa názov firmy schová za systémové hodiny
+ * a vykukne len na okamih pri ťahaní prstom nadol (presne to sa dialo).
+ */
+test('mobil: hlavička ostane pod stavovým riadkom telefónu', async ({ page }) => {
+    const SAFE_TOP = 59;
+    const errors = await openApp(page);
+    await page.addStyleTag({ content: `:root { --safe-top: ${SAFE_TOP}px; }` });
+
+    for (const panel of ['terazky', '7dni', 'zdielat']) {
+        await page.locator(`#nav-${panel}`).click();
+        const vrch = await page.evaluate(() => document.querySelector('.appbar-inner').getBoundingClientRect().top);
+        expect(vrch, `karta ${panel}: hlavička zasahuje do stavového riadku`).toBeGreaterThanOrEqual(SAFE_TOP);
+    }
+
+    // Karta Terazky je obrazovka bez scrollovania (viď test vyššie) - bezpečná zóna jej
+    // nesmie nič vytlačiť von.
+    await page.locator('#nav-terazky').click();
+    const scroll = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+    expect(scroll, `karta Terazky preteká o ${scroll} px`).toBeLessThanOrEqual(0);
+    expect(errors).toEqual([]);
+});
