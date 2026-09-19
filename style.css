@@ -233,9 +233,6 @@ b {
 }
 .pv-updated-line {
     margin-top: var(--sp-1);
-    display: flex;
-    align-items: center;
-    gap: 5px;
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     color: var(--ink-35);
@@ -648,87 +645,14 @@ b {
     transition: background-color var(--dur);
 }
 
-/* ---- Spotrebiče: ikonka a popup s vysvetlením ciferníka --------------------
-   Ikonka sedí v hlavičke vedľa riadku "aktualizované HH:MM" (viď .pv-updated-line
-   v index.html), nie na karte - dáva zmysel len na Terazky, ktorá ako jediná má
-   ciferník na vysvetlenie, preto je inde v hlavičke skrytá tým istým :has() vzorom,
-   akým appka na Terazky mení aj iné veci v .appbar (viď nižšie). Kruh je plný, "i"
-   v ňom je vyrezané farbou pozadia, nie orámovanie tlačidla - to by pridalo druhý,
-   prekrývajúci sa kruh. Rozmer ikony drží pod výškou riadku, do ktorého sedí, aby
-   si hlavička nepýtala viac miesta, než mala doteraz. */
-.info-btn {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    color: var(--ink-45);
-}
-body:has(#page[data-panel='terazky']) .info-btn {
-    display: flex;
-}
-.info-btn svg {
-    width: 12px;
-    height: 12px;
-}
-.info-btn svg .bg {
-    fill: currentColor;
-}
-.info-btn svg .i {
-    fill: var(--bg);
-}
-/* Prekrytie je position: fixed, nie súčasť .dial-hero - má sadnúť na celú obrazovku,
-   nie len na kartu. */
-/* Pri nižšom displeji (alebo natrvalo zobrazenej navigačnej lište telefónu) je popup
-   vyšší než viditeľná plocha - prekrytie preto smie scrollovať a spodný odstup počíta
-   aj s bezpečnou zónou, rovnako ako .bottomnav. Bez toho by tlačidlo "Rozumiem" ostalo
-   pod navigačnou lištou, nedosiahnuteľné. */
-.info-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: calc(70px + var(--safe-top)) 20px calc(20px + env(safe-area-inset-bottom));
-    background: rgba(0, 0, 0, 0.62);
-    overflow-y: auto;
-}
-.info-popup {
-    position: relative;
-    width: 100%;
-    max-width: 340px;
-    flex: 0 0 auto;
+/* ---- Karta Info: vysvetlenie ciferníka -------------------------------------
+   Obsah karty je statický (žiadna render funkcia), preto tu nie je nič, čo by JS
+   prepínal - len rozloženie. */
+.info-panel {
     background: var(--card-bg);
     border: 1px solid var(--ink-12);
     border-radius: var(--radius-lg);
-    padding: 22px 20px 20px;
-    text-align: left;
-}
-.info-close {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--ink-20);
-    background: var(--ink-05);
-    color: var(--ink-45);
-    font-size: 15px;
-    line-height: 1;
-}
-.info-popup h2 {
-    margin: 0 0 4px;
-    font-size: var(--fs-lg);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-}
-.info-sub {
-    margin: 0 0 18px;
-    font-size: var(--fs-sm);
-    color: var(--ink-35);
+    padding: 22px 20px;
 }
 /* Ilustračný ciferník: pevné pásma aj ukážková hodnota výkonu, nie živé dáta - na
    vysvetlenie farieb a prstencov to netreba prepočítavať. Farby pásiem (.day-band)
@@ -830,19 +754,6 @@ body:has(#page[data-panel='terazky']) .info-btn {
     display: flex;
     align-items: center;
     gap: 6px;
-}
-.info-ok {
-    margin-top: 18px;
-    width: 100%;
-    padding: 11px;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--ink-20);
-    background: var(--ink-05);
-    color: var(--ink);
-    font-family: var(--font-body);
-    font-size: var(--fs-md);
-    font-weight: 600;
-    text-align: center;
 }
 
 /* ---- Spotrebiče: verdikt a spotrebiče ------------------------------------- */

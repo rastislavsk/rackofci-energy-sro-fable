@@ -8,10 +8,10 @@ const byId = (/** @type {string} */ id) => {
 };
 
 // Karty v poradí navigácie. Kódový názov a popiska v navigácii nie sú vždy to isté slovo,
-// preto tu ostáva mapovanie: terazky = „Terazky", 7dni = „7 dní", zdielat = „Zdieľať".
-// Popiska je text pre používateľa a mení sa podľa chuti; kódový názov drží HTML id,
-// CSS selektory aj stav, tak nech ho popiska nemusí naháňať.
-export const PANELS = /** @type {const} */ (['terazky', '7dni', 'zdielat']);
+// preto tu ostáva mapovanie: terazky = „Terazky", 7dni = „7 dní", zdielat = „Zdieľať",
+// info = „Info". Popiska je text pre používateľa a mení sa podľa chuti; kódový názov drží
+// HTML id, CSS selektory aj stav, tak nech ho popiska nemusí naháňať.
+export const PANELS = /** @type {const} */ (['terazky', '7dni', 'zdielat', 'info']);
 
 function headerDom() {
     return {
@@ -50,7 +50,6 @@ function terazkyDom() {
         dialWhen: byId('dial-when'),
         dialNow: byId('dial-now'),
         dialGrip: byId('dial-grip'),
-        infoOverlay: byId('info-overlay'),
     };
 }
 
