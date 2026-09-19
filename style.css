@@ -75,6 +75,11 @@
        pása, mení sa aj toto číslo o rovnaký počet pixelov, aby medzera medzi obsahom
        a pásom ostala rovnaká. */
     --nav-h: 59px;
+    /* Výška systémového pásu nad stránkou (stavový riadok iPhonu s hodinami a batériou).
+       Na displeji bez výrezu a na desktope je nula, takže sa nikde nič neposunie.
+       Prehliadač ju vie len cez env(), ktoré sa v teste nedá nastaviť - preto ju appka
+       číta cez túto premennú a e2e test si do nej môže dosadiť vlastné číslo. */
+    --safe-top: env(safe-area-inset-top, 0px);
 }
 
 /* Tarifné okno, v ktorom sme práve teraz. data-tier zapisuje renderHeader vo
@@ -166,10 +171,18 @@ b {
 }
 
 /* ---- Hlavička a navigácia -------------------------------------------------- */
+/* Odsadenie zhora o bezpečnú zónu (--safe-top), rovnako ako má .bottomnav zdola.
+   Appka má v index.html "viewport-fit=cover" a "apple-mobile-web-app-status-bar-style:
+   black-translucent": po pridaní na plochu iPhonu tak stránka začína pod stavovým
+   riadkom - teda pod hodinami a batériou systému. Bez tohto odsadenia sa celý riadok
+   s názvom firmy schoval za stavový riadok a bolo ho vidieť len na okamih, kým ťahanie
+   prstom nadol (obnova ťahom) posunulo stránku nižšie. Odsadenie je vnútri .appbar,
+   takže pozadie hlavičky siaha až pod stavový riadok a prechod zostáva plynulý. */
 .appbar {
     position: sticky;
     top: 0;
     z-index: 30;
+    padding-top: var(--safe-top);
     background: var(--bg-page);
     background-attachment: fixed;
 }
@@ -675,7 +688,7 @@ body:has(#page[data-panel='terazky']) .info-btn {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 70px 20px calc(20px + env(safe-area-inset-bottom));
+    padding: calc(70px + var(--safe-top)) 20px calc(20px + env(safe-area-inset-bottom));
     background: rgba(0, 0, 0, 0.62);
     overflow-y: auto;
 }
